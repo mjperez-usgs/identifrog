@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.prefs.Preferences;
+
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
@@ -27,7 +28,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+
 import gov.usgs.identifrog.ChoiceDialog;
+import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.ImageManipFrame;
 import gov.usgs.identifrog.MainFrame;
 import gov.usgs.identifrog.DataObjects.Frog;
@@ -121,6 +124,7 @@ public class AddFrog extends JDialog {
 		}
 	};
 	JButton butFillPreviousFrogInfo = new JButton();
+	JButton butDebugPopulate = new JButton();
 	JLabel labEntryPersonTitle = new JLabel();
 	JLabel labObserverTitle = new JLabel();
 	JLabel labFrogTitle = new JLabel();
@@ -145,7 +149,7 @@ public class AddFrog extends JDialog {
 	String[] sexStrings = { "M", "F", "J", "Unknown" };
 	String[] day = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31" };
 	String[] month = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-	String[] year = { "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015" };
+	String[] year = { "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015" }; //TODO: Should be dynamic or this will break in the future.
 	JComboBox dayComboBox = new JComboBox(day);
 	JComboBox monthComboBox = new JComboBox(month);
 	JComboBox yearComboBox = new JComboBox(year);
@@ -267,14 +271,14 @@ public class AddFrog extends JDialog {
 		panelFrogInfo.setLayout(null);
 		panelLocation.setLayout(null);
 		panelAllInfo.setPreferredSize(new Dimension(800, 695));
-		panelEntryPersonInfo.setBounds(new Rectangle(169, 0, 440, 170));
+		panelEntryPersonInfo.setBounds(new Rectangle(169, 0, 540, 170));
 		panelObserverInfo.setBounds(new Rectangle(169, 180, 440, 70));
 		panelFrogInfo.setBounds(new Rectangle(169, 260, 640, 180));
 		panelLocation.setBounds(new Rectangle(169, 450, 440, 190));
 		panelButtons.setBounds(new Rectangle(169, 645, 440, 50));
 		// PANEL ENTRY PERSON INFO
 		panelEntryPersonInfo.setFont(new java.awt.Font("MS Sans Serif", Font.BOLD, 14));
-		butFillPreviousFrogInfo.setBounds(new Rectangle(180, 10, 160, 35));// 8
+		butFillPreviousFrogInfo.setBounds(new Rectangle(180, 10, 180, 35));// 8
 		butFillPreviousFrogInfo.setText("Populate from History");
 		butFillPreviousFrogInfo.setVisible(true);
 		butFillPreviousFrogInfo.setIcon(new ImageIcon(MainFrame.class.getResource("IconRefresh32.png")));
@@ -283,6 +287,19 @@ public class AddFrog extends JDialog {
 				butFillPreviousFrogInfo_actionPerformed(e);
 			}
 		});
+		//Debugging button
+		butDebugPopulate.setBounds(new Rectangle(350, 10, 180, 35));// 8
+		butDebugPopulate.setText("Debug: Autopopulate");
+		butDebugPopulate.setIcon(new ImageIcon(MainFrame.class.getResource("IconDebug32.png")));
+		butDebugPopulate.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				//butFillPreviousFrogInfo_actionPerformed(e);
+			}
+		});
+		if (IdentiFrog.DEBUGGING_BUILD) {
+			butDebugPopulate.setVisible(true);
+		}
+		
 		labEntryPersonTitle.setFont(new Font("MS Sans Serif", Font.BOLD, 14));
 		labEntryPersonTitle.setBounds(new Rectangle(13, 43, 60, 20));
 		labEntryPersonTitle.setText("Entry");
@@ -537,6 +554,7 @@ public class AddFrog extends JDialog {
 		});
 		getContentPane().add(panelAllInfo, BorderLayout.CENTER);
 		panelEntryPersonInfo.add(butFillPreviousFrogInfo, null);
+		panelEntryPersonInfo.add(butDebugPopulate, null);
 		panelEntryPersonInfo.add(labEntryPersonTitle, null);
 		panelEntryPersonInfo.add(textEntrydate, null);
 		panelEntryPersonInfo.add(labEntrydate, null);

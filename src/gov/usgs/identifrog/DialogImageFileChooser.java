@@ -115,7 +115,7 @@ public class DialogImageFileChooser extends JDialog {
 	 *Returns the path and name of the selected file, "null" if canceled, "Error" if there was an
 	 * error
 	 */
-	public String getType() {
+	public String getFilepath() {
 		return fileType;
 	}
 

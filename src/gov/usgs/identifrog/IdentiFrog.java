@@ -22,7 +22,7 @@ public class IdentiFrog {
 	boolean packFrame = false;
 	private Preferences root = Preferences.userRoot();
 	private final Preferences node = root.node("edu/isu/aadis/defaults");
-
+	public final static boolean DEBUGGING_BUILD = true; //when building the app, change this to false and debugging items will be hidden
 	// construct the application
 	public IdentiFrog() {
 	  // if the application is already open, then verify that the user wants to open another instance of the application
