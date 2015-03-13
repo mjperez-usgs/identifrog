@@ -957,6 +957,7 @@ public class AddFrog extends JDialog {
 	public void setButImage(File imageFile) {
 		thumbnailFilename = imageFile.getAbsolutePath();
 		butImage.setIcon(new ImageIcon(thumbnailFilename));
+		//butImage.setM
 	}
 
 	private void openDigSigFrame(int frogdbid) {

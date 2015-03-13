@@ -45,12 +45,31 @@ public class IdentiFrog {
 			ex.printStackTrace();
 		}*/
 		// setup data folders and database xml file
-		//TODO: MOVE THIS INTO A CREATE WORKSPACE
+		
+		
+		StartupFrame startupFrame = new StartupFrame();
+		// center the window
+		/*Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		Dimension frameSize = startupFrame.getSize();
+		if (frameSize.height > screenSize.height) {
+			frameSize.height = screenSize.height;
+		}
+		if (frameSize.width > screenSize.width) {
+			frameSize.width = screenSize.width;
+		}*/
+		startupFrame.setLocationRelativeTo(null);
+		// close Splash Screen
+		splash.dispose();
+		startupFrame.setVisible(true);
+		
+		//TODO: MOVE THIS INTO STARTUP FRAME
+		/*
 		FolderHandler fh = new FolderHandler();
 		XMLHandler file = new XMLHandler(fh.getFileNamePath());
 		if (!fh.FoldersExist()) {
 			fh.CreateFolders();
 			file.CreateXMLFile();
+			
 		}
 		File f = new File(fh.getFileNamePath());
 		if (f.exists() && f.length() == 0) {
@@ -77,7 +96,7 @@ public class IdentiFrog {
 		frame.setLocation(0, 0);
 		// close Splash Screen
 		splash.dispose();
-		frame.setVisible(true);
+		frame.setVisible(true);*/
 	}
 
 	// main method
