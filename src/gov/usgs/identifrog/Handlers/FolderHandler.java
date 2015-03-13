@@ -11,39 +11,40 @@ public class FolderHandler {
 	private static final String filename = "datafile.xml";
 	private static final String[] foldernames = { "Images", "Signatures", "Binary", "Dorsal", "Thumbnail" };
 
+	/**
+	 * Creates a new "Folder Handler", an object that handles folder creation for storing data related to a single site.
+	 * This constructor by default puts the site in the %USERPROFILE%/Identifrog Data folder.
+	 */
 	public FolderHandler() {
 	  base = drive + File.separator + register;
 	}
 
+	/**
+	 * Creates a new "Folder Handler", an object that handles folder creation for storing data related to a single site.
+	 * This constructor uses the base string (site location data) as the data directory. 
+	 */
 	public FolderHandler(String base) {
 	  this.base = base;
 	}
 	
 	public boolean FoldersExist() {
-		if (new File(base).exists()) {
-			return true;
-		} else {
-			return false;
-		}
+		return new File(base).exists();
 	}
 
-	public boolean CreateFolders() {
+	/**
+	 * Creates folders required for a site. Uses the base variable as the place to put the data.
+	 * @return true if successful, false on any error
+	 * @author mjperez
+	 */
+	public boolean createFolders() {
 		boolean exists = false;
-		ArrayList<File> folders = new ArrayList<File>();
-		for (int i = 0; i < foldernames.length; i++) {
-			folders.add(new File(base + File.separator + foldernames[i]));
-		}
-		if (new File(base).mkdir()) {
-			for (int i = 0; i < foldernames.length; i++) {
-				exists = folders.get(i).mkdir();
-				if (!exists) {
-					return false;
-				}
+		for (String folderName : foldernames) {
+			File dataSubfolder = new File(base + File.separator + folderName);
+			exists = dataSubfolder.mkdirs();
+			if (!exists) {
+				return false;
 			}
-		} else {
-			return false;
 		}
-		folders.get(0).delete();
 		return true;
 	}
 

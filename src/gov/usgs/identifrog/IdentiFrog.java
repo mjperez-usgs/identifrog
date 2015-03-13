@@ -27,6 +27,9 @@ public class IdentiFrog {
 	public IdentiFrog() {
 	  // if the application is already open, then verify that the user wants to open another instance of the application
 		boolean alreadyOpen = node.getBoolean("alreadyOpen", false);
+		
+		
+		/*
 		if (alreadyOpen) {
 			if (ChoiceDialog.choiceMessage("Another instance of IdentiFrog may already running.\n" + "Open Anyway?") == 0) {
 				node.putBoolean("alreadyOpen", true);
@@ -35,10 +38,13 @@ public class IdentiFrog {
 			}
 		} else {
 			node.putBoolean("alreadyOpen", true);
-		}
+		}*/
+		
+		
+		//splash screen ==== likely removed
 		// set splash screen
-		SplashScreen splash = new SplashScreen("SplashScreen.png");
-		splash.splash();
+		//SplashScreen splash = new SplashScreen("SplashScreen.png");
+		//splash.splash();
 		/*try {
 			Thread.sleep(1);
 		} catch (InterruptedException ex) {
@@ -59,44 +65,11 @@ public class IdentiFrog {
 		}*/
 		startupFrame.setLocationRelativeTo(null);
 		// close Splash Screen
-		splash.dispose();
+		//splash.dispose();
 		startupFrame.setVisible(true);
 		
 		//TODO: MOVE THIS INTO STARTUP FRAME
-		/*
-		FolderHandler fh = new FolderHandler();
-		XMLHandler file = new XMLHandler(fh.getFileNamePath());
-		if (!fh.FoldersExist()) {
-			fh.CreateFolders();
-			file.CreateXMLFile();
-			
-		}
-		File f = new File(fh.getFileNamePath());
-		if (f.exists() && f.length() == 0) {
-			file.CreateXMLFile();
-		}
-		// create an instance of the MainFrame
-		MainFrame frame = new MainFrame(fh);
-		// validate frames that have preset sizes
-		// pack frames that have useful preferred size info, e.g. from their layout
-		if (packFrame) {
-			frame.pack();
-		} else {
-			frame.validate();
-		}
-		// center the window
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		Dimension frameSize = frame.getSize();
-		if (frameSize.height > screenSize.height) {
-			frameSize.height = screenSize.height;
-		}
-		if (frameSize.width > screenSize.width) {
-			frameSize.width = screenSize.width;
-		}
-		frame.setLocation(0, 0);
-		// close Splash Screen
-		splash.dispose();
-		frame.setVisible(true);*/
+				
 	}
 
 	// main method

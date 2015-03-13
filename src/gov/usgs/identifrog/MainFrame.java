@@ -277,7 +277,7 @@ public class MainFrame extends JFrame {
 					FolderHandler fhLocal = new FolderHandler(sitePath);
 					XMLHandler file = new XMLHandler(fhLocal.getFileNamePath());
 					if (!fhLocal.FoldersExist()) {
-						fhLocal.CreateFolders();
+						fhLocal.createFolders();
 						file.CreateXMLFile();
 						File f = new File(fhLocal.getFileNamePath());
 						if (f.exists() && f.length() == 0) {
