@@ -2,6 +2,7 @@ package gov.usgs.identifrog;
 
 import java.io.File;
 import java.util.ArrayList;
+
 import javax.swing.filechooser.FileFilter;
 
 /**
@@ -9,22 +10,22 @@ import javax.swing.filechooser.FileFilter;
  * Title: ExtensionFileFilter.java
  * <p>
  * Description: this filters the file view based on file extensions
+ * Use when using filechosers.
  * 
  * @author Steven P. Miller <b>IdentiFrog Team</b> <i>2005</i>
  */
 
 public class ExtensionFileFilter extends FileFilter {
 	private String description = "";
-	@SuppressWarnings("unchecked")
-	private ArrayList extensions = new ArrayList();
+	private ArrayList<String> extensions = new ArrayList<String>();
+	private ArrayList<String> exactfiles = new ArrayList<String>();
 
 	/**
-	 * Adds an extension to the list of filters
+	 * Adds an extension to the list of filters. The . is optional, e.g. .xml and xml will both work.
 	 * 
 	 * @param extension
 	 *            String file extension
 	 */
-	@SuppressWarnings("unchecked")
 	public void addExtension(String extension) {
 		if (!extension.startsWith(".")) {
 			extension = "." + extension;
@@ -63,11 +64,20 @@ public class ExtensionFileFilter extends FileFilter {
 			return true;
 		}
 		String name = f.getName().toLowerCase();
-		for (int i = 0; i < extensions.size(); i++) {
-			if (name.endsWith((String) extensions.get(i))) {
+		for (String ext : extensions) {
+			if (name.endsWith(ext)) {
+				return true;
+			}
+		}
+		for (String fname : exactfiles) {
+			if (name.toLowerCase().equals(fname.toLowerCase())) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	public void addExactFile(String filename) {
+		exactfiles.add(filename);
 	}
 }

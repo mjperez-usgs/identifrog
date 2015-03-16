@@ -1,5 +1,15 @@
 package gov.usgs.identifrog.Operations;
 
+import gov.usgs.identifrog.ChoiceDialog;
+import gov.usgs.identifrog.IdentiFrog;
+import gov.usgs.identifrog.ImageManipFrame;
+import gov.usgs.identifrog.MainFrame;
+import gov.usgs.identifrog.DataObjects.Frog;
+import gov.usgs.identifrog.DataObjects.Location;
+import gov.usgs.identifrog.DataObjects.Personel;
+import gov.usgs.identifrog.Handlers.DataHandler;
+import gov.usgs.identifrog.Handlers.FolderHandler;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -14,6 +24,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Random;
 import java.util.prefs.Preferences;
 
 import javax.swing.BorderFactory;
@@ -28,16 +39,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-
-import gov.usgs.identifrog.ChoiceDialog;
-import gov.usgs.identifrog.IdentiFrog;
-import gov.usgs.identifrog.ImageManipFrame;
-import gov.usgs.identifrog.MainFrame;
-import gov.usgs.identifrog.DataObjects.Frog;
-import gov.usgs.identifrog.DataObjects.Location;
-import gov.usgs.identifrog.DataObjects.Personel;
-import gov.usgs.identifrog.Handlers.DataHandler;
-import gov.usgs.identifrog.Handlers.FolderHandler;
 
 /**
  * <p>
@@ -150,10 +151,10 @@ public class AddFrog extends JDialog {
 	String[] day = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31" };
 	String[] month = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 	String[] year = { "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015" }; //TODO: Should be dynamic or this will break in the future.
-	JComboBox dayComboBox = new JComboBox(day);
-	JComboBox monthComboBox = new JComboBox(month);
-	JComboBox yearComboBox = new JComboBox(year);
-	JComboBox sexComboBox = new JComboBox(sexStrings);
+	JComboBox<?> dayComboBox = new JComboBox<Object>(day);
+	JComboBox<?> monthComboBox = new JComboBox<Object>(month);
+	JComboBox<?> yearComboBox = new JComboBox<Object>(year);
+	JComboBox<?> sexComboBox = new JComboBox<Object>(sexStrings);
 	JRadioButton additDiscrNo = new JRadioButton("No", false);
 	JRadioButton additDiscrYes = new JRadioButton("Yes", false);
 	JLabel additDiscr = new JLabel("Add. Discriminator");
@@ -203,11 +204,11 @@ public class AddFrog extends JDialog {
 	ArrayList<String> obsFirstNameCorrespondToList = new ArrayList<String>();
 	ArrayList<String> entryFirstNameCorrespondToList = new ArrayList<String>();
 	ArrayList<LocInfo> locList = new ArrayList<LocInfo>();
-	JComboBox comboEntryLastName = new JComboBox(EntryLastNameList);
-	JComboBox comboEntryFirstName = new JComboBox(EntryFirstNameList);
-	JComboBox comboObserverLastName = new JComboBox(ObsLastNameList);
-	JComboBox comboObserverFirstName = new JComboBox(ObsFirstNameList);
-	JComboBox comboLocationName = new JComboBox(LocNameList);
+	JComboBox<String> comboEntryLastName = new JComboBox<String>(EntryLastNameList);
+	JComboBox<String> comboEntryFirstName = new JComboBox<String>(EntryFirstNameList);
+	JComboBox<String> comboObserverLastName = new JComboBox<String>(ObsLastNameList);
+	JComboBox<String> comboObserverFirstName = new JComboBox<String>(ObsFirstNameList);
+	JComboBox<?> comboLocationName = new JComboBox<Object>(LocNameList);
 	DataHandler frogData = new DataHandler();
 	private Frog lastFrog;
 
@@ -293,7 +294,7 @@ public class AddFrog extends JDialog {
 		butDebugPopulate.setIcon(new ImageIcon(MainFrame.class.getResource("IconDebug32.png")));
 		butDebugPopulate.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				//butFillPreviousFrogInfo_actionPerformed(e);
+				butDebugAutopopulate_actionPerformed(e);
 			}
 		});
 		if (IdentiFrog.DEBUGGING_BUILD) {
@@ -529,7 +530,7 @@ public class AddFrog extends JDialog {
 		textZone.setBounds(new Rectangle(223, 152, 200, 25));
 		textZone.setColumns(200);
 		butNewEntry.setIcon(new ImageIcon(MainFrame.class.getResource("IconSave32.png")));
-		butNewEntry.setText("New Entry");
+		butNewEntry.setText("Save Entry");
 		butNewEntry.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				butNewEntry_actionPerformed(e);
@@ -978,7 +979,7 @@ public class AddFrog extends JDialog {
 	}
 
 	void butClearAll_actionPerformed(ActionEvent e) {
-		if (ChoiceDialog.choiceMessage("This will clear all informaiton on the screen.\n" + "Do you want to continue?") == 0) {
+		if (ChoiceDialog.choiceMessage("This will clear all entered information on this screen.\n" + "Do you want to continue?") == 0) {
 			comboEntryLastName.setSelectedIndex(0);
 			comboEntryFirstName.setSelectedIndex(0);
 			comboObserverLastName.setSelectedIndex(0);
@@ -1003,6 +1004,56 @@ public class AddFrog extends JDialog {
 			textDatum.setText("");
 			textZone.setText("");
 		}
+	}
+	
+	private void butDebugAutopopulate_actionPerformed(ActionEvent e) {
+		String[] firstnames = {
+				"Haley",
+				"Jim",
+				"Deonna", 
+				"Sam",
+				"Elaine",
+				"Aiko",
+				"Ashlee",
+				"Chiquita",
+				"Chrystal",
+				"Tinisha",
+				"Mabel",
+				"Ronni",
+				"Clinton",
+				"Monica",
+				"Earleen",
+				"Margret",
+				"Jackson",
+				"Pamella",  
+				"Clifton",  
+				"Kory"  
+		};
+		comboEntryLastName.addItem("Lastname");
+		comboEntryLastName.getEditor().setItem("Lastname");
+		Random rand = new Random();
+	    int randomNum = rand.nextInt(firstnames.length);
+		comboEntryFirstName.getEditor().setItem(firstnames[randomNum]);
+		comboObserverLastName.getEditor().setItem("Perez");
+		comboObserverFirstName.getEditor().setItem("Mike");
+		textFrog_ID.setText("");
+		textSpecies.setText("Jumpy");
+		sexComboBox.setSelectedItem("M");
+		dayComboBox.setSelectedItem("16");
+		monthComboBox.setSelectedItem("Mar");
+		yearComboBox.setSelectedItem("2015");
+		textMass.setText("28");
+		textLength.setText("64");
+		textFrogComments.setText("Really hoppy this one was");
+		textSurveyID.setText("");
+		comboLocationName.getEditor().setItem("Area 51");
+		textLocDesc.setText("Hoppy Pond");
+		textX.setText("115.8111");
+		textY.setText("37.2350");
+		Butgroup.setSelected(LatLongButton.getModel(), true); // set radio LatLongButton, UTMButton to false
+		ButAdditDiscrGroup.clearSelection();
+		textDatum.setText("");
+		textZone.setText("");
 	}
 
 	// end of search for previous entries

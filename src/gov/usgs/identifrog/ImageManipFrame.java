@@ -241,7 +241,7 @@ public class ImageManipFrame extends JFrame {
 		TextAreaTools.setLineWrap(true);
 		TextAreaTools.setLocation(1, 1);
 		butStartOver.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconRestart32.png")));
-		butStartOver.setText("Re-Start");
+		butStartOver.setText("Restart");
 		butStartOver.addActionListener(new ImageManipFrame_butStartOver_actionAdapter(this));
 		butQuit.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconCancel32.png")));
 		butQuit.setText("Quit");

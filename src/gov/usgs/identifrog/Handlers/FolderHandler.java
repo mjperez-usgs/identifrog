@@ -1,14 +1,15 @@
 package gov.usgs.identifrog.Handlers;
 
+import gov.usgs.identifrog.IdentiFrog;
+
 import java.io.File;
-import java.util.ArrayList;
 
 public class FolderHandler {
   private String base;
   private String siteName;
 	private static final String drive = System.getProperty("user.home");
 	private static final String register = "IdentiFrog Data";
-	private static final String filename = "datafile.xml";
+	//private static final String filename = "datafile.xml";
 	private static final String[] foldernames = { "Images", "Signatures", "Binary", "Dorsal", "Thumbnail" };
 
 	/**
@@ -49,11 +50,11 @@ public class FolderHandler {
 	}
 
 	public String getFileName() {
-		return filename;
+		return IdentiFrog.DB_FILENAME;
 	}
 
 	public String getFileNamePath() {
-		return base + File.separator + filename + File.separator;
+		return base + File.separator + IdentiFrog.DB_FILENAME;
 	}
 
 	// { "Images", "Signatures", "Binary", "Dorsal", "Thumbnail" };

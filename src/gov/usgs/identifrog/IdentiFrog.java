@@ -4,7 +4,9 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.io.File;
 import java.util.prefs.Preferences;
+
 import javax.swing.UIManager;
+
 import gov.usgs.identifrog.Handlers.FolderHandler;
 import gov.usgs.identifrog.Handlers.XMLHandler;
 
@@ -23,6 +25,7 @@ public class IdentiFrog {
 	private Preferences root = Preferences.userRoot();
 	private final Preferences node = root.node("edu/isu/aadis/defaults");
 	public final static boolean DEBUGGING_BUILD = true; //when building the app, change this to false and debugging items will be hidden
+	public static final String DB_FILENAME = "datafile.xml"; //filename for the DB, can possibly change.
 	// construct the application
 	public IdentiFrog() {
 	  // if the application is already open, then verify that the user wants to open another instance of the application
