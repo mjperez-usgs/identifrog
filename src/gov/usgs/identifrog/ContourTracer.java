@@ -87,7 +87,7 @@ public class ContourTracer {
 				int pix = ip.getRGB(u, v);
 				int red = (pix & 0xff0000) >> 16;
 				if (red > 191) {
-					// System.out.println(red);
+					// IdentiFrog.LOGGER.writeMessage(red);
 					pixelArray[v + 1][u + 1] = FOREGROUND;
 				}
 			}
@@ -205,7 +205,7 @@ public class ContourTracer {
 	// and computes the statistics for each region
 	void collectRegions() {
 		if (beVerbose) {
-			System.out.println("makeRegions()");
+			IdentiFrog.LOGGER.writeMessage("makeRegions()");
 		}
 		int maxLabel = regionId;
 		int startLabel = 1;

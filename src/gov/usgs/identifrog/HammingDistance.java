@@ -40,13 +40,13 @@ public class HammingDistance {
 		try {
 			binary_image1 = ImageIO.read(new File(filename1));
 		} catch (Exception e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 		}
 
 		try {
 			binary_image2 = ImageIO.read(new File(filename2));
 		} catch (Exception e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 		}
 
 		int img_width = binary_image1.getWidth();
@@ -104,12 +104,12 @@ public class HammingDistance {
 		int[] dbSW = db.getSamples(0, 1, img_width - 1, img_height - 1, 1, (int[]) null);
 		hamdistances[8] = computeHamDist(querySW, dbSW);
 
-		// System.out.println("0=" + hamdistances[0] + " 1=" + hamdistances[1] + " 2=" +
+		// IdentiFrog.LOGGER.writeMessage("0=" + hamdistances[0] + " 1=" + hamdistances[1] + " 2=" +
 		// hamdistances[2] + " 3=" + hamdistances[3] + " 4=" + hamdistances[4] + " 5=" +
 		// hamdistances[5] + " 6=" + hamdistances[6] + " 7=" + hamdistances[7] + " 8=" +
 		// hamdistances[8]);
 		Arrays.sort(hamdistances);
-		// System.out.println("0=" + hamdistances[0] + " 1=" + hamdistances[1] + " 2=" +
+		// IdentiFrog.LOGGER.writeMessage("0=" + hamdistances[0] + " 1=" + hamdistances[1] + " 2=" +
 		// hamdistances[2] + " 3=" + hamdistances[3] + " 4=" + hamdistances[4] + " 5=" +
 		// hamdistances[5] + " 6=" + hamdistances[6] + " 7=" + hamdistances[7] + " 8=" +
 		// hamdistances[8]);
@@ -119,7 +119,7 @@ public class HammingDistance {
 	private double computeHamDist(int[] qpix, int[] dbpix) {
 		double hamdist = 0;
 
-		// System.out.println("dbpix.length = " + dbpix.length + " qpix.length = " + qpix.length);
+		// IdentiFrog.LOGGER.writeMessage("dbpix.length = " + dbpix.length + " qpix.length = " + qpix.length);
 		for (int i = 0; i < qpix.length; ++i) {
 			int Qpix = qpix[i];
 			int Dpix = dbpix[i];

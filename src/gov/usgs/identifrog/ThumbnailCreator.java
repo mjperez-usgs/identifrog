@@ -76,8 +76,8 @@ public class ThumbnailCreator {
 			importFile(imageFile);
 			return createThumbnail(image, thumbMaxWidth, thumbMaxHeight, outputFile, forceOverwrite);
 		} catch (IOException e) {
-			System.out.println("ThumbnailCreator.createThumbnail() IOException");
-			System.out.println(e.getStackTrace());
+			IdentiFrog.LOGGER.writeMessage("ThumbnailCreator.createThumbnail() IOException");
+			IdentiFrog.LOGGER.writeException(e);
 			return null;
 		}
 	}
@@ -154,11 +154,11 @@ public class ThumbnailCreator {
 			try {
 				ImageIO.write(smallImg, "jpg", outFile);
 			} catch (IOException e) {
-				e.printStackTrace();
+				IdentiFrog.LOGGER.writeException(e);
 				return null;
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 			return null;
 		}
 		// garbage collector

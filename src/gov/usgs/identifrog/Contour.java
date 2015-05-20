@@ -112,7 +112,7 @@ public class Contour {
 
 	void printPoints() {
 		for (Point pt : points) {
-			System.out.println(" " + pt);
+			IdentiFrog.LOGGER.writeMessage(" " + pt);
 		}
 	}
 

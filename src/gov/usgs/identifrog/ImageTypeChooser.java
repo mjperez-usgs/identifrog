@@ -33,7 +33,7 @@ public class ImageTypeChooser extends JComponent {
 		try {
 			jbInit();
 		} catch (Exception e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 		}
 	}
 

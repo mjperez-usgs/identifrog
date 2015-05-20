@@ -116,7 +116,7 @@ public class Frog {
 		discriminator = frog.getDiscriminator();
 		comments = frog.getComments();
 		location = frog.getLocation();
-		pathImage = frog.getPathImage();
+		pathImage = frog.getGenericImageName();
 	}
 
 	public Frog(Frog frog, Document document) {
@@ -134,7 +134,7 @@ public class Frog {
 		discriminator = frog.getDiscriminator();
 		comments = frog.getComments();
 		location = frog.getLocation();
-		pathImage = frog.getPathImage();
+		pathImage = frog.getGenericImageName();
 		this.document = document;
 	}
 
@@ -193,7 +193,7 @@ public class Frog {
 		Location elementLocation = new Location(getLocation(), document);
 		element.appendChild(elementLocation.getElement());
 		//
-		element.appendChild(setupImage(document, "image", getPathImage()));
+		element.appendChild(setupImage(document, "image", getGenericImageName()));
 	}
 
 	private Element setupImage(Document doc, String type, String path) {
@@ -205,7 +205,7 @@ public class Frog {
 		return image;
 	}
 
-	public String printBuffer() {
+	public String toString() {
 		String buffer = null;
 		buffer = "Frog ID: " + ID + "\n";
 		buffer = buffer + "Former ID: " + formerID + "\n";
@@ -299,7 +299,7 @@ public class Frog {
 		return location;
 	}
 
-	public String getPathImage() {
+	public String getGenericImageName() {
 		return pathImage;
 	}
 

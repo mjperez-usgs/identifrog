@@ -70,7 +70,7 @@ public class DigSignature {
 			double mynormarea = trunc(mynormA, 2);
 
 			if (mynormarea >= areathresh) {
-				System.out.println("REL " + regions.get(r).label);
+				IdentiFrog.LOGGER.writeMessage("REL " + regions.get(r).label);
 				relevantSpots.add(regions.get(r));
 			}
 		}
@@ -124,7 +124,7 @@ public class DigSignature {
 				AdjacencyMatrix[node1][node2] = 1;
 				AdjacencyMatrix[node2][node1] = 1;
 				selectedSpotDistances.add(SpotDistances.get(l));
-				// System.out.println("A " + " node1= " + node1 + " node2= " + node2 + " "
+				// IdentiFrog.LOGGER.writeMessage("A " + " node1= " + node1 + " node2= " + node2 + " "
 				// +AdjacencyMatrix[node1][node2]);
 			}
 
@@ -223,7 +223,7 @@ public class DigSignature {
 			}
 			bufferedWriter.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 		}
 	}
 

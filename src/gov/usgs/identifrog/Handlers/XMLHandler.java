@@ -1,5 +1,6 @@
 package gov.usgs.identifrog.Handlers;
 
+import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
 import gov.usgs.identifrog.DataObjects.Personel;
@@ -55,7 +56,7 @@ public class XMLHandler {
 		try {
 			docBuilder = docFactory.newDocumentBuilder();
 		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 			return false;
 		}
 		// CREATE ROOT ELEMENT
@@ -71,7 +72,7 @@ public class XMLHandler {
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 		    transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "1");
 		} catch (TransformerConfigurationException e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 			return false;
 		}
 		DOMSource source = new DOMSource(doc);
@@ -79,7 +80,7 @@ public class XMLHandler {
 		try {
 			transformer.transform(source, result);
 		} catch (TransformerException e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 			return false;
 		}
 		return true;
@@ -91,7 +92,7 @@ public class XMLHandler {
 		try {
 			docBuilder = docFactory.newDocumentBuilder();
 		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 			return false;
 		}
 		// CREATE ROOT ELEMENT
@@ -108,7 +109,7 @@ public class XMLHandler {
 		try {
 			transformer = transformerFactory.newTransformer();
 		} catch (TransformerConfigurationException e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 			return false;
 		}
 		DOMSource source = new DOMSource(doc);
@@ -116,7 +117,7 @@ public class XMLHandler {
 		try {
 			transformer.transform(source, result);
 		} catch (TransformerException e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 			return false;
 		}
 		return true;
@@ -129,14 +130,14 @@ public class XMLHandler {
 		try {
 			docBuilder = dbFactory.newDocumentBuilder();
 		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 		}
 		try {
 			doc = docBuilder.parse(file);
 		} catch (SAXException e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 		}
 		doc.getDocumentElement().normalize();
 		Frog frog = null;

@@ -47,12 +47,13 @@ public class ImageViewer extends JDialog {
 
 	private MainFrame parentFrame;
 	private MatchingDialog matchingDialog;
-
+	
 	private boolean view = true;
 	private boolean searched = false;
 	private boolean displayAllImages = false;
 	
 	private FolderHandler fh;
+	private boolean shouldShow;
 
 	// //////// CONSTRUCTORS //////////
 	/**
@@ -68,7 +69,7 @@ public class ImageViewer extends JDialog {
 	 */
 	public ImageViewer(FolderHandler fh, String frogID, MainFrame frame, String title, boolean modal, File imageFile, boolean view, boolean displayAllImages) {
 		super(frame, title, modal);
-
+		this.shouldShow = true;
 		this.frogID = frogID;
 		parentFrame = frame;
 		this.view = view;
@@ -80,8 +81,8 @@ public class ImageViewer extends JDialog {
 			init();
 			pack();
 		} catch (Exception e) {
-			System.out.println("ImageViewer.ImageViewer(String,MainFrame,String,boolean,File,boolean,boolean) Exception");
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeMessage("ImageViewer.ImageViewer(String,MainFrame,String,boolean,File,boolean,boolean) Exception");
+			IdentiFrog.LOGGER.writeException(e);
 		}
 	}
 
@@ -108,8 +109,8 @@ public class ImageViewer extends JDialog {
 			init();
 			pack();
 		} catch (Exception e) {
-			System.out.println("ImageViewer.ImageViewer(MatchingDialog,MainFrame,String,boolean,File,boolean) Exception");
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeMessage("ImageViewer.ImageViewer(MatchingDialog,MainFrame,String,boolean,File,boolean) Exception");
+			IdentiFrog.LOGGER.writeException(e);
 		}
 	}
 
@@ -189,7 +190,7 @@ public class ImageViewer extends JDialog {
 		for (int i = 0; i < localFrogs.size(); i++) {
 			frog = localFrogs.get(i);
 			if (frog.getID().equals(searchFrogID) && !frog.getFormerID().equals(searchFrogFormerID)) {
-				parentFrame.OpenImageViewer(frog.getID(), "Frog ID: " + frog.getID() + " (" + frog.getPathImage() + ")", new File(fh.getDorsalFolder() + frog.getPathImage()), false);
+				parentFrame.OpenImageViewer(frog.getID(), "Frog ID: " + frog.getID() + " (" + frog.getGenericImageName() + ")", new File(fh.getDorsalFolder() + frog.getGenericImageName()), false);
 				additImg = true;
 			}
 		}
@@ -213,8 +214,8 @@ public class ImageViewer extends JDialog {
 		int frogIDList = new Integer(joinFrogId);
 		int frogIDImage = new Integer(parentFrame.getMatchForg().getFormerID());
 		
-		System.out.println("DEBUG: Frog ID in the List " + frogIDList);
-    System.out.println("DEBUG: Frog ID in the Image " + frogIDImage);
+		IdentiFrog.LOGGER.writeMessage("DEBUG: Frog ID in the List " + frogIDList);
+		IdentiFrog.LOGGER.writeMessage("DEBUG: Frog ID in the Image " + frogIDImage);
 		
 		// parentFrame.getFrogData().searchFrog(parentFrame.getMatchForg().getFormerID()).setID(new Integer(frogIDTemp).toString());
 		
@@ -245,6 +246,15 @@ public class ImageViewer extends JDialog {
 	// //////// SETTERS //////////
 	public void setFrogID(String frogID) {
 		this.frogID = frogID;
+	}
+
+	/**
+	 * Indicates if this image viewer should show itself. If not, this object will be discarded. 
+	 * This method exists because the image viewer is coupled with the match finder and will eventually be separated.
+	 * @return if this image viewer should show
+	 */
+	public boolean shouldShow() {
+		return true;
 	}
 }
 

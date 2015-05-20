@@ -36,8 +36,8 @@ public class MatchingDialog {
 		try {
 			init();
 		} catch (Exception e) {
-			System.out.println("MatchingDialog.MatchingDialog() Exception");
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeMessage("MatchingDialog.MatchingDialog() Exception");
+			IdentiFrog.LOGGER.writeException(e);
 		}
 	}
 
@@ -54,7 +54,9 @@ public class MatchingDialog {
 		if (imageFile.exists()) {
 			imageViewer = new ImageViewer(fh,MatchingDialog.this, parentFrame, title, false, imageFile, false);
 			open = true;
-			imageViewer.setVisible(true);
+			if (imageViewer.shouldShow()) {
+				imageViewer.setVisible(true);
+			}
 		} else {
 			if (ChoiceDialog.choiceMessage("Cannot find Digital Image File for " + title + "\nWould you like to create one now?") == 0) {
 				// parentFrame.digSigAction();

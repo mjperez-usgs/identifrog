@@ -9,6 +9,11 @@ import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
 import gov.usgs.identifrog.DataObjects.Personel;
 
+/**
+ * Used to store the backing data for the jtable displayed on the screen. Essentially holds the database in memory and can perform queries and operations on it in memory.
+ * @author (not) mjperez
+ *
+ */
 public class DataHandler {
   private ArrayList<Frog> frogs;
 
@@ -19,8 +24,17 @@ public class DataHandler {
     this.frogs = frogs;
   }
 
-  public Integer getNextAvailableID() {
-    ArrayList<Integer> arrayID = new ArrayList<Integer>();
+  public int getNextAvailableID() {
+    int nextAvailable = 1;
+    for (Frog frog : frogs) {
+    	Integer formerID = new Integer(frog.getFormerID());
+    	if (formerID > nextAvailable) {
+    		nextAvailable = formerID;
+    	}
+    }
+    return nextAvailable+1;
+	  
+	/*ArrayList<Integer> arrayID = new ArrayList<Integer>();
     if (frogs.size() == 0) {
       return 1;
     } else {
@@ -29,7 +43,7 @@ public class DataHandler {
       }
       Collections.sort(arrayID);
       return arrayID.get(arrayID.size() - 1) + 1;
-    }
+    }*/
   }
 
   private int searchFrogByID(String ID) {
@@ -52,6 +66,11 @@ public class DataHandler {
     return index;
   }
 
+  /**
+   * Finds a frog by it's ID.
+   * @param ID ID of the frog in the DB.
+   * @return Frog object containing info about frog with the ID.
+   */
   public Frog searchFrog(String ID) {
     int index = searchFrogByID(ID);
     if (index == -1) {

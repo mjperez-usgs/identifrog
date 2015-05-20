@@ -1,14 +1,14 @@
 package gov.usgs.identifrog;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.io.File;
+import gov.usgs.identifrog.Frames.ProjectManagerFrame;
+import gov.usgs.identifrog.logger.GSLogger;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.prefs.Preferences;
 
 import javax.swing.UIManager;
-
-import gov.usgs.identifrog.Handlers.FolderHandler;
-import gov.usgs.identifrog.Handlers.XMLHandler;
 
 /**
  * <p>
@@ -26,8 +26,13 @@ public class IdentiFrog {
 	private final Preferences node = root.node("edu/isu/aadis/defaults");
 	public final static boolean DEBUGGING_BUILD = true; //when building the app, change this to false and debugging items will be hidden
 	public static final String DB_FILENAME = "datafile.xml"; //filename for the DB, can possibly change.
+	public static final String HR_VERSION = "1.0 Alpha";
+	protected static final String THUMBNAIL_DIR = "Thumbnail";
+	public static boolean LOGGING = true;
+	public static GSLogger LOGGER;
 	// construct the application
-	public IdentiFrog() {
+	public IdentiFrog() throws FileNotFoundException, ParseException, IOException {
+		LOGGER = new GSLogger();
 	  // if the application is already open, then verify that the user wants to open another instance of the application
 		boolean alreadyOpen = node.getBoolean("alreadyOpen", false);
 		
@@ -56,7 +61,7 @@ public class IdentiFrog {
 		// setup data folders and database xml file
 		
 		
-		StartupFrame startupFrame = new StartupFrame();
+		ProjectManagerFrame startupFrame = new ProjectManagerFrame();
 		// center the window
 		/*Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		Dimension frameSize = startupFrame.getSize();
@@ -76,11 +81,11 @@ public class IdentiFrog {
 	}
 
 	// main method
-	public static void main(String[] args) {
+	public static void main(String[] args) throws FileNotFoundException, ParseException, IOException {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
-			System.out.println(e.getLocalizedMessage());
+			IdentiFrog.LOGGER.writeMessage(e.getLocalizedMessage());
 		}
 		new IdentiFrog();
 	}

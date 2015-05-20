@@ -60,7 +60,7 @@ public class BinMorpher {
 		if (disksize == 0.0) {
 			return null;
 		}
-		// System.out.println("ground " + ground);
+		// IdentiFrog.LOGGER.writeMessage("ground " + ground);
 		// convert H to 1D array
 		if (!ground) { // dilation applied to foreground
 			float[] filter = new float[se.length * se[0].length];

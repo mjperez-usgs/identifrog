@@ -56,7 +56,7 @@ public class SpotDifferencePass {
 			}
 			f1.close();
 		} catch (IOException iox) {
-			System.out.println("Problem reading filename1 " + filename1);
+			IdentiFrog.LOGGER.writeMessage("Problem reading filename1 " + filename1);
 		}
 		try {
 			FileReader f2 = new FileReader(filename2);
@@ -76,7 +76,7 @@ public class SpotDifferencePass {
 			}
 			f2.close();
 		} catch (IOException iox) {
-			System.out.println("Problem reading filename2 " + filename2);
+			IdentiFrog.LOGGER.writeMessage("Problem reading filename2 " + filename2);
 		}
 		Double[] array_sig1 = sig1.toArray(new Double[sig1.size()]);
 		Double[] array_sig2 = sig2.toArray(new Double[sig2.size()]);

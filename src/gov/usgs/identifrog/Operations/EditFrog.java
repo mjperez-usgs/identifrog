@@ -1,12 +1,15 @@
 package gov.usgs.identifrog.Operations;
 
 import java.awt.event.ActionEvent;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+
+import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.MainFrame;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.Frames.ErrorDialog;
@@ -57,8 +60,8 @@ public class EditFrog extends JDialog {
 		try {
 			init();
 		} catch (Exception e) {
-			System.out.println("DBEditFrog.DBEditFrog()");
-			System.out.println(e.getMessage());
+			IdentiFrog.LOGGER.writeMessage("DBEditFrog.DBEditFrog()");
+			IdentiFrog.LOGGER.writeMessage(e.getMessage());
 		}
 	}
 

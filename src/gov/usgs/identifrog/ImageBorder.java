@@ -32,13 +32,13 @@ public class ImageBorder {
 			for (int row = 0; row < rect_height + wsize - 1; ++row) {
 
 				if (row >= offset && row < rect_height + offset && col >= offset && col < rect_width + offset) {
-					// System.out.println(row + " col " + col);
+					// IdentiFrog.LOGGER.writeMessage(row + " col " + col);
 					int pix = img.getRGB(col - offset, row - offset);
 					expanded_img.setRGB(col, row, pix);
 				}
 				// pad four corner areas with 0s
 				if ((row < offset || row >= rect_height + offset) && (col < offset || col >= rect_width + offset)) {
-					// System.out.println(row + " col " + col);
+					// IdentiFrog.LOGGER.writeMessage(row + " col " + col);
 					expanded_img.setRGB(col, row, zero);
 				}
 			}

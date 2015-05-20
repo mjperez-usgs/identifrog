@@ -1,29 +1,38 @@
 package gov.usgs.identifrog;
 
+import gov.usgs.identifrog.DataObjects.Frog;
+import gov.usgs.identifrog.Frames.ErrorDialog;
+import gov.usgs.identifrog.Handlers.DataHandler;
+import gov.usgs.identifrog.Handlers.FolderHandler;
+import gov.usgs.identifrog.Operations.AddFrog;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
-import gov.usgs.identifrog.DataObjects.Frog;
-import gov.usgs.identifrog.Frames.ErrorDialog;
-import gov.usgs.identifrog.Handlers.DataHandler;
-import gov.usgs.identifrog.Handlers.FolderHandler;
 
 /**
  * <p>
@@ -75,7 +84,8 @@ public class WorkingAreaPanel extends JPanel {
 	public boolean discriminatorSex = false;
 	public boolean additDiscriminator = false;
 	public boolean includeQueryImg = false;
-	private Object[][] emptyFrogCells = { { "-", new ImageIcon("IconFrog.png"), "-", "-", "-", "-", "-", new Integer(0), new Double(0), new Double(0), "-", "-", "-", "-", "-" } };
+	private static String BLANK_FROG_ID = "-"; //this is what shows up for frog id in the list if no rows exist
+	private Object[][] emptyFrogCells = { { BLANK_FROG_ID, new ImageIcon("IconFrog.png"), "-", "-", "-", "-", "-", new Integer(0), new Double(0), new Double(0), "-", "-", "-", "-", "-" } };
 	private Object[][] emptyEntryPersonCells = { { "-", "-", "-" } };
 	private Object[][] emptyObserverCells = { { "-", "-", "-" } };
 	private Object[][] emptyLocationCells = { { "-", "-", "-", new Double(0), new Double(0), "-", "-", "-" } };
@@ -90,6 +100,11 @@ public class WorkingAreaPanel extends JPanel {
 	private double Threshold;
 	private DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
 
+	//
+	// Task: IconEdit32_disabled and enabled via working area selection listeners, passing to parentFrame.
+	//
+	
+	
 	private JButton btnPrevious = new JButton("Previous Page", new ImageIcon(WorkingAreaPanel.class.getResource("IconButtonPrevious32.png")));
 	private JButton btnNext = new JButton("Next Page", new ImageIcon(WorkingAreaPanel.class.getResource("IconButtonNext32.png")));
 	private JCheckBox chkAllImages = new JCheckBox("All Images", true);
@@ -102,7 +117,7 @@ public class WorkingAreaPanel extends JPanel {
 		try {
 			init();
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			IdentiFrog.LOGGER.writeException(e);
 		}
 	}
 
@@ -141,8 +156,68 @@ public class WorkingAreaPanel extends JPanel {
 		renderer.setHorizontalAlignment(JLabel.CENTER);
 		dbTable.addMouseListener(new java.awt.event.MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
-				tableMouseClicked(e);
-			}
+				if (SwingUtilities.isRightMouseButton(e)) {
+			           //-- select a row
+			           int idx = dbTable.rowAtPoint(e.getPoint());
+			           dbTable.getSelectionModel().setSelectionInterval(idx, idx);
+			           //---
+			           //Get currently selected frog ID.
+			           String localID = getSelectedFrog_Id();
+				   		if (localID == null) {
+				   			IdentiFrog.LOGGER.writeError("Locally selected ID is null when right click, but one should be selected already!");
+				   			return;
+				   		}
+				   		Frog localFrog = parentFrame.getFrogData().searchFrog(localID);
+			           
+			           
+			           //codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
+			            JPopupMenu popup = new JPopupMenu();
+						JMenuItem popupAddImage, popupEditInfo, popupDeleteFrog, popupSearch;
+						popupAddImage = new JMenuItem("Add image to this frog");
+						popupAddImage.addActionListener(new ActionListener() {
+							
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								// TODO Auto-generated method stub
+								IdentiFrog.LOGGER.writeMessage("MainFrame: Right click > Add image to this frog on ID: "+idx);
+							}
+						});
+						popupEditInfo = new JMenuItem("Edit frog information");
+						popupEditInfo.addActionListener(new ActionListener() {
+							
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								IdentiFrog.LOGGER.writeMessage("Opening Frog Editor via Right Click Menu: "+localFrog.toString());
+								AddFrog editFrogWindow = new AddFrog(WorkingAreaPanel.this.parentFrame, fh, "Edit Frog", localFrog);
+								editFrogWindow.setButImage(new File(fh.getMainFolder()+IdentiFrog.THUMBNAIL_DIR+File.separator+localFrog.getGenericImageName()));
+								editFrogWindow.pack();
+								editFrogWindow.setVisible(true);
+							}
+						});
+						popupDeleteFrog = new JMenuItem("Search for matching frog");
+						popupSearch = new JMenuItem("Delete this frog");
+						popup.add(popupAddImage);
+						popup.add(popupEditInfo);
+						popup.add(popupDeleteFrog);
+						popup.add(popupSearch);
+			            popup.show(e.getComponent(), e.getX(), e.getY());
+			       } else{
+						tableMouseClicked(e);
+			       }
+			    }
+		});
+		//this listens for changes to the selection, so when a row is clicked/selected
+		dbTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+		    @Override
+		    public void valueChanged(ListSelectionEvent event) {
+		        if (dbTable.getSelectedRow() > -1) {
+		            //enable buttons
+		        	WorkingAreaPanel.this.parentFrame.setButtonState(true);
+		        } else {
+		        	//disable buttons
+		        	WorkingAreaPanel.this.parentFrame.setButtonState(false);
+		        }
+		    }
 		});
 		// //These Items Don't Work
 		labSort.setEnabled(false);
@@ -158,20 +233,23 @@ public class WorkingAreaPanel extends JPanel {
 		textRange.setColumns(25);
 	}
 
-	protected void updateCells() {
-		updateCells(currentMatrixType);
+	/**
+	 * Updates cell data in the table. If this method returns false, the table view should not be updated.
+	 * @return boolean indicating if the table should be updated or not.
+	 */
+	protected boolean updateCells() {
+		return updateCells(currentMatrixType);
 	}
 
-	protected void updateCells(int matrixType) {
-		updateCells(matrixType, lastType, wasAscending, wasAllImagesDisplay);
+	protected boolean updateCells(int matrixType) {
+		return updateCells(matrixType, lastType, wasAscending, wasAllImagesDisplay);
 	}
 
-	protected void updateCells(int sortType, boolean ascending, boolean allImages) {
-		updateCells(currentMatrixType, sortType, ascending, allImages);
+	protected boolean updateCells(int sortType, boolean ascending, boolean allImages) {
+		return updateCells(currentMatrixType, sortType, ascending, allImages);
 	}
 
-	@SuppressWarnings("unused")
-	protected void updateCells(int matrixType, int sortType, boolean ascending, boolean allImagesDisp) {
+	protected boolean updateCells(int matrixType, int sortType, boolean ascending, boolean allImagesDisp) {
 		System.gc();
 		Object[][] badCells = emptyFrogCells;
 		try {
@@ -208,7 +286,11 @@ public class WorkingAreaPanel extends JPanel {
 				String myID = this.getSelectedFrog_Id();
 				Frog myFrog = frogsData.searchFrog(myID);
 				// if (allImagesDisp) {
-				  cells = topTenMatches.getMatches(frogsData, myFrog, sortType, ascending, includeQueryImg, discriminatorSex, additDiscriminator);
+				cells = topTenMatches.getMatches(frogsData, myFrog, sortType, ascending, includeQueryImg, discriminatorSex, additDiscriminator);
+				if (cells == null) {
+					//no matches
+					return false;
+				}
 				// } else {
 				//   cells = topTenMatches.getMatches(frogsData.getUniqueFrogs(), myFrog, sortType, ascending, includeQueryImg, discriminatorSex, additDiscriminator);
 				// }
@@ -250,8 +332,10 @@ public class WorkingAreaPanel extends JPanel {
 			} catch (Exception exc) {
 				exc.printStackTrace();
 				new ErrorDialog("ERROR: Table Error 002");
+				return false;
 			}
 		}
+		return true;
 	}
 
 	private Object[][] getEmptyCells() {
@@ -320,6 +404,9 @@ public class WorkingAreaPanel extends JPanel {
 			Frogcolumn.setPreferredWidth(STANDARD_WIDTH + 15);
 			Frogcolumn = dbTable.getColumnModel().getColumn(12);
 			Frogcolumn.setMaxWidth(0);
+			
+			
+			
 
 		} else if (matrixType == LOCATION) {
 			currentMatrixType = LOCATION;
@@ -405,6 +492,10 @@ public class WorkingAreaPanel extends JPanel {
 		}
 		// Remove the first visible column without removing the underlying data
 		dbTable.removeColumn(dbTable.getColumnModel().getColumn(0));
+		
+		
+		//dbTable.setComponentPopupMenu(derp);
+		
 		// repaint to show table cell changes
 		refreshTable();
 	}
@@ -493,7 +584,7 @@ public class WorkingAreaPanel extends JPanel {
 		pageCells = new Object[rows][col];
 		for (int r = 0; r < rows; r++) {
 			for (int c = startCol; c < col; c++) {
-				// System.out.println("rowOffset  col loop " + c + " r " + r +
+				// IdentiFrog.LOGGER.writeMessage("rowOffset  col loop " + c + " r " + r +
 				// " cells.length " + cells.length);
 				if (c == 1 && (currentMatrixType == 0 || currentMatrixType == 2)) { // image
 					// in
@@ -693,12 +784,21 @@ public class WorkingAreaPanel extends JPanel {
 		// get frogs data
 		if (e.getClickCount() == 2 && currentMatrixType == FROG) {
 			// double click was detected
-			System.out.println("WorkingAreaPanel.tableMouseClicked(e)");
+			IdentiFrog.LOGGER.writeMessage("WorkingAreaPanel.tableMouseClicked(e)");
 			String localFrogID = getSelectedFrog_Id();
-			System.out.println("\tSearch Forg ID = " + localFrogID);
+			if (localFrogID.equals(BLANK_FROG_ID)) {
+				return;
+			}
+			IdentiFrog.LOGGER.writeMessage("\tSearch Frog ID = " + localFrogID);
+			
+			
 			Frog localFrog = frogsData.searchFrog(localFrogID);
-			String localImagename = fh.getDorsalFolder() + localFrog.getPathImage();
-			parentFrame.OpenImageViewer(localFrogID, "Frog ID: " + localFrog.getID() + " (" + localFrog.getPathImage() + ")", new File(localImagename), true);
+			String localImagename = fh.getDorsalFolder() + localFrog.getGenericImageName();
+			parentFrame.OpenImageViewer(localFrogID, "Frog ID: " + localFrog.getID() + " (" + localFrog.getGenericImageName() + ")", new File(localImagename), true);
+		}
+		
+		if (e.isPopupTrigger() && currentMatrixType == FROG) {
+			IdentiFrog.LOGGER.writeMessage("popup");
 		}
 	}
 
@@ -747,8 +847,9 @@ public class WorkingAreaPanel extends JPanel {
 			chkAllImages.setEnabled(false);
 		}
 		try {
-			updateCells();
-			refreshRows();
+			if (updateCells()){
+				refreshRows();
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -758,11 +859,13 @@ public class WorkingAreaPanel extends JPanel {
 		// ComboBoxViewBy.setEnabled(false);
 		currentMatrixType = MATCHING;
 		try {
-			updateCells();
-			refreshRows();
+			if (updateCells())
+			{
+				refreshRows();
+			}
 		} catch (Exception e) {
-			System.out.println("WorkingAreaPanel.showMatches() Exception");
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeMessage("WorkingAreaPanel.showMatches() Exception");
+			IdentiFrog.LOGGER.writeException(e);
 		}
 	}
 

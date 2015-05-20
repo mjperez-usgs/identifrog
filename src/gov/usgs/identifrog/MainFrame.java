@@ -4,11 +4,13 @@ import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.Frames.AboutDialog;
 import gov.usgs.identifrog.Frames.ErrorDialog;
 import gov.usgs.identifrog.Frames.ParametersDialog;
+import gov.usgs.identifrog.Frames.ProjectManagerFrame;
 import gov.usgs.identifrog.Handlers.DataHandler;
 import gov.usgs.identifrog.Handlers.FolderHandler;
 import gov.usgs.identifrog.Handlers.XMLHandler;
 import gov.usgs.identifrog.Operations.AddFrog;
 import gov.usgs.identifrog.Operations.EditFrog;
+import gov.usgs.identifrog.Operations.XLSXTemplateGeneratorFrame;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
@@ -23,13 +25,17 @@ import java.awt.event.InputEvent;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.prefs.Preferences;
 
 import javax.swing.ImageIcon;
@@ -77,11 +83,15 @@ public class MainFrame extends JFrame {
 			MainFrame.class.getResource("IconDelete32.png"));
 	private ImageIcon imageHelp = new ImageIcon(
 			MainFrame.class.getResource("IconHelp32.png"));
+
 	private ImageIcon imageFind = new ImageIcon(
 			MainFrame.class.getResource("IconFind32.png"));
 	private ImageIcon imageEdit = new ImageIcon(
 			MainFrame.class.getResource("IconEdit32.png"));
-	private JButton bFind = new JButton("", imageFind);
+
+	private JButton bFind = new JButton("", imageFind); // disabled icons are
+														// set in init()
+
 	private JButton bEdit = new JButton("", imageEdit);
 	private JButton bDelete = new JButton("", imageDelete);
 	private JButton bOpen = new JButton("", imageNew);
@@ -105,17 +115,19 @@ public class MainFrame extends JFrame {
 
 	private JMenuBar mainMenu = new JMenuBar();
 	private JMenu menuFile = new JMenu("File");
+	private JMenuItem menuItemCreateXLSX = new JMenuItem(
+			"Create Batch Template",new ImageIcon(MainFrame.class.getResource("IconXLS16.png")));
 	private JMenuItem MenuItemNew = new JMenuItem("New Frog Image",
 			new ImageIcon(MainFrame.class.getResource("IconNew16.png")));
 	private JMenuItem MenuItemMarkExport = new JMenuItem("Export to MARK");
 	private JMenuItem menuItemFileExit = new JMenuItem("Exit");
 	private JMenu menuHelp = new JMenu("Help");
 	private JMenuItem menuItemHelpAbout = new JMenuItem("About");
-	private JMenu menuDatabase = new JMenu("Database");
+	private JMenu menuDatabase = new JMenu("Project");
 	private JMenuItem MenuItemSearch = new JMenuItem("Search for a Match",
 			new ImageIcon(MainFrame.class.getResource("IconFind16.png")));
-	private JMenuItem menuItemAddSite = new JMenuItem("Add New Site");
-	private JMenuItem menuItemOpenSite = new JMenuItem("Open Existing Site");
+	private JMenuItem menuItemProjectManager = new JMenuItem("Project Manager");
+	// private JMenuItem menuItemOpenSite = new JMenuItem("Open Existing Site");
 	private JMenuItem menuItemSaveSiteAs = new JMenuItem("Save Site As");
 	private JMenuItem MenuItemEdit = new JMenuItem("Edit Frog", new ImageIcon(
 			MainFrame.class.getResource("IconEdit16.png")));
@@ -147,18 +159,33 @@ public class MainFrame extends JFrame {
 		workingFolder = fh.getMainFolder();
 		thumbnailFolder = new File(fh.getThumbnailFolder());
 		thumbnailCreator = new ThumbnailCreator(thumbnailFolder);
-		this.setTitle("IdentiFrog Beta " + fh.getFileNamePath());
+		this.setTitle("IdentiFrog - " + fh.getFileNamePath());
 		try {
 			init();
 		} catch (Exception e) {
-			System.out.println("MainFrame.MainFrame() Exception");
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeMessage("MainFrame.MainFrame() Exception");
+			IdentiFrog.LOGGER.writeException(e);
 		}
+	}
+
+	/**
+	 * Sets buttons on or off, depending if a row is selected.
+	 * 
+	 * @param state
+	 */
+	protected void setButtonState(boolean state) {
+		bFind.setEnabled(state);
+		bEdit.setEnabled(state);
+		bDelete.setEnabled(state);
+		MenuItemDelete.setEnabled(state);
+		MenuItemEdit.setEnabled(state);
+		MenuItemSearch.setEnabled(state);
 	}
 
 	private void read() {
 		ArrayList<Frog> frogs = new XMLHandler(fh.getFileNamePath())
 				.ReadXMLFile();
+		updateRecentlyOpened(fh.getFileNamePath());
 		frogData.setFrogs(frogs);
 
 		workingAreaPanel.setFrogs(frogs);
@@ -169,7 +196,72 @@ public class MainFrame extends JFrame {
 		// update cells
 		updateCells();
 
-		this.setTitle("IdentiFrog Beta " + fh.getFileNamePath());
+		this.setTitle("IdentiFrog " + fh.getFileNamePath());
+	}
+
+	private void updateRecentlyOpened(String fileNamePath) {
+		// gather site info
+		Site newSite = new Site();
+		newSite.setDatafilePath(fileNamePath);
+		newSite.setLastModified(new Date());
+		File file = new File(fileNamePath);
+		String siteName = file.getParent();
+		siteName = siteName.substring(siteName.lastIndexOf(File.separator) + 1,
+				siteName.length());
+		newSite.setSiteName(siteName);
+
+		// load recent site info for parsing
+		ArrayList<Site> recentSites = null;
+		try {
+			ObjectInputStream in = new ObjectInputStream(new FileInputStream(
+					ProjectManagerFrame.RECENT_SITES_FILE));
+			recentSites = (ArrayList<Site>) in.readObject();
+			in.close();
+		} catch (Exception e) {
+			recentSites = new ArrayList<Site>(); // empty
+		}
+
+		boolean updated = false;
+		// update existing entry if it exists.
+		if (recentSites.contains(newSite)) {
+			recentSites.set(recentSites.indexOf(newSite), newSite);
+			updated = true;
+		}
+
+		Site leastRecentSite = null;
+		if (recentSites.size() < 3 && !updated) {
+			// list not full
+			recentSites.add(newSite);
+			updated = true;
+		}
+
+		// sites are full, existing one not available. find the oldest one and
+		// replace it.
+		if (!updated) {
+			for (Site site : recentSites) {
+				if (leastRecentSite == null
+						|| leastRecentSite.getLastModified().before(
+								site.getLastModified())) {
+					leastRecentSite = site;
+				}
+			}
+			recentSites.set(recentSites.indexOf(leastRecentSite), newSite);
+		}
+
+		ObjectOutputStream out;
+		try {
+			out = new ObjectOutputStream(new FileOutputStream(
+					ProjectManagerFrame.RECENT_SITES_FILE));
+			out.writeObject(recentSites);
+			out.close();
+			out.flush();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			IdentiFrog.LOGGER.writeException(e);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			IdentiFrog.LOGGER.writeException(e);
+		}
 	}
 
 	/**
@@ -178,6 +270,8 @@ public class MainFrame extends JFrame {
 	 * @throws Exception
 	 */
 	private void init() throws Exception {
+		// startup
+
 		ArrayList<Frog> frogs = new XMLHandler(fh.getFileNamePath())
 				.ReadXMLFile();
 		frogData.setFrogs(frogs);
@@ -209,7 +303,7 @@ public class MainFrame extends JFrame {
 		MenuItemMarkExport
 				.addActionListener(new MainFrame_MenuItemMarkExport_actionAdapter(
 						this));
-
+		menuItemCreateXLSX.addActionListener(new MainFrame_menuItemCreateXLSX_actionAdapter(this));
 		// find button verify input when focus target
 		bFind.setVerifyInputWhenFocusTarget(true);
 		// buttons tool tip text
@@ -262,56 +356,49 @@ public class MainFrame extends JFrame {
 						this));
 
 		// ActionListeners for Add Site Functionality
-		menuItemAddSite.addActionListener(new ActionListener() {
+		menuItemProjectManager.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				// open file chooser in user's home directory
-				JFileChooser fileChooser = new JFileChooser(System
-						.getProperty("user.home"));
-				// if user selects the OK button then perform the following:
-				// XXX Add comments here
-				if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
-					String sitePath = fileChooser.getSelectedFile()
-							.getAbsolutePath();
-					// setup data folders and database xml file
-					FolderHandler fhLocal = new FolderHandler(sitePath);
-					XMLHandler file = new XMLHandler(fhLocal.getFileNamePath());
-					if (!fhLocal.FoldersExist()) {
-						fhLocal.createFolders();
-						file.CreateXMLFile();
-						File f = new File(fhLocal.getFileNamePath());
-						if (f.exists() && f.length() == 0) {
-							file.CreateXMLFile();
-						}
-						fh = fhLocal;
-						read();
-					} else {
-						String message = "Site name "
-								+ fileChooser.getSelectedFile().getName()
-								+ " already exists.";
-						JOptionPane.showConfirmDialog(null, message,
-								"Site Already Exists", JOptionPane.OK_OPTION);
-					}
-				}
+
+				/*
+				 * // open file chooser in user's home directory JFileChooser
+				 * fileChooser = new JFileChooser(System
+				 * .getProperty("user.home")); // if user selects the OK button
+				 * then perform the following: // XXX Add comments here if
+				 * (fileChooser.showSaveDialog(null) ==
+				 * JFileChooser.APPROVE_OPTION) { String sitePath =
+				 * fileChooser.getSelectedFile() .getAbsolutePath(); // setup
+				 * data folders and database xml file FolderHandler fhLocal =
+				 * new FolderHandler(sitePath); XMLHandler file = new
+				 * XMLHandler(fhLocal.getFileNamePath()); if
+				 * (!fhLocal.FoldersExist()) { fhLocal.createFolders();
+				 * file.CreateXMLFile(); File f = new
+				 * File(fhLocal.getFileNamePath()); if (f.exists() && f.length()
+				 * == 0) { file.CreateXMLFile(); } fh = fhLocal; read(); } else
+				 * { String message = "Site name " +
+				 * fileChooser.getSelectedFile().getName() + " already exists.";
+				 * JOptionPane.showConfirmDialog(null, message,
+				 * "Site Already Exists", JOptionPane.OK_OPTION); } }
+				 */
+				ProjectManagerFrame pmf = new ProjectManagerFrame(
+						MainFrame.this);
+				pmf.setLocationRelativeTo(MainFrame.this);
+				pmf.setVisible(true);
 			}
 		});
 
-		menuItemOpenSite.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				// open file chooser in user's home directory
-				JFileChooser fileChooser = new JFileChooser(System
-						.getProperty("user.home"));
-				// if user selects the OK button then perform the following:
-				// XXX Add comments here
-				if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-					String sitePath = fileChooser.getSelectedFile().getParent();
-					FolderHandler fhLocal = new FolderHandler(sitePath);
-					fh = fhLocal;
-					read();
-				}
-			}
-		});
+		/*
+		 * menuItemOpenSite.addActionListener(new ActionListener() {
+		 * 
+		 * @Override public void actionPerformed(ActionEvent arg0) { // open
+		 * file chooser in user's home directory JFileChooser fileChooser = new
+		 * JFileChooser(System .getProperty("user.home")); // if user selects
+		 * the OK button then perform the following: // XXX Add comments here if
+		 * (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+		 * String sitePath = fileChooser.getSelectedFile().getParent();
+		 * FolderHandler fhLocal = new FolderHandler(sitePath); fh = fhLocal;
+		 * read(); } } });
+		 */
 
 		menuItemSaveSiteAs.addActionListener(new ActionListener() {
 			@Override
@@ -343,7 +430,7 @@ public class MainFrame extends JFrame {
 							fh = new FolderHandler(sitePath);
 							read();
 						} catch (IOException e) {
-							e.printStackTrace();
+							IdentiFrog.LOGGER.writeException(e);
 						}
 					}
 				}
@@ -362,21 +449,22 @@ public class MainFrame extends JFrame {
 		barButtons.add(bHelp);
 
 		// add menu items
-		menuFile.add(MenuItemNew);
-		menuFile.addSeparator();
+		menuFile.add(menuItemCreateXLSX);
 		menuFile.add(MenuItemMarkExport);
 		menuFile.addSeparator();
+		menuFile.add(menuItemProjectManager);
+		menuFile.add(menuItemSaveSiteAs);
+		menuFile.addSeparator();
 		menuFile.add(menuItemFileExit);
+
 		menuHelp.add(MenuItemHelp);
 		menuHelp.addSeparator();
 		menuHelp.add(menuItemHelpAbout);
 		mainMenu.add(menuFile);
 		menuDatabase.add(MenuItemSearchCriteria);
 		menuDatabase.addSeparator();
-		menuDatabase.add(menuItemAddSite);
-		menuDatabase.add(menuItemOpenSite);
-		menuDatabase.add(menuItemSaveSiteAs);
-		menuDatabase.addSeparator();
+
+		menuDatabase.add(MenuItemNew);
 		menuDatabase.add(MenuItemSearch);
 		menuDatabase.add(MenuItemEdit);
 		menuDatabase.add(MenuItemDelete);
@@ -386,6 +474,16 @@ public class MainFrame extends JFrame {
 		mainMenu.add(menuDatabase);
 		mainMenu.add(menuHelp);
 		setJMenuBar(mainMenu);
+
+		// icon states
+		bFind.setEnabled(false); // default to false cause nothing is selected
+									// by default
+		bEdit.setEnabled(false);
+		bDelete.setEnabled(false);
+		MenuItemDelete.setEnabled(false);
+		MenuItemEdit.setEnabled(false);
+		MenuItemSearch.setEnabled(false);
+
 		//
 		contentPanel.add(barButtons, BorderLayout.NORTH);
 		contentPanel.add(workingAreaPanel, BorderLayout.CENTER);
@@ -396,7 +494,8 @@ public class MainFrame extends JFrame {
 			// if directory not exists, create it
 			if (!dest.exists()) {
 				dest.mkdir();
-				// System.out.println("Directory copied from " + src + "  to " +
+				// IdentiFrog.LOGGER.writeMessage("Directory copied from " + src
+				// + "  to " +
 				// dest);
 			}
 			// list all the directory contents
@@ -424,7 +523,8 @@ public class MainFrame extends JFrame {
 
 			in.close();
 			out.close();
-			// System.out.println("File copied from " + src + " to " + dest);
+			// IdentiFrog.LOGGER.writeMessage("File copied from " + src + " to "
+			// + dest);
 		}
 	}
 
@@ -465,7 +565,7 @@ public class MainFrame extends JFrame {
 		if (temporaryThumbnail.exists()) {
 			temporaryThumbnail.delete();
 		}
-		System.out.println(System.getProperty("java.io.tmpdir")
+		IdentiFrog.LOGGER.writeMessage(System.getProperty("java.io.tmpdir")
 				+ "tempThumb.jpg");
 		File thumbnailImageFile = thumbnailCreator.createThumbnailforEntry(
 				image, addFrogObject.getButImage().getWidth(), addFrogObject
@@ -494,16 +594,20 @@ public class MainFrame extends JFrame {
 			return;
 		}
 		Frog localFrog = frogData.searchFrog(localID);
-		EditFrog editFrogObject = new EditFrog(MainFrame.this,
-				"Edit Frog Information", true, localFrog);
-		editFrogObject.pack();
+		AddFrog editFrogFrame = new AddFrog(this, fh, "Edit Frog", localFrog);
+
+		/*
+		 * EditFrog editFrogFrame = new EditFrog(MainFrame.this,
+		 * "Edit Frog Information", true, localFrog);
+		 */
+		editFrogFrame.pack();
 		// garbage collector
-		System.gc();
+		//System.gc();
 		// TODO center edit frog frame
-		editFrogObject.setLocation(getX(), getY());
-		editFrogObject.setVisible(true);
-		localFrog = editFrogObject.getFrog();
-		frogData.replaceFrog(localID, localFrog);
+		// editFrogFrame.setLocation(getX(), getY());
+		editFrogFrame.setVisible(true);
+		localFrog = editFrogFrame.getFrog();
+		// frogData.replaceFrog(localID, localFrog);
 		// update cells
 		updateCells();
 		// write xml file
@@ -524,7 +628,7 @@ public class MainFrame extends JFrame {
 		}
 		if (ChoiceDialog.choiceMessage("Do you want to delete this row?") == 0) {
 			Frog localFrog = frogData.searchFrog(localID);
-			String localImageName = localFrog.getPathImage();
+			String localImageName = localFrog.getGenericImageName();
 			String localSignatureName = localFrog.getPathSignature();
 			// check if exists then delete
 			new File(fh.getImagesFolder() + localImageName).delete();
@@ -625,6 +729,12 @@ public class MainFrame extends JFrame {
 		}
 	}
 
+	protected void menuItemCreateBatchXLSX_actionPerformed(ActionEvent e) {
+		new XLSXTemplateGeneratorFrame(this);
+		// String filePath = saveAsDialog.getName();
+
+	}
+
 	protected void MenuItemEdit_actionPerformed(ActionEvent e) {
 		butEdit_actionPerformed(e);
 	}
@@ -658,9 +768,9 @@ public class MainFrame extends JFrame {
 		// File dorspath = workingAreaPanel.getDorsalImageFileFromSelectedRow();
 		File dorsalImage = new File(fh.getDorsalFolder()
 				+ frogData.searchFrog(workingAreaPanel.getSelectedFrog_Id())
-						.getPathImage());
+						.getGenericImageName());
 		setButtonsOn(false);
-		// System.out.println("In butFind Action Performed tfrog[0].intValue() is "
+		// IdentiFrog.LOGGER.writeMessage("In butFind Action Performed tfrog[0].intValue() is "
 		// +
 		// tfrog[0].intValue());
 		OpenMatchingDialog(dorsalImage, tfrog[0].intValue());
@@ -671,8 +781,9 @@ public class MainFrame extends JFrame {
 		try {
 			editFrog();
 		} catch (Exception ex) {
-			System.out.println("MainFrame.butEdit_actionPerfomed() Exception");
-			System.out.println(ex.getMessage());
+			IdentiFrog.LOGGER
+					.writeMessage("MainFrame.butEdit_actionPerfomed() Exception");
+			IdentiFrog.LOGGER.writeMessage(ex.getMessage());
 		}
 	}
 
@@ -695,18 +806,21 @@ public class MainFrame extends JFrame {
 				Desktop.getDesktop().browse(new URI(url));
 			} catch (IOException e) {
 				new ErrorDialog("Cannot open " + url + " IO exception.");
-				e.printStackTrace();
+				IdentiFrog.LOGGER.writeException(e);
 			} catch (URISyntaxException e) {
 				new ErrorDialog("Cannot open " + url + ", invalid URI.");
-				e.printStackTrace();
+				IdentiFrog.LOGGER.writeException(e);
 			}
 		} else {
-			new ErrorDialog("Desktop services not supported on this OS. You can view the manual at "+url+".");
+			new ErrorDialog(
+					"Desktop services not supported on this OS. You can view the manual at "
+							+ url + ".");
 		}
 	}
 
 	protected void CheckBoxMenuItemShowThumbs_actionPerformed(ActionEvent e) {
-		workingAreaPanel.setShowThumbnails(CheckBoxMenuItemShowThumbs.isSelected());
+		workingAreaPanel.setShowThumbnails(CheckBoxMenuItemShowThumbs
+				.isSelected());
 	}
 
 	public void setDBRows(int rows) {
@@ -786,7 +900,11 @@ public class MainFrame extends JFrame {
 				viewerY = 0;
 			}
 		} else {
-			new ErrorDialog("Cannot find image file for " + title);
+			IdentiFrog.LOGGER
+					.writeMessage("Unable to find image file while opening image viewer: "
+							+ imageFile.getAbsolutePath());
+			new ErrorDialog("Cannot find image file: "
+					+ imageFile.getAbsolutePath());
 		}
 	}
 
@@ -802,10 +920,16 @@ public class MainFrame extends JFrame {
 		return workingAreaPanel;
 	}
 
+	/**
+	 * Turns buttons on or off. Does not apply to buttons that depend on a
+	 * selected item in the lists.
+	 * 
+	 * @param on
+	 */
 	protected void setButtonsOn(boolean on) {
-		bDelete.setEnabled(on);
-		bEdit.setEnabled(on);
-		bFind.setEnabled(on);
+		// bDelete.setEnabled(on);
+		// bEdit.setEnabled(on);
+		// bFind.setEnabled(on);
 		bOpen.setEnabled(on);
 		MenuItemMarkExport.setEnabled(on);
 		MenuItemDelete.setEnabled(on);
@@ -906,6 +1030,19 @@ class MainFrame_MenuItemMarkExport_actionAdapter implements
 
 	public void actionPerformed(ActionEvent e) {
 		adaptee.MenuItemMarkExport_actionPerformed(e);
+	}
+}
+
+class MainFrame_menuItemCreateXLSX_actionAdapter implements
+		java.awt.event.ActionListener {
+	MainFrame adaptee;
+
+	MainFrame_menuItemCreateXLSX_actionAdapter(MainFrame adaptee) {
+		this.adaptee = adaptee;
+	}
+
+	public void actionPerformed(ActionEvent e) {
+		adaptee.menuItemCreateBatchXLSX_actionPerformed(e);
 	}
 }
 

@@ -25,7 +25,11 @@ public class FolderHandler {
 	 * This constructor uses the base string (site location data) as the data directory. 
 	 */
 	public FolderHandler(String base) {
-	  this.base = base;
+		if (base.endsWith(IdentiFrog.DB_FILENAME)) {
+			this.base = base.substring(0,base.length()-IdentiFrog.DB_FILENAME.length()-1);
+		} else {
+			this.base = base;
+		}
 	}
 	
 	public boolean FoldersExist() {
@@ -33,7 +37,7 @@ public class FolderHandler {
 	}
 
 	/**
-	 * Creates folders required for a site. Uses the base variable as the place to put the data.
+	 * Creates folders required for a site. Uses the 'base' variable as the place to put the data.
 	 * @return true if successful, false on any error
 	 * @author mjperez
 	 */
@@ -53,6 +57,10 @@ public class FolderHandler {
 		return IdentiFrog.DB_FILENAME;
 	}
 
+	/**
+	 * Returns the datafile.xml path by adding the folder, the path separator, and the database filename.
+	 * @return Project Folder + (separator) + DB_NAME e.g. C:\project\datafile.xml
+	 */
 	public String getFileNamePath() {
 		return base + File.separator + IdentiFrog.DB_FILENAME;
 	}

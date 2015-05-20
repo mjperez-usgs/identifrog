@@ -172,8 +172,8 @@ public class ImageManipFrame extends JFrame {
 		try {
 			init();
 		} catch (Exception e) {
-			System.out.println("ImageManipFrame.ImageManipFrame() Exception");
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeMessage("ImageManipFrame.ImageManipFrame() Exception");
+			IdentiFrog.LOGGER.writeException(e);
 		}
 		parentFrame.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 	}
@@ -734,9 +734,9 @@ public class ImageManipFrame extends JFrame {
 				imagePanel.setRidgeRect(false);
 				butStartOver.setEnabled(true);
 				// imagePanel.setNoise_slider_Active(false);
-				System.out.println("case 1 before next " + step);
+				IdentiFrog.LOGGER.writeMessage("case 1 before next " + step);
 				increaseStep();
-				System.out.println("case 1 after next " + step);
+				IdentiFrog.LOGGER.writeMessage("case 1 after next " + step);
 				imagePanel.newOperationStep();
 				imagePanel.repaint();
 				break;
@@ -748,9 +748,9 @@ public class ImageManipFrame extends JFrame {
 
 				String sigFileLocarion = fh.getSignaturesFolder() + imageName1;
 				String binaryImageLocation = fh.getBinaryFolder() + imageName1;
-				System.out.println("imageName1 " + imageName1);
-				System.out.println("sigFileLocation " + sigFileLocarion);
-				System.out.println("binaryImageLocation " + binaryImageLocation);
+				IdentiFrog.LOGGER.writeMessage("imageName1 " + imageName1);
+				IdentiFrog.LOGGER.writeMessage("sigFileLocation " + sigFileLocarion);
+				IdentiFrog.LOGGER.writeMessage("binaryImageLocation " + binaryImageLocation);
 
 				if (binaryImageLocation != null) {
 					if (binaryImage != null) {
@@ -766,7 +766,7 @@ public class ImageManipFrame extends JFrame {
 				// ///////////////////////////////////////////////////////////////////////////////////
 				parentFrame.updateCells();
 				parentFrame.getFrogData().getFrogs().get(parentFrame.getFrogData().getFrogs().size() - 1).setPathImage(imageName1);
-				System.out.println(parentFrame.getFrogData().getFrogs().size());
+				IdentiFrog.LOGGER.writeMessage(parentFrame.getFrogData().getFrogs().size());
 				XMLHandler file = new XMLHandler(new File(fh.getFileNamePath()), parentFrame.getFrogData().getFrogs());
 				file.WriteXMLFile();
 				parentFrame.updateCells(0, false);
@@ -811,12 +811,12 @@ public class ImageManipFrame extends JFrame {
 				imagePanel.setFillSpotOn(false);
 				imagePanel.setUndoPencilOn(false);
 				imagePanel.setUndoFillSpotOn(false);
-				System.out.println("case 1 before back " + step);
+				IdentiFrog.LOGGER.writeMessage("case 1 before back " + step);
 				decreaseStep();
-				System.out.println("case 1 afer back " + step);
+				IdentiFrog.LOGGER.writeMessage("case 1 afer back " + step);
 				break;
 			case 2: // from binary fingerprint creation back to clicking on the frog's eyes
-				System.out.println("back case 2");
+				IdentiFrog.LOGGER.writeMessage("back case 2");
 				ExamplePanelContainer.setVisible(true);
 				inPanelToolsInstructions.setVisible(false);
 				ExampleVent.setVisible(false);
@@ -847,9 +847,9 @@ public class ImageManipFrame extends JFrame {
 				butBack.setEnabled(true);
 				butNext.setEnabled(false);
 				butStartOver.setEnabled(true);
-				System.out.println("case 2 before back " + step);
+				IdentiFrog.LOGGER.writeMessage("case 2 before back " + step);
 				decreaseStep();
-				System.out.println("case 2 afer back " + step);
+				IdentiFrog.LOGGER.writeMessage("case 2 afer back " + step);
 				imagePanel.backOperationStep();
 				imagePanel.deleteTempFiles();
 				imagePanel.repaint();
@@ -880,7 +880,7 @@ public class ImageManipFrame extends JFrame {
 	public void increaseStep() {
 		changeMade = false;
 		step++;
-		System.out.println("incr step " + step);
+		IdentiFrog.LOGGER.writeMessage("incr step " + step);
 	}
 
 	// Decraments to the previous step

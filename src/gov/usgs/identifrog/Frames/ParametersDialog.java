@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -14,6 +15,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+
+import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.MainFrame;
 import gov.usgs.identifrog.WorkingAreaPanel;
 
@@ -72,7 +75,7 @@ public class ParametersDialog extends JDialog {
 
 		dbPanel.setLayout(null);
 		ComboBoxNumRows.setBounds(new Rectangle(153, 24, 50, 21)); // 41 instead of 47
-		System.out.println(" parentFrame.getWorkingAreaPanel().getMaxPageRows() " + parentFrame.getWorkingAreaPanel().getMaxPageRows());
+		IdentiFrog.LOGGER.writeMessage(" parentFrame.getWorkingAreaPanel().getMaxPageRows() " + parentFrame.getWorkingAreaPanel().getMaxPageRows());
 		// ComboBoxNumRows.setSelectedIndex((int)(parentFrame.getWorkingAreaPanel().getMaxPageRows()/10));
 		ComboBoxNumRows.setSelectedIndex(0);
 		butClose.setBounds(new Rectangle(70, 80, 94, 35));

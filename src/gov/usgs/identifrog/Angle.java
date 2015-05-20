@@ -43,7 +43,7 @@ public class Angle {
 			}
 			f1.close();
 		} catch (IOException iox) {
-			System.out.println("Problem reading filename1 hausdorff" + filename1);
+			IdentiFrog.LOGGER.writeMessage("Problem reading filename1 hausdorff" + filename1);
 		}
 
 		// file 2
@@ -56,7 +56,7 @@ public class Angle {
 			}
 			f2.close();
 		} catch (IOException iox) {
-			System.out.println("Problem reading filename2" + filename2);
+			IdentiFrog.LOGGER.writeMessage("Problem reading filename2" + filename2);
 		}
 
 		// get coordinates from spot constellation 1

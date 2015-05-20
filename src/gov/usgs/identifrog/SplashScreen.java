@@ -40,7 +40,7 @@ public final class SplashScreen extends Frame {
 		try {
 			fMediaTracker.waitForID(0);
 		} catch (InterruptedException ie) {
-			ie.printStackTrace();
+			IdentiFrog.LOGGER.writeException(ie);
 		}
 		@SuppressWarnings("unused")
 		SplashWindow splashWindow = new SplashWindow(this, fImage);

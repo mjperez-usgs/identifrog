@@ -40,7 +40,7 @@ public class MarkExport {
 			}
 			buffer = buffer + "\n";
 		}
-		System.out.println(buffer);
+		IdentiFrog.LOGGER.writeMessage(buffer);
 
 		String filename;
 		String ext = path.substring(path.length() - 3, path.length());
@@ -54,9 +54,9 @@ public class MarkExport {
 			wr = new BufferedWriter(new FileWriter(filename));
 			wr.write(buffer);
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 		} catch (IOException e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 		} finally {
 			try {
 				if (wr != null) {
@@ -64,7 +64,7 @@ public class MarkExport {
 					wr.close();
 				}
 			} catch (IOException e) {
-				e.printStackTrace();
+				IdentiFrog.LOGGER.writeException(e);
 			}
 		}
 	}

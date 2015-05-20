@@ -242,7 +242,7 @@ public class ImagePanel extends JPanel {
 		imageFile = inputfile;
 		this.fh = fh;
 		
-		System.out.println("ImagePanel inputfile = " + inputfile.getName());
+		IdentiFrog.LOGGER.writeMessage("ImagePanel inputfile = " + inputfile.getName());
 
 		// initialize control points for two curves
 		firstCurvePoints[0] = new Point2D.Double();
@@ -266,8 +266,8 @@ public class ImagePanel extends JPanel {
 		try {
 			init();
 		} catch (Exception e) {
-			System.out.println("ImagePanel.ImagePanel() Exception");
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeMessage("ImagePanel.ImagePanel() Exception");
+			IdentiFrog.LOGGER.writeException(e);
 		}
 	}
 
@@ -281,7 +281,7 @@ public class ImagePanel extends JPanel {
 		long heapSize = Runtime.getRuntime().totalMemory();
 		// Print the jvm heap size.
 		long Used_memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-		System.out.println("\tImagePanel.init() Heap: Size = " + heapSize + " Used = " + Used_memory);
+		IdentiFrog.LOGGER.writeMessage("\tImagePanel.init() Heap: Size = " + heapSize + " Used = " + Used_memory);
 		setBackground(maskColor);
 		setVisible(true);
 		// initialize start point
@@ -373,9 +373,9 @@ public class ImagePanel extends JPanel {
 			Graphics2D gc = newImage.createGraphics();
 			gc.drawImage(tempImage, 0, 0, null);
 			image = newImage;
-			System.out.println("\tImage File Size: " + image.getWidth() + " x " + image.getHeight());
+			IdentiFrog.LOGGER.writeMessage("\tImage File Size: " + image.getWidth() + " x " + image.getHeight());
 		} catch (Exception e) {
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 		}
 	}
 
@@ -770,8 +770,8 @@ public class ImagePanel extends JPanel {
 		}
 		double width = w / image.getWidth();
 		double height = h / image.getHeight();
-		System.out.println(" resampleImage image.getWidth() " + image.getWidth() + " height " + image.getHeight());
-		System.out.println("resampleImage width " + width + " height " + height);
+		IdentiFrog.LOGGER.writeMessage(" resampleImage image.getWidth() " + image.getWidth() + " height " + image.getHeight());
+		IdentiFrog.LOGGER.writeMessage("resampleImage width " + width + " height " + height);
 		AffineTransform transform = AffineTransform.getScaleInstance(width, height);
 		AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BICUBIC);
 		Filter(op, (int) w, (int) h);
@@ -1118,7 +1118,7 @@ public class ImagePanel extends JPanel {
 				Color white = new Color(255, 255, 255, 255);
 
 				++filledSpotNumber;
-				// System.out.println("press filledSpotNumber " +
+				// IdentiFrog.LOGGER.writeMessage("press filledSpotNumber " +
 				// filledSpotNumber + " dilation_radius " + dilation_radius);
 
 				FillSpot spot = new FillSpot();
@@ -1243,7 +1243,7 @@ public class ImagePanel extends JPanel {
 			if (e.getX() >= ColorRectImgX & e.getX() < ColorRectImgX + rect_width & e.getY() >= ColorRectImgY & e.getY() < ColorRectImgY + rect_height) {
 				// new drawing
 				++drawingNumber;
-				System.out.println("press " + drawingNumber);
+				IdentiFrog.LOGGER.writeMessage("press " + drawingNumber);
 				start.setLocation(e.getX() - ColorRectImgX, e.getY() - ColorRectImgY);
 			}
 		}
@@ -1474,7 +1474,7 @@ public class ImagePanel extends JPanel {
 
 		Point2D.Double dest = new Point2D.Double();
 		dest.setLocation((a.getX() + (b.getX() - a.getX()) * t), (a.getY() + (b.getY() - a.getY()) * t));
-		// System.out.println("dest" + " " + dest.getX() + " " + dest.getY());
+		// IdentiFrog.LOGGER.writeMessage("dest" + " " + dest.getX() + " " + dest.getY());
 		return dest;
 
 	}
@@ -1646,8 +1646,8 @@ public class ImagePanel extends JPanel {
 		try {
 			ImageIO.write(image, "png", new File(folder + imageName));
 		} catch (IOException e) {
-			System.out.println("IOException in ImagePanel.saveImage()");
-			System.out.println(e.getMessage());
+			IdentiFrog.LOGGER.writeMessage("IOException in ImagePanel.saveImage()");
+			IdentiFrog.LOGGER.writeMessage(e.getMessage());
 		}
 	}
 
@@ -1749,7 +1749,7 @@ public class ImagePanel extends JPanel {
 
 				int white = (255 & 0xff) << 16 | (255 & 0xff) << 8 | 255 & 0xff;
 				for (int k = 0; k < spotFilledCoor.size(); ++k) {
-					// System.out.println(pencilCoor.get(k).startL + " " +
+					// IdentiFrog.LOGGER.writeMessage(pencilCoor.get(k).startL + " " +
 					// pencilCoor.get(k).endL);
 					standardRectBinary.setRGB(spotFilledCoor.get(k).pixCoor.x, spotFilledCoor.get(k).pixCoor.y, white);
 				}
@@ -1931,7 +1931,7 @@ public class ImagePanel extends JPanel {
 
 	public void setUndoPencilOn(boolean on) {
 		undopencil = on;
-		System.out.println("set undopencil " + undopencil);
+		IdentiFrog.LOGGER.writeMessage("set undopencil " + undopencil);
 
 	}
 

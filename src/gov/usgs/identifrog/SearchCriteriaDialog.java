@@ -52,8 +52,8 @@ public class SearchCriteriaDialog extends JDialog {
 			init();
 			pack();
 		} catch (Exception e) {
-			System.out.println("SearchCriteriaDialog.SearchCriteriaDialog() Exception");
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeMessage("SearchCriteriaDialog.SearchCriteriaDialog() Exception");
+			IdentiFrog.LOGGER.writeException(e);
 		}
 	}
 

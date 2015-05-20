@@ -39,7 +39,6 @@ public class TopTenMatches {
 	}
 
 	// XXX
-	@SuppressWarnings("unused")
 	public Object[][] getMatches(DataHandler frogData, Frog frog, int attribute, boolean ascending, boolean imgInclude, boolean isSex, boolean isAdditDiscr) {
 		boolean discriminateBySex = isSex;
 		boolean discriminateByAdditDiscr = isAdditDiscr;
@@ -73,7 +72,7 @@ public class TopTenMatches {
 
 		boolean queryHasOneSpot = false;
 		digsigtomatch = fh.getSignaturesFolder() + frog.getPathSignature();
-		binaryImgtomatch = fh.getBinaryFolder() + frog.getPathImage();
+		binaryImgtomatch = fh.getBinaryFolder() + frog.getGenericImageName();
 		queryfrogid = frog.getID();
 		querygender = frog.getGender();
 		queryspecies = frog.getSpecies();
@@ -92,14 +91,14 @@ public class TopTenMatches {
 					searchableFrogs.add(frogData.getFrogs().get(i));
 				}
 			}
-			System.out.println("SIZE " + searchableFrogs.size());
+			IdentiFrog.LOGGER.writeMessage("SIZE " + searchableFrogs.size());
 		}
 		/************ CHECK SEARCH DESCRIMINATORS (SEX or SNOUT SPOT) ************/
 		// remember about row count will be decreasing after passes!
 		/************************* DESCRIMINATE BY SEX ***************************/
 		for (int i = 0; i < searchableFrogs.size(); i++) {
 			otherdigsig = fh.getSignaturesFolder() + searchableFrogs.get(i).getPathSignature();
-			otherbinaryImg = fh.getBinaryFolder() + searchableFrogs.get(i).getPathImage();
+			otherbinaryImg = fh.getBinaryFolder() + searchableFrogs.get(i).getGenericImageName();
 			otherfrogid = searchableFrogs.get(i).getID();
 			String lame = searchableFrogs.get(i).getFormerID();
 			// lame = lame.substring(3, lame.length());
@@ -125,7 +124,8 @@ public class TopTenMatches {
 		if (Candidates_afterDiscriminateSex.size() == 0) {
 			JOptionPane.showMessageDialog(null, "There are no matches according to Search Criteria.");
 			Object[][] retArray = new Object[rowcount][col];
-			return retArray;
+			return null;
+			//return retArray;
 		}
 		/*********************** DESCRIMINATE BY Additional Discriminator *************************/
 		if (discriminateByAdditDiscr) {
@@ -373,7 +373,7 @@ public class TopTenMatches {
 			}
 			Frog f = frogData.searchFrog(Matches.get(i).frogid);
 			retArray[row][MROW] = f.getID();
-			retArray[row][FILENAME] = fh.getThumbnailFolder() + f.getPathImage();
+			retArray[row][FILENAME] = fh.getThumbnailFolder() + f.getGenericImageName();
 			retArray[row][MFROG_ID] = "FROG" + f.getFormerID();
 			retArray[row][SCORE] = myscore;
 			retArray[row][MCAPDATE] = f.getDateCapture();
@@ -468,7 +468,7 @@ public class TopTenMatches {
 		while (i < Current_Candidates.size() && entered == false) {
 			if (signat.equals(Current_Candidates.get(i).signature)) {
 				entered = true;
-				// System.out.println("entered " + Current_Candidates.get(i).signature);
+				// IdentiFrog.LOGGER.writeMessage("entered " + Current_Candidates.get(i).signature);
 			} else {
 				++i;
 			}

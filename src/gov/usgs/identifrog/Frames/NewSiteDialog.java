@@ -1,11 +1,10 @@
 package gov.usgs.identifrog.Frames;
 
-import gov.usgs.identifrog.StartupFrame;
+import gov.usgs.identifrog.IdentiFrog;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -38,7 +37,7 @@ public class NewSiteDialog extends JDialog implements ActionListener {
 	private JButton butOK, butChange;
 	private JTextField textSiteName;
 	private JLabel labelSaveLocation;
-	private StartupFrame parent;
+	private ProjectManagerFrame parent;
 	
 	/**
 	 * Creates a new site dialog, where the user chooses where to save their site data.
@@ -46,11 +45,11 @@ public class NewSiteDialog extends JDialog implements ActionListener {
 	 * @param parent StartupFrame that spawns this dialog
 	 * @author Michael J. Perez
 	 */
-	public NewSiteDialog(StartupFrame parent) {
+	public NewSiteDialog(ProjectManagerFrame parent) {
 		super(parent);
 		this.parent = parent;
 		enableEvents(AWTEvent.WINDOW_EVENT_MASK);
-		setTitle("Create new collection site");
+		setTitle("Create new project");
 		setLocationRelativeTo(parent);
 		setMinimumSize(new Dimension(500,200));
 		setResizable(false);
@@ -62,11 +61,11 @@ public class NewSiteDialog extends JDialog implements ActionListener {
 			contentPanel.add(folderLabel, BorderLayout.WEST);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			IdentiFrog.LOGGER.writeException(e);
 		}
 		
 		//site folder
-		butOK = new JButton("Create site");
+		butOK = new JButton("Create project");
 		butOK.addActionListener(this);
 		butChange = new JButton("Change...");
 		butChange.addActionListener(this);
@@ -82,12 +81,12 @@ public class NewSiteDialog extends JDialog implements ActionListener {
 				"Site Data Folder"));
 		
 		//site name
-		textSiteName = new JTextField("Site ");
+		textSiteName = new JTextField("Project  ");
 		JPanel siteNamePanel = new JPanel(new BorderLayout());
 		siteNamePanel.add(textSiteName, BorderLayout.SOUTH);
 		siteNamePanel.setBorder(BorderFactory.createTitledBorder(
 				BorderFactory.createEtchedBorder(EtchedBorder.LOWERED),
-				"Site Name"));
+				"Project Name"));
 		
 		JPanel siteInfoRightPanel = new JPanel(new BorderLayout());
 		siteInfoRightPanel.add(saveLocationPanel, BorderLayout.NORTH);
@@ -96,6 +95,7 @@ public class NewSiteDialog extends JDialog implements ActionListener {
 		siteInfoRightPanel.setMinimumSize(new Dimension(350,200));
 		contentPanel.add(siteInfoRightPanel, BorderLayout.EAST);
 		
+		getRootPane().setDefaultButton(butOK);
 		add(contentPanel);
 		pack();
 		setLocationRelativeTo(parent);

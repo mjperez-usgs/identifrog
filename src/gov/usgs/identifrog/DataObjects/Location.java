@@ -153,7 +153,7 @@ public class Location {
 		buffer = buffer + "\t" + "Longitude: " + longitude + "\n";
 		buffer = buffer + "\t" + "Latitude: " + latitude + "\n";
 		buffer = buffer + "\t" + "Datum: " + datum + "\n";
-		if (coordinateType.equals("UTM")) {
+		if (coordinateType != null && coordinateType.equals("UTM")) {
 			buffer = buffer + "\t" + "Zone: " + zone + "\n";
 		}
 		return buffer;
