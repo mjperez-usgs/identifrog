@@ -1,8 +1,11 @@
 package gov.usgs.identifrog.DataObjects;
 
+import gov.usgs.identifrog.Handlers.FolderHandler;
+
+import java.util.ArrayList;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import gov.usgs.identifrog.Handlers.FolderHandler;
 
 public class Frog {
 	private String ID;
@@ -21,8 +24,10 @@ public class Frog {
 	private Location location;
 	private String pathImage;
 	private Document document;
-
 	private Element element;
+	
+	//DB 2.0
+	private ArrayList<SiteSample> siteSamples;
 
 	private enum ListItem {
 		DORSALVIEW(1), ID(2), GENDER(3), SPECIES(4), DATECAPTURE(5), LOCATIONNAME(6), SURVEYID(7), MASS(8), LENGTH(9), DISCRIMINATOR(10), OBSERVER(11), FORMERID(12), DATEENTRY(13), RECORDER(14);
@@ -44,6 +49,23 @@ public class Frog {
 	public Frog() {
 	}
 
+	/**
+	 * Creates a frog using the old DB 1.0 style where a frog is a collection of all data rather than biometrics and a set of sitesamples
+	 * @param ID
+	 * @param formerID
+	 * @param surveyID
+	 * @param species
+	 * @param gender
+	 * @param mass
+	 * @param length
+	 * @param dateCapture
+	 * @param dateEntry
+	 * @param observer
+	 * @param recorder
+	 * @param discriminator
+	 * @param comments
+	 * @param location
+	 */
 	public Frog(String ID, String formerID, String surveyID, String species, String gender, String mass, String length, String dateCapture, String dateEntry, Personel observer, Personel recorder,
 			String discriminator, String comments, Location location) {
 		this.ID = ID;
@@ -101,6 +123,10 @@ public class Frog {
 		this.document = document;
 	}
 
+	/**
+	 * This constructor clones the frog passed in as a parameter so one can safely edit the returned object without side effects.
+	 * @param frog Frog object to clone
+	 */
 	public Frog(Frog frog) {
 		ID = frog.getID();
 		formerID = frog.getFormerID();
@@ -138,9 +164,13 @@ public class Frog {
 		this.document = document;
 	}
 
-	public void createElement() {
+	/**
+	 * Creates an XML element representing this frog in the XML database.
+	 * @return 
+	 */
+	public Element createElement(Document document) {
 		// CREATE FROG ELEMENT
-		element = document.createElement("frog");
+		Element element = document.createElement("frog");
 		// SET ID ATTRIBUTE OF FROG
 		element.setAttribute("id", getID().toString());
 		// SET FORMER ID ATTRIBUTE OF FROG
@@ -194,6 +224,34 @@ public class Frog {
 		element.appendChild(elementLocation.getElement());
 		//
 		element.appendChild(setupImage(document, "image", getGenericImageName()));
+		
+		return element;
+	}
+	
+	/**
+	 * Creates an XML element representing this frog in the XML database using the DB 2.0 styling (in progress) //TODO
+	 */
+	public Element createDBElement(Document document) {
+		// CREATE FROG ELEMENT
+		Element element = document.createElement("frog");
+		// SET ID ATTRIBUTE OF FROG
+		element.setAttribute("id", getID().toString());
+		
+		// CREATE SPECIES ELEMENT
+		Element species = document.createElement("species");
+		species.appendChild(document.createTextNode(getSpecies()));
+		element.appendChild(species);
+		// CREATE GENDER ELEMENT
+		Element gender = document.createElement("gender");
+		gender.appendChild(document.createTextNode(getGender()));
+		element.appendChild(gender);
+		
+		Element sites = document.createElement("sitesamples");
+		for (SiteSample sample : siteSamples) {
+			sites.appendChild(sample.createElement(document));
+		}
+		element.appendChild(sites);
+		return element;
 	}
 
 	private Element setupImage(Document doc, String type, String path) {
@@ -307,9 +365,8 @@ public class Frog {
 		return pathImage.substring(0, pathImage.indexOf(".")) + ".dsg";
 	}
 
-	public Element getElement() {
-		createElement();
-		return element;
+	public Element getElement(Document document) {
+		return createElement(document);
 	}
 
 	public void setID(String iD) {

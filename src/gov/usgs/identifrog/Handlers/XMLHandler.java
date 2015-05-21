@@ -66,11 +66,12 @@ public class XMLHandler {
 
 		// WRITE XML FILE
 		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		transformerFactory.setAttribute("indent-number",  2);
 		Transformer transformer = null;
 		try {
 			transformer = transformerFactory.newTransformer();
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		    transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "1");
+		    //transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "1");
 		} catch (TransformerConfigurationException e) {
 			IdentiFrog.LOGGER.writeException(e);
 			return false;
@@ -99,8 +100,8 @@ public class XMLHandler {
 		Document doc = docBuilder.newDocument();
 		Element root = doc.createElement("frogdatabase");
 		doc.appendChild(root);
-		for (int i = 0; i < frogs.size(); i++) {
-			root.appendChild(new Frog(frogs.get(i), doc).getElement());
+		for (Frog frog : frogs) {
+			root.appendChild(frog.createElement(doc));
 		}
 
 		// WRITE XML FILE

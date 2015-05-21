@@ -149,7 +149,10 @@ public class AddFrog extends JDialog {
 			//load frog
 			textSurveyID.setText(frog.getSurveyID());
 			textFrog_ID.setText(frog.getID());
-			textEntrydate.setText(frog.getDateEntry());
+			Calendar entryCal = Calendar.getInstance();
+			entryCal.setTime(df.parse(frog.getDateEntry()));
+			entryDatePicker.getModel().setDate(entryCal.get(Calendar.YEAR),entryCal.get(Calendar.MONTH), entryCal.get(Calendar.DAY_OF_MONTH));
+			entryDatePicker.getModel().setSelected(true);
 			textSpecies.setText(frog.getSpecies());
 			textMass.setText(frog.getMass());
 			textLength.setText(frog.getLength());
@@ -222,9 +225,9 @@ public class AddFrog extends JDialog {
 	JLabel labCapturedate = new JLabel();
 	JLabel labEntrydate = new JLabel();
 	String[] sexStrings = { "M", "F", "J", "Unknown" };
-	String[] day = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31" };
-	String[] month = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-	String[] year;
+	//String[] day = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31" };
+	//String[] month = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+	//String[] year;
 	//JComboBox<?> dayComboBox = new JComboBox<Object>(day);
 	//JComboBox<?> monthComboBox = new JComboBox<Object>(month);
 	//JComboBox<?> yearComboBox;
@@ -250,7 +253,7 @@ public class AddFrog extends JDialog {
 	ButtonGroup Butgroup = new ButtonGroup();
 	JTextField textZone = new JTextField();
 	JLabel labImage = new JLabel("", SwingConstants.CENTER);
-	JFormattedTextField textEntrydate = new JFormattedTextField();
+	//JFormattedTextField textEntrydate = new JFormattedTextField();
 	JDatePickerImpl entryDatePicker;
 	JLabel labZone = new JLabel();
 	JTextField textLocDesc = new JTextField();
@@ -299,7 +302,7 @@ public class AddFrog extends JDialog {
 			years.add(Integer.toString(parsingYear));
 			parsingYear++;
 		}
-		year = years.toArray(new String[years.size()]);
+		//year = years.toArray(new String[years.size()]);
 		//yearComboBox = new JComboBox<Object>(year);
 		
 		//start init
@@ -355,8 +358,7 @@ public class AddFrog extends JDialog {
 			if(((DefaultComboBoxModel)comboEntryFirstName.getModel()).getIndexOf(rcArray.get(k).getFirstName()) == -1 ) {
 				comboEntryFirstName.addItem(rcArray.get(k).getFirstName());
 			}
-			
-			
+						
 			//comboEntryLastName.addItem(rcArray.get(k).getLastName());
 			if (!entryFirstNameCorrespondToList.contains(rcArray.get(k).getFirstName())) {
 				entryFirstNameCorrespondToList.add(rcArray.get(k).getFirstName());
@@ -893,8 +895,8 @@ public class AddFrog extends JDialog {
 	  boolean isError = true;
 	  String errorMessage = "Error message at validate field";
 	  // validate entry person's last name
-	  if (isEmptyString(textEntrydate.getText())) {
-	    textEntrydate.requestFocus(true);
+	  if (!entryDatePicker.getModel().isSelected()) {
+		entryDatePicker.requestFocus(true);
 	    errorMessage = "Entry date cannot be empty";
 	  } else if (isEmptyString((String) comboEntryLastName.getSelectedItem())) {
 	    comboEntryLastName.requestFocus(true);
@@ -917,6 +919,9 @@ public class AddFrog extends JDialog {
     } else if (isEmptyString((String) sexComboBox.getSelectedItem())) {
       sexComboBox.requestFocus(true);
       errorMessage = "Select frog's gender";
+    } else if (!entryDatePicker.getModel().isSelected()) {
+		entryDatePicker.requestFocus(true);
+	    errorMessage = "Entry date cannot be empty";
     /*} else if (isEmptyString((String) dayComboBox.getSelectedItem())) {
       dayComboBox.requestFocus(true);
       errorMessage = "Capture Day cannot be empty";
@@ -1012,7 +1017,8 @@ public class AddFrog extends JDialog {
 
 		// ******************** VALIDATE FIELD ******************** //
 		if (validateField()) {
-			entrydate = textEntrydate.getText().trim();
+			Date eDate = (Date) entryDatePicker.getModel().getValue();
+			entrydate = df.format(eDate);
 			entryLastName = (String) comboEntryLastName.getSelectedItem();
 			entryFirstName = (String) comboEntryFirstName.getSelectedItem();
 			obsLastName = (String) comboObserverLastName.getSelectedItem();
@@ -1022,7 +1028,7 @@ public class AddFrog extends JDialog {
 			gender = (String) sexComboBox.getSelectedItem();
 			// Additional Discriminator
 			//int m = monthComboBox.getSelectedIndex() + 1;
-			capturedate = df.format(captureDatePicker.getModel());
+			capturedate = df.format(captureDatePicker.getModel().getValue());
 					
 					//yearComboBox.getSelectedItem() + "-" + m + "-"
 					//+ dayComboBox.getSelectedItem();
