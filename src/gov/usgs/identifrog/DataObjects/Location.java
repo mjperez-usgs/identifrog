@@ -212,6 +212,10 @@ public class Location {
 		this.description = description;
 	}
 
+	/**
+	 * Sets the coordinate type. Valid values are UTM, LatLong, and null.
+	 * @param coordinateType
+	 */
 	public void setCoordinateType(String coordinateType) {
 		this.coordinateType = coordinateType;
 	}

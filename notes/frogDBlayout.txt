@@ -1,0 +1,26 @@
+This file describes the XML database layout for a single frog with multiple images and multiple surveys over time.
+This is known as DB2.0 in the code comments. 
+
+	Frog
+	|-ID
+	|-Species
+	|-Gender
+	|-SiteSamples
+		|-SiteSample
+			|-Length
+			|-Location
+			|-Mass
+			|-Length
+			|-Date Capture
+			|-Date Entry
+			|-Discriminator
+			|-Recorder,Observer
+			|-Comments
+			|-Images
+				|-Image
+					|-Generic Image Filename + random data (for uniqueness post processing)
+					|-Signature Generated (true/false)
+					|-Source image hash (as full images are not stored in the project)
+				|-Image
+				|-...
+		|-SiteSample
