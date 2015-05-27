@@ -115,6 +115,14 @@ public class SiteSample {
 		return element;
 	}
 
+	public ArrayList<SiteImage> getSiteImages() {
+		return siteImages;
+	}
+
+	public void setSiteImages(ArrayList<SiteImage> siteImages) {
+		this.siteImages = siteImages;
+	}
+
 	public String getSurveyID() {
 		return surveyID;
 	}

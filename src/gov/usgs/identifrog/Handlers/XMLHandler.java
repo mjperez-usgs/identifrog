@@ -4,6 +4,7 @@ import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
 import gov.usgs.identifrog.DataObjects.Personel;
+import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.DataObjects.SiteSample;
 
 import java.io.File;
@@ -21,7 +22,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.omg.CORBA.NamedValue;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -292,13 +292,20 @@ public class XMLHandler {
 				sample.setDiscriminator(sampleElement.getElementsByTagName("discriminator").item(0).getTextContent());
 				
 				//Images
-				String temp;
-				for (int j = 0; j < frogElement.getElementsByTagName("image").getLength(); j++) {
-					temp = frogElement.getElementsByTagName("image").item(j).getAttributes().getNamedItem("type").getNodeValue();
-					if (temp.equals("image")) {
-						frog.setPathImage(frogElement.getElementsByTagName("image").item(j).getTextContent());
-					}
+				IdentiFrog.LOGGER.writeMessage("Loading -images- for SiteSample #"+s+" on frog with ID "+frog.getID());
+				Element imagesElement = (Element) sampleElement.getElementsByTagName("images").item(0);
+				NodeList imagesList = imagesElement.getElementsByTagName("image");
+				ArrayList<SiteImage> siteImages = new ArrayList<SiteImage>();
+				for (int n = 0; n < imagesList.getLength(); n++) {
+					IdentiFrog.LOGGER.writeMessage("Loading -image #"+n+"- for SiteSample #"+s+" on frog with ID "+frog.getID());
+					Element imageElement = (Element) imagesList.item(n);
+					SiteImage image = new SiteImage();
+					image.setImageFileName(imageElement.getElementsByTagName("filename").item(0).getTextContent());
+					image.setSignatureGenerated(imageElement.getElementsByTagName("signature").item(0).getTextContent().equals("true"));
+					image.setSourceImageHash(imageElement.getElementsByTagName("srchash").item(0).getTextContent());
+					siteImages.add(image);
 				}
+				sample.setSiteImages(siteImages);
 				
 				//Location
 				IdentiFrog.LOGGER.writeMessage("Loading -location- for SiteSample #"+s+" on frog with ID "+frog.getID());

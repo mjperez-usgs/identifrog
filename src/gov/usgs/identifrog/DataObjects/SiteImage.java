@@ -10,7 +10,7 @@ import org.w3c.dom.Node;
  *
  */
 public class SiteImage {
-	private String imageName;
+	private String imageFileName;
 	private boolean signatureGenerated;
 	private String sourceImageHash;
 	
@@ -20,11 +20,11 @@ public class SiteImage {
 	public void setSourceImageHash(String sourceImageHash) {
 		this.sourceImageHash = sourceImageHash;
 	}
-	public String getImageName() {
-		return imageName;
+	public String getImageFileName() {
+		return imageFileName;
 	}
-	public void setImageName(String imageName) {
-		this.imageName = imageName;
+	public void setImageFileName(String imageName) {
+		this.imageFileName = imageName;
 	}
 	public boolean isSignatureGenerated() {
 		return signatureGenerated;
@@ -42,7 +42,7 @@ public class SiteImage {
 		Element element = document.createElement("image");
 
 		Element imageNameElement = document.createElement("filename");
-		imageNameElement.appendChild(document.createTextNode(getImageName()));
+		imageNameElement.appendChild(document.createTextNode(getImageFileName()));
 
 		Element signatureElement = document.createElement("signature");
 		signatureElement.appendChild(document.createTextNode((isSignatureGenerated()) ? "true" : "false"));
