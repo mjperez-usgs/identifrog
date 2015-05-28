@@ -25,7 +25,7 @@ public class DataHandler {
   }
 
   public int getNextAvailableID() {
-    int nextAvailable = 1;
+    int nextAvailable = 0;
     for (Frog frog : frogs) {
     	Integer formerID = new Integer(frog.getFormerID());
     	if (formerID > nextAvailable) {

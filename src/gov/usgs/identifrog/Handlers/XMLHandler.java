@@ -103,7 +103,7 @@ public class XMLHandler {
 		Element root = doc.createElement("frogdatabase");
 		doc.appendChild(root);
 		for (Frog frog : frogs) {
-			root.appendChild(frog.createElement(doc));
+			root.appendChild(frog.createDBElement(doc));
 		}
 
 		// WRITE XML FILE

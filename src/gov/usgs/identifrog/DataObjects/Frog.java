@@ -83,6 +83,25 @@ public class Frog {
 		this.comments = comments;
 		this.location = location;
 	}
+	
+	/**
+	 * Creates a new frog and assigns it a single 
+	 * @param ID
+	 * @param species
+	 * @param gender
+	 * @param sample
+	 */
+	public Frog (String ID, String species, String gender, SiteSample sample) {
+		this.ID = ID;
+		this.species = species;
+		this.gender = gender;
+		siteSamples = new ArrayList<SiteSample>();
+		siteSamples.add(sample);
+	}
+	
+	public void addSiteSample(SiteSample sample) {
+		siteSamples.add(sample);
+	}
 
 	public Frog(String ID, String formerID, String surveyID, String species, String gender, String mass, String length, String dateCapture, String dateEntry, Personel observer, Personel recorder,
 			String discriminator, String comments, Location location, String pathImage) {

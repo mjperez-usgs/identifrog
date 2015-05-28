@@ -8,6 +8,7 @@ import gov.usgs.identifrog.DataObjects.DateLabelFormatter;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
 import gov.usgs.identifrog.DataObjects.Personel;
+import gov.usgs.identifrog.DataObjects.SiteSample;
 import gov.usgs.identifrog.Handlers.DataHandler;
 import gov.usgs.identifrog.Handlers.FolderHandler;
 
@@ -33,19 +34,22 @@ import java.util.Random;
 import java.util.prefs.Preferences;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.border.TitledBorder;
 
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
@@ -69,6 +73,11 @@ public class AddFrog extends JDialog {
 	private Preferences root = Preferences.userRoot();
 	private Preferences node = root.node("edu/isu/aadis/defaults");
 
+//	private int DEFAULT_WIDTH = 170, DEFAULT_HEIGHT = 25;
+	private Dimension DEFAULT_MAX_ELEM_SIZE = new Dimension(170,25);
+	private Font level1TitleFont = new Font("MS Sans Serif", Font.BOLD, 14);
+	private Font level2TitleFont = new Font("MS Sans Serif", Font.BOLD, 12);
+	
 	int frogDbId, entpersDbId, obsDbId, caplocDbId, zone, frogidNum;
 
 	String surveyID;
@@ -181,7 +190,8 @@ public class AddFrog extends JDialog {
 				textZone.setVisible(false);
 				labDatum.setVisible(false);
 				labZone.setVisible(false);
-				
+				labX.setText("Latitude");
+				labY.setText("Longitude");
 			}
 			if (((JRadioButton) e.getSource()).getText() == "UTM") {
 				locCoorType = "UTM";
@@ -189,25 +199,38 @@ public class AddFrog extends JDialog {
 				textZone.setVisible(true);
 				labDatum.setVisible(true);
 				labZone.setVisible(true);
+				labX.setText("Northing");
+				labY.setText("Easting");
 			}
 		}
 	};
-	private ActionListener radDiscrButtonAction = new ActionListener() {
+	/*private ActionListener radDiscrButtonAction = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 			addDiscriminator = ((JRadioButton) e.getSource()).getText();
 			/*
 			 * if (((JRadioButton) e.getSource()).getText() == "Yes") { addDiscriminator = "Yes"; }
 			 * if (((JRadioButton) e.getSource()).getText() == "No") { addDiscriminator = "No"; }
-			 */
+			 *
 		}
-	};
+	};*/
 	JButton butFillPreviousFrogInfo = new JButton();
 	JButton butDebugPopulate = new JButton();
 	JLabel labEntryPersonTitle = new JLabel();
 	JLabel labObserverTitle = new JLabel();
 	JLabel labFrogTitle = new JLabel();
 	JLabel labCapLocationTitle = new JLabel();
+	
 	JPanel panelAllInfo = new JPanel();
+	JPanel panelTopButtons = new JPanel();
+	JPanel panelFrogInfo = new JPanel();
+
+	JPanel panelSiteSampleInfo = new JPanel();
+	JPanel panelEntryPersonInfo = new JPanel();
+	JPanel panelObserverInfo = new JPanel();
+	JPanel panelLocation = new JPanel();
+	
+	JPanel panelBottomButtons = new JPanel();
+	
 	JLabel labEntryLastName = new JLabel();
 	JLabel labEntryFirstName = new JLabel();
 	JLabel labObserverLastName = new JLabel();
@@ -220,8 +243,7 @@ public class AddFrog extends JDialog {
 	JTextField textDatum = new JTextField();
 	JTextField textSurveyID = new JTextField();
 	JLabel labSurveyID = new JLabel();
-	JPanel panelEntryPersonInfo = new JPanel();
-	JPanel panelObserverInfo = new JPanel();
+	
 	JLabel labCapturedate = new JLabel();
 	JLabel labEntrydate = new JLabel();
 	String[] sexStrings = { "M", "F", "J", "Unknown" };
@@ -235,11 +257,11 @@ public class AddFrog extends JDialog {
 	JComboBox<?> sexComboBox = new JComboBox<Object>(sexStrings);
 	JRadioButton additDiscrNo = new JRadioButton("No", false);
 	JRadioButton additDiscrYes = new JRadioButton("Yes", false);
-	JLabel additDiscr = new JLabel("Add. Discriminator");
-	ButtonGroup ButAdditDiscrGroup = new ButtonGroup();
-	boolean isAdditDiscr = false;
+	//JLabel additDiscr = new JLabel("Add. Discriminator");
+	JCheckBox checkAdditionalDescriptor = new JCheckBox("Additional Discriminator");
+	//ButtonGroup ButAdditDiscrGroup = new ButtonGroup();
+	//boolean isAdditDiscr = false;
 	JTextField textMass = new JTextField();
-	JPanel panelButtons = new JPanel();
 	JLabel labFrogComments = new JLabel();
 	JTextField textFrogComments = new JTextField();
 	JLabel labCoorType = new JLabel();
@@ -253,7 +275,6 @@ public class AddFrog extends JDialog {
 	ButtonGroup Butgroup = new ButtonGroup();
 	JTextField textZone = new JTextField();
 	JLabel labImage = new JLabel("", SwingConstants.CENTER);
-	//JFormattedTextField textEntrydate = new JFormattedTextField();
 	JDatePickerImpl entryDatePicker;
 	JLabel labZone = new JLabel();
 	JTextField textLocDesc = new JTextField();
@@ -261,8 +282,7 @@ public class AddFrog extends JDialog {
 	JTextField textFrog_ID = new JTextField();
 	JLabel labFrog_ID = new JLabel();
 	JLabel labFRO = new JLabel();
-	JPanel panelLocation = new JPanel();
-	JPanel panelFrogInfo = new JPanel();
+	
 	JLabel labDatum = new JLabel();
 	JLabel labLocationName = new JLabel();
 	JLabel labMass = new JLabel();
@@ -270,7 +290,6 @@ public class AddFrog extends JDialog {
 	JLabel labCoordinates = new JLabel();
 	JTextField textLength = new JTextField();
 	JLabel labLength = new JLabel();
-	BorderLayout borderLayout1 = new BorderLayout();
 	JButton butCancel = new JButton();
 	JLabel labMassUnit = new JLabel();
 	JLabel labLengthUnit = new JLabel();
@@ -372,21 +391,34 @@ public class AddFrog extends JDialog {
 		 * Double(lcArray.get(k).getLongitude())); Integer locid = new Integer(-1); LocInfo locinfo
 		 * = new LocInfo(locid.intValue(), lcArray.get(k).getName(), xy); locList.add(locinfo); }
 		 */
-		getContentPane().setLayout(borderLayout1);
+		setLayout(new BorderLayout());
+		panelAllInfo.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		panelAllInfo.setLayout(null);
+		panelAllInfo.setLayout(new BoxLayout(panelAllInfo,BoxLayout.PAGE_AXIS));
 		panelEntryPersonInfo.setLayout(null);
-		panelObserverInfo.setBorder(null);
+		panelEntryPersonInfo.setBorder(BorderFactory.createEtchedBorder());
+		panelObserverInfo.setBorder(BorderFactory.createEtchedBorder());
 		panelObserverInfo.setLayout(null);
-		panelFrogInfo.setBorder(null);
-		panelFrogInfo.setLayout(null);
+		TitledBorder staticFrogBorder = BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),"Static Frog Information");
+		staticFrogBorder.setTitleFont(level1TitleFont);
+		panelFrogInfo.setBorder(staticFrogBorder);
+		panelFrogInfo.setLayout(new BoxLayout(panelFrogInfo,BoxLayout.LINE_AXIS));
+		
 		panelLocation.setLayout(null);
+		panelLocation.setBorder(BorderFactory.createEtchedBorder());
 		panelAllInfo.setPreferredSize(new Dimension(800, 695));
-		panelEntryPersonInfo.setBounds(new Rectangle(169, 0, 540, 170));
+		
+		//panelEntryPersonInfo.setBounds(new Rectangle(169, 0, 540, 170));
+		/*panelEntryPersonInfo.setBounds(new Rectangle(169, 260, 640, 180));
+		//panelTopButtons
 		panelObserverInfo.setBounds(new Rectangle(169, 180, 440, 70));
-		panelFrogInfo.setBounds(new Rectangle(169, 260, 640, 180));
+		//panelFrogInfo.setBounds(new Rectangle(169, 260, 640, 180));
+		panelFrogInfo.setBounds(new Rectangle(169, 0, 540, 170));
+
 		panelLocation.setBounds(new Rectangle(169, 450, 440, 190));
-		panelButtons.setBounds(new Rectangle(169, 645, 440, 50));
+		panelButtons.setBounds(new Rectangle(169, 645, 440, 50));*/
+		
+		
 		// PANEL ENTRY PERSON INFO
 		panelEntryPersonInfo.setFont(new java.awt.Font("MS Sans Serif", Font.BOLD, 14));
 		butFillPreviousFrogInfo.setBounds(new Rectangle(180, 10, 180, 35));// 8
@@ -399,7 +431,7 @@ public class AddFrog extends JDialog {
 			}
 		});
 		//Debugging button
-		butDebugPopulate.setBounds(new Rectangle(350, 10, 180, 35));// 8
+		butDebugPopulate.setBounds(new Rectangle(360, 10, 180, 35));// 8
 		butDebugPopulate.setText("Debug: Autopopulate");
 		butDebugPopulate.setIcon(new ImageIcon(MainFrame.class.getResource("IconDebug32.png")));
 		butDebugPopulate.addActionListener(new java.awt.event.ActionListener() {
@@ -425,7 +457,7 @@ public class AddFrog extends JDialog {
 		p.put("text.year", "Year");
 		JDatePanelImpl entryDatePanel = new JDatePanelImpl(entryDateModel,p);
 		entryDatePicker = new JDatePickerImpl(entryDatePanel,new DateLabelFormatter());
-		entryDatePicker.setBounds(new Rectangle(13, 85, 160, 25));
+		entryDatePicker.setBounds(new Rectangle(13, 85, 160, 25)); //TODO
 		
 		/*
 		textEntrydate.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
@@ -489,18 +521,30 @@ public class AddFrog extends JDialog {
 		labFrogTitle.setFont(new Font("MS Sans Serif", Font.BOLD, 14));
 		labFrogTitle.setBounds(new Rectangle(13, 0, 70, 20));
 		labFrogTitle.setText("Frog");
+		
+		//Frog ID
+		JPanel idPanel = new JPanel();
+		idPanel.setLayout(new BoxLayout(idPanel, BoxLayout.PAGE_AXIS));
 		labFrog_ID.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
-		labFrog_ID.setBounds(new Rectangle(13, 22, 15, 20));
+		//labFrog_ID.setBounds(new Rectangle(13, 22, 15, 20));
 		labFrog_ID.setText("ID");
+		labFrog_ID.setMaximumSize(DEFAULT_MAX_ELEM_SIZE);
+		textFrog_ID.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
+		//textFrog_ID.setBounds(new Rectangle(13, 42, 143, 25)); //TODO
+		idPanel.add(labFrog_ID);
+		idPanel.add(textFrog_ID);
+		
 		labFRO.setText("<html><div style=\"width:115px;\">If you want to add an image to an existing frog, use the right click menu for that frog to add one.</div></html>");
 		labFRO.setFont(new Font("MS Sans Serif", Font.PLAIN, 11));
 		labFRO.setBounds(new Rectangle(10, 102, 149, 140));
 		
-		textFrog_ID.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
-		textFrog_ID.setBounds(new Rectangle(13, 42, 143, 25));
+		
+		entryDatePicker.setBounds(new Rectangle(13, 85, 160, 25)); //TODO
+
 		textFrog_ID.setColumns(143);
 		textFrog_ID.setText(nextAvailFrogId);
 		textFrog_ID.setEnabled(false);
+		textFrog_ID.setMaximumSize(DEFAULT_MAX_ELEM_SIZE);
 		/*labNextFrog_ID.setText("Next Free:");
 		labNextFrog_ID.setFont(new Font("MS Sans Serif", Font.PLAIN, 11));
 		labNextFrog_ID.setBounds(new Rectangle(33, 22, 53, 20));
@@ -508,25 +552,43 @@ public class AddFrog extends JDialog {
 		lab2NextFrog_ID.setBounds(new Rectangle(87, 22, 150, 20));
 		lab2NextFrog_ID.setBounds(new Rectangle(125, 22, 90, 20));
 		lab2NextFrog_ID.setText(nextAvailFrogId);*/
-		labSpecies.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
-		labSpecies.setBounds(new Rectangle(168, 22, 80, 20));
+		
+		//Species
+		JPanel speciesPanel = new JPanel();
+		speciesPanel.setLayout(new BoxLayout(speciesPanel, BoxLayout.PAGE_AXIS));
+		//labSpecies.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
+		//labSpecies.setBounds(new Rectangle(168, 22, 80, 20));
 		labSpecies.setText("Species");
+		labSpecies.setMaximumSize(DEFAULT_MAX_ELEM_SIZE);
 		textSpecies.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
-		textSpecies.setBounds(new Rectangle(168, 42, 163, 25));
+		//textSpecies.setBounds(new Rectangle(168, 42, 163, 25)); //TODO
 		textSpecies.setColumns(163);
+		textSpecies.setMaximumSize(DEFAULT_MAX_ELEM_SIZE);
+		speciesPanel.add(labSpecies);
+		speciesPanel.add(textSpecies);
+		
+		//Sex
+		JPanel sexPanel = new JPanel();
+		sexPanel.setLayout(new BoxLayout(sexPanel, BoxLayout.PAGE_AXIS));
 		labSex.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
-		labSex.setBounds(new Rectangle(343, 22, 80, 20));
+		labSex.setMaximumSize(DEFAULT_MAX_ELEM_SIZE);
+//		labSex.setBounds(new Rectangle(343, 22, 80, 20));
+
 		labSex.setText("Gender");
-		sexComboBox.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
+		sexComboBox.setFont(new Font("MS Sans Serif", Font.PLAIN, 13)); //TODO
 		sexComboBox.setSelectedIndex(-1);
-		sexComboBox.setBounds(new Rectangle(343, 42, 78, 25));
+		sexComboBox.setMaximumSize(DEFAULT_MAX_ELEM_SIZE);
+	//	sexComboBox.setBounds(new Rectangle(343, 42, 78, 25));
 		sexComboBox.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				sexComboBox_actionPerformed(e);
 			}
 		});
+		
+		sexPanel.add(labSex);
+		sexPanel.add(sexComboBox);
 		// Selection Addit. discriminator
-		JRadioButton additDiscrNo = new JRadioButton("No", true);
+		/*JRadioButton additDiscrNo = new JRadioButton("No", true);
 		JRadioButton additDiscrYes = new JRadioButton("Yes", false);
 		addDiscriminator = "Yes";
 		JLabel additDiscr = new JLabel("Add. Discriminator");
@@ -537,10 +599,14 @@ public class AddFrog extends JDialog {
 		additDiscrYes.setFont(new Font("MS Sans Serif", Font.PLAIN, 12));
 		additDiscrYes.setBounds(new Rectangle(445, 45, 55, 20));
 		additDiscrNo.setBounds(new Rectangle(500, 45, 55, 20));
-		ButAdditDiscrGroup.add(additDiscrNo);
-		ButAdditDiscrGroup.add(additDiscrYes);
-		additDiscrNo.addActionListener(radDiscrButtonAction);
-		additDiscrYes.addActionListener(radDiscrButtonAction);
+		//ButAdditDiscrGroup.add(additDiscrNo);
+		//ButAdditDiscrGroup.add(additDiscrYes);
+		//additDiscrNo.addActionListener(radDiscrButtonAction);
+		//additDiscrYes.addActionListener(radDiscrButtonAction);*/
+		
+		checkAdditionalDescriptor.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
+		
+		
 		LatLongButton.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
 		UTMButton.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
 		LatLongButton.setBounds(new Rectangle(288, 100, 80, 20));
@@ -665,7 +731,7 @@ public class AddFrog extends JDialog {
 		textZone.setBounds(new Rectangle(223, 152, 200, 25));
 		textZone.setColumns(200);
 		butNewEntry.setIcon(new ImageIcon(MainFrame.class.getResource("IconSave32.png")));
-		butNewEntry.setText("Save Entry");
+		butNewEntry.setText("Generate Signature");
 		butNewEntry.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				butNewEntry_actionPerformed(e);
@@ -690,10 +756,18 @@ public class AddFrog extends JDialog {
 			}
 		});
 		getContentPane().add(panelAllInfo, BorderLayout.CENTER);
-		panelEntryPersonInfo.add(butFillPreviousFrogInfo, null);
-		panelEntryPersonInfo.add(butDebugPopulate, null);
+		
+		//top buttons
+		panelTopButtons.setLayout(new BoxLayout(panelTopButtons, BoxLayout.LINE_AXIS));
+		panelTopButtons.add(Box.createHorizontalGlue());
+		panelTopButtons.add(butFillPreviousFrogInfo);
+		if (IdentiFrog.DEBUGGING_BUILD){
+			panelTopButtons.add(Box.createRigidArea(new Dimension(10,10)));
+			panelTopButtons.add(butDebugPopulate);
+		}
+		panelTopButtons.add(Box.createHorizontalGlue());
+		
 		panelEntryPersonInfo.add(labEntryPersonTitle, null);
-		//panelEntryPersonInfo.add(textEntrydate, null);
 		panelEntryPersonInfo.add(entryDatePicker, null);
 		panelEntryPersonInfo.add(labEntrydate, null);
 		panelEntryPersonInfo.add(labEntryLastName, null);
@@ -705,7 +779,8 @@ public class AddFrog extends JDialog {
 		panelObserverInfo.add(comboObserverLastName, null);
 		panelObserverInfo.add(labObserverFirstName, null);
 		panelObserverInfo.add(comboObserverFirstName, null);
-		panelFrogInfo.add(labFrogTitle, null);
+		
+		/*panelFrogInfo.add(labFrogTitle, null);
 		panelFrogInfo.add(labFrog_ID, null);
 		panelFrogInfo.add(labNextFrog_ID, null);
 		// panelFrogInfo.add(labFRO, null);
@@ -715,25 +790,29 @@ public class AddFrog extends JDialog {
 		panelFrogInfo.add(textSpecies, null);
 		panelFrogInfo.add(labSex, null);
 		panelFrogInfo.add(sexComboBox, null);
-		panelFrogInfo.add(sexComboBox, null);
-		panelFrogInfo.add(additDiscr, null);
-		panelFrogInfo.add(additDiscrNo, null);
-		panelFrogInfo.add(additDiscrYes, null);
-		panelFrogInfo.add(labCapturedate, null);
+		panelFrogInfo.add(sexComboBox, null);*/
+		
+		//panelFroginfo.add(labF)
+		panelFrogInfo.add(idPanel);
+		panelFrogInfo.add(speciesPanel);
+		panelFrogInfo.add(sexPanel);
+		
+		
+		//panelFrogInfo.add(additDiscr, null);
+		//panelFrogInfo.add(additDiscrNo, null);
+		//panelFrogInfo.add(additDiscrYes, null);
+		/*panelFrogInfo.add(labCapturedate, null);
 		panelFrogInfo.add(captureDatePicker,null);
-		//panelFrogInfo.add(dayComboBox, null);
-		//panelFrogInfo.add(monthComboBox, null);
-		//panelFrogInfo.add(yearComboBox, null);
-		// panelFrogInfo.add(textCapturedate, null);
 		panelFrogInfo.add(labMass, null);
 		panelFrogInfo.add(textMass, null);
 		panelFrogInfo.add(labLength, null);
-		panelFrogInfo.add(textLength, null);
+		panelFrogInfo.add(textLength, null);*/
+
 		// panelFrogInfo.add(labMassUnit, null);
-		panelFrogInfo.add(labSurveyID, null);
+		/*panelFrogInfo.add(labSurveyID, null);
 		panelFrogInfo.add(textSurveyID, null);
 		panelFrogInfo.add(labFrogComments, null);
-		panelFrogInfo.add(textFrogComments, null);
+		panelFrogInfo.add(textFrogComments, null);*/
 		// panelFrogInfo.add(labLengthUnit, null);
 		panelLocation.add(labCapLocationTitle, null);
 		panelLocation.add(labLocationName, null);
@@ -751,16 +830,24 @@ public class AddFrog extends JDialog {
 		panelLocation.add(textDatum, null);
 		panelLocation.add(labZone, null);
 		panelLocation.add(textZone, null);
-		panelButtons.add(butCancel, null);
-		panelButtons.add(butClearAll, null);
-		panelButtons.add(butNewEntry, null);
-		panelAllInfo.add(labImage, null);
-		panelAllInfo.add(panelEntryPersonInfo, null);
-		panelAllInfo.add(panelObserverInfo, null);
-		panelAllInfo.add(labFRO, null);
-		panelAllInfo.add(panelFrogInfo, null);
-		panelAllInfo.add(panelLocation, null);
-		panelAllInfo.add(panelButtons, null);
+		panelBottomButtons.add(Box.createHorizontalGlue());
+		panelBottomButtons.add(butCancel);
+		panelBottomButtons.add(Box.createRigidArea(new Dimension(10,10)));
+		panelBottomButtons.add(butClearAll);
+		panelBottomButtons.add(Box.createRigidArea(new Dimension(10,10)));
+
+		panelBottomButtons.add(butNewEntry);
+		panelBottomButtons.add(Box.createHorizontalGlue());
+		//panelAllInfo.add(labImage);
+		panelAllInfo.add(panelTopButtons);
+		panelAllInfo.add(panelFrogInfo);
+		panelAllInfo.add(panelEntryPersonInfo);
+		panelAllInfo.add(panelObserverInfo);
+		//panelAllInfo.add(labFRO);
+		
+		panelAllInfo.add(panelLocation);
+		panelAllInfo.add(Box.createVerticalGlue());
+		panelAllInfo.add(panelBottomButtons);
 	}
 
 	/**
@@ -1059,10 +1146,25 @@ public class AddFrog extends JDialog {
 			Location lc = new Location(locationName, locationDescription,
 					locCoorType, textX.getText(), textY.getText(), datum,
 					Integer.toString(zone));
-			Frog f = new Frog(frogID, formerID, textSurveyID.getText(),
-					species, gender, textMass.getText(), textLength.getText(),
-					capturedate, entrydate, ob, rc, addDiscriminator, comments,
-					lc);
+			//Frog f = new Frog(frogID, formerID, textSurveyID.getText(),
+			//		species, gender, textMass.getText(), textLength.getText(),
+			//		capturedate, entrydate, ob, rc, addDiscriminator, comments,
+			//		lc);
+			
+			//Generate sitesample
+			SiteSample firstSample = new SiteSample();
+			firstSample.setSurveyID(textSurveyID.getText());
+			firstSample.setMass(textMass.getText());
+			firstSample.setLength(textLength.getText());
+			firstSample.setDateCapture(capturedate);
+			firstSample.setDateEntry(entrydate);
+			firstSample.setRecorder(rc);
+			firstSample.setObserver(ob);
+			firstSample.setDiscriminator(addDiscriminator);
+			firstSample.setComments(comments);
+			firstSample.setLocation(lc);
+			
+			Frog f = new Frog(frogID, species, gender, firstSample);
 			if (frog != null) {
 				this.frog = f;
 				//it's in edit mode
@@ -1191,7 +1293,7 @@ public class AddFrog extends JDialog {
 			textX.setText("");
 			textY.setText("");
 			Butgroup.clearSelection(); // set radio LatLongButton, UTMButton to false
-			ButAdditDiscrGroup.clearSelection();
+			checkAdditionalDescriptor.setSelected(false);
 			textDatum.setText("");
 			textZone.setText("");
 		}
@@ -1242,7 +1344,7 @@ public class AddFrog extends JDialog {
 		textX.setText("115.8111");
 		textY.setText("37.2350");
 		Butgroup.setSelected(LatLongButton.getModel(), true); // set radio LatLongButton, UTMButton to false
-		ButAdditDiscrGroup.clearSelection();
+		checkAdditionalDescriptor.setSelected(false);
 		textDatum.setText("");
 		textZone.setText("");
 	}
