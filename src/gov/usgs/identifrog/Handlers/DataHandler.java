@@ -27,9 +27,8 @@ public class DataHandler {
   public int getNextAvailableID() {
     int nextAvailable = 0;
     for (Frog frog : frogs) {
-    	Integer formerID = new Integer(frog.getFormerID());
-    	if (formerID > nextAvailable) {
-    		nextAvailable = formerID;
+    	if (frog.getID() > nextAvailable) {
+    		nextAvailable = frog.getID();
     	}
     }
     return nextAvailable+1;
@@ -45,59 +44,29 @@ public class DataHandler {
       return arrayID.get(arrayID.size() - 1) + 1;
     }*/
   }
-
-  private int searchFrogByID(String ID) {
-    int index = -1;
-    for (int i = 0; i < frogs.size(); i++) {
-      if (frogs.get(i).getFormerID().equals(ID)) {
-        index = i;
-      }
-    }
-    return index;
-  }
-
+  
+ 
+/*
   private int searchFrogByFrogID(String ID) {
     int index = -1;
     for (int i = 0; i < frogs.size(); i++) {
-      if (frogs.get(i).getID().equals(ID)) {
+      if (frogs.get(i).getID() == ID) {
         index = i;
       }
     }
     return index;
-  }
+  }*/
 
-  /**
-   * Finds a frog by it's ID.
-   * @param ID ID of the frog in the DB.
-   * @return Frog object containing info about frog with the ID.
-   */
-  public Frog searchFrog(String ID) {
+
+  /*public Frog searchFrog(int ID) {
     int index = searchFrogByID(ID);
     if (index == -1) {
       return null;
     }
     return frogs.get(index);
-  }
+  }*/
 
-  public void removeFrog(String ID) {
-    int index = searchFrogByID(ID);
-    if (index == -1) {
-      return;
-    }
-    frogs.remove(index);
-  }
 
-  public void replaceFrog(String ID, Frog frog) {
-    int index = -1;
-    for (int i = 0; i < frogs.size(); i++) {
-      if (frogs.get(i).getFormerID().equals(ID)) {
-        index = i;
-      }
-    }
-    if (index == -1) {
-      frogs.set(index, frog);
-    }
-  }
 
   public ArrayList<Personel> uniquePersonels(String type) {
     ArrayList<Personel> personel = new ArrayList<Personel>();
@@ -145,16 +114,16 @@ public class DataHandler {
   
   public DataHandler getUniqueFrogs() {
     ArrayList<Frog> uniqueFrogs;
-    ArrayList<String> frogIDs = new ArrayList<String>();
+    ArrayList<Integer> frogIDs = new ArrayList<Integer>();
     for (int i = 0; i < frogs.size(); i++) {
       frogIDs.add(frogs.get(i).getID());
     }
-    HashSet<String> uniqueFrogIDSet = new HashSet<String>(frogIDs);
+    HashSet<Integer> uniqueFrogIDSet = new HashSet<Integer>(frogIDs);
     frogIDs.clear();
     frogIDs.addAll(uniqueFrogIDSet);
     uniqueFrogs = new ArrayList<Frog>();
     for (int i = 0; i < frogIDs.size(); i++) {
-      uniqueFrogs.add(frogs.get(searchFrogByFrogID(frogIDs.get(i))));
+      uniqueFrogs.add(XMLFrogDatabase.searchFrogByID(frogIDs.get(i)));
     }
     return new DataHandler(uniqueFrogs);
   }

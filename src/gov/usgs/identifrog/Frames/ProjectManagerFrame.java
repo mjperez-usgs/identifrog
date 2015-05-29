@@ -5,7 +5,7 @@ import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.MainFrame;
 import gov.usgs.identifrog.Site;
 import gov.usgs.identifrog.Handlers.FolderHandler;
-import gov.usgs.identifrog.Handlers.XMLHandler;
+import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 import java.awt.Dimension;
 import java.awt.Image;
@@ -205,7 +205,7 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 	
 	public void createSite(String location, String siteName){
 		FolderHandler fh = new FolderHandler(location+File.separator+siteName);
-		XMLHandler file = new XMLHandler(fh.getFileNamePath());
+		XMLFrogDatabase file = new XMLFrogDatabase(fh.getFileNamePath());
 		if (!fh.FoldersExist()) {
 			fh.createFolders();
 			file.CreateXMLFile();

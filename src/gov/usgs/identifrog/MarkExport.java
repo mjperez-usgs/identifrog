@@ -80,7 +80,7 @@ public class MarkExport {
 	private static ArrayList<String> getFrogList(ArrayList<Frog> frogs) {
 		ArrayList<String> list = new ArrayList<String>();
 		for (int i = 0; i < frogs.size(); i++) {
-			list.add(frogs.get(i).getID());
+			list.add(Integer.toString(frogs.get(i).getID())); //TODO
 		}
 		return list;
 	}

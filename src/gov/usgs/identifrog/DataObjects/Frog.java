@@ -8,8 +8,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 public class Frog {
-	private String ID;
-	private String formerID;
+	private int ID;
 	private String surveyID;
 	private String species;
 	private String gender;
@@ -17,17 +16,26 @@ public class Frog {
 	private String length;
 	private String dateCapture;
 	private String dateEntry;
+	private String observer2, recorder2;
 	private Personel observer;
 	private Personel recorder;
 	private String discriminator;
 	private String comments;
 	private Location location;
 	private String pathImage;
-	private Document document;
-	private Element element;
+	/*private Document document;
+	private Element element;*/
 	
 	//DB 2.0
 	private ArrayList<SiteSample> siteSamples;
+
+	public ArrayList<SiteSample> getSiteSamples() {
+		return siteSamples;
+	}
+
+	public void setSiteSamples(ArrayList<SiteSample> siteSamples) {
+		this.siteSamples = siteSamples;
+	}
 
 	private enum ListItem {
 		DORSALVIEW(1), ID(2), GENDER(3), SPECIES(4), DATECAPTURE(5), LOCATIONNAME(6), SURVEYID(7), MASS(8), LENGTH(9), DISCRIMINATOR(10), OBSERVER(11), FORMERID(12), DATEENTRY(13), RECORDER(14);
@@ -66,10 +74,9 @@ public class Frog {
 	 * @param comments
 	 * @param location
 	 */
-	public Frog(String ID, String formerID, String surveyID, String species, String gender, String mass, String length, String dateCapture, String dateEntry, Personel observer, Personel recorder,
+	public Frog(int ID, String surveyID, String species, String gender, String mass, String length, String dateCapture, String dateEntry, Personel observer, Personel recorder,
 			String discriminator, String comments, Location location) {
 		this.ID = ID;
-		this.formerID = formerID;
 		this.surveyID = surveyID;
 		this.species = species;
 		this.gender = gender;
@@ -91,7 +98,7 @@ public class Frog {
 	 * @param gender
 	 * @param sample
 	 */
-	public Frog (String ID, String species, String gender, SiteSample sample) {
+	public Frog (int ID, String species, String gender, SiteSample sample) {
 		this.ID = ID;
 		this.species = species;
 		this.gender = gender;
@@ -103,10 +110,9 @@ public class Frog {
 		siteSamples.add(sample);
 	}
 
-	public Frog(String ID, String formerID, String surveyID, String species, String gender, String mass, String length, String dateCapture, String dateEntry, Personel observer, Personel recorder,
+	public Frog(int ID, String formerID, String surveyID, String species, String gender, String mass, String length, String dateCapture, String dateEntry, Personel observer, Personel recorder,
 			String discriminator, String comments, Location location, String pathImage) {
 		this.ID = ID;
-		this.formerID = formerID;
 		this.surveyID = surveyID;
 		this.species = species;
 		this.gender = gender;
@@ -121,34 +127,13 @@ public class Frog {
 		this.location = location;
 		this.pathImage = pathImage;
 	}
-
-	public Frog(String ID, String formerID, String surveyID, String species, String gender, String mass, String length, String dateCapture, String dateEntry, Personel observer, Personel recorder,
-			String discriminator, String comments, Location location, String pathImage, Document document) {
-		this.ID = ID;
-		this.formerID = formerID;
-		this.surveyID = surveyID;
-		this.species = species;
-		this.gender = gender;
-		this.mass = mass;
-		this.length = length;
-		this.dateCapture = dateCapture;
-		this.dateEntry = dateEntry;
-		this.observer = observer;
-		this.recorder = recorder;
-		this.discriminator = discriminator;
-		this.comments = comments;
-		this.location = location;
-		this.pathImage = pathImage;
-		this.document = document;
-	}
-
+	
 	/**
 	 * This constructor clones the frog passed in as a parameter so one can safely edit the returned object without side effects.
 	 * @param frog Frog object to clone
 	 */
 	public Frog(Frog frog) {
 		ID = frog.getID();
-		formerID = frog.getFormerID();
 		surveyID = frog.getSurveyID();
 		species = frog.getSpecies();
 		gender = frog.getGender();
@@ -162,25 +147,6 @@ public class Frog {
 		comments = frog.getComments();
 		location = frog.getLocation();
 		pathImage = frog.getGenericImageName();
-	}
-
-	public Frog(Frog frog, Document document) {
-		ID = frog.getID();
-		formerID = frog.getFormerID();
-		surveyID = frog.getSurveyID();
-		species = frog.getSpecies();
-		gender = frog.getGender();
-		mass = frog.getMass();
-		length = frog.getLength();
-		dateCapture = frog.getDateCapture();
-		dateEntry = frog.getDateEntry();
-		observer = frog.getObserver();
-		recorder = frog.getRecorder();
-		discriminator = frog.getDiscriminator();
-		comments = frog.getComments();
-		location = frog.getLocation();
-		pathImage = frog.getGenericImageName();
-		this.document = document;
 	}
 
 	/**
@@ -191,9 +157,7 @@ public class Frog {
 		// CREATE FROG ELEMENT
 		Element element = document.createElement("frog");
 		// SET ID ATTRIBUTE OF FROG
-		element.setAttribute("id", getID().toString());
-		// SET FORMER ID ATTRIBUTE OF FROG
-		element.setAttribute("formerid", getFormerID());
+		element.setAttribute("id", Integer.toString(getID()));
 		// CREATE SURVEY ID ELEMENT
 		Element surveyid = document.createElement("surveyid");
 		surveyid.appendChild(document.createTextNode(getSurveyID()));
@@ -254,7 +218,7 @@ public class Frog {
 		// CREATE FROG ELEMENT
 		Element element = document.createElement("frog");
 		// SET ID ATTRIBUTE OF FROG
-		element.setAttribute("id", getID().toString());
+		element.setAttribute("id", Integer.toString(getID()));
 		
 		// CREATE SPECIES ELEMENT
 		Element species = document.createElement("species");
@@ -285,7 +249,6 @@ public class Frog {
 	public String toString() {
 		String buffer = null;
 		buffer = "Frog ID: " + ID + "\n";
-		buffer = buffer + "Former ID: " + formerID + "\n";
 		buffer = buffer + "Survey ID: " + surveyID + "\n";
 		buffer = buffer + "Gender: " + gender + "\n";
 		buffer = buffer + "BIOMETICS\n";
@@ -312,7 +275,6 @@ public class Frog {
 	public Object[] toArray(FolderHandler fh) {
 		Object fo[] = new Object[ListItem.getSize()];
 		fo[ListItem.ID.getValue()] = "FROG" + ID;
-		fo[ListItem.FORMERID.getValue()] = formerID;
 		fo[ListItem.SURVEYID.getValue()] = surveyID;
 		fo[ListItem.GENDER.getValue()] = gender;
 		fo[ListItem.SPECIES.getValue()] = species;
@@ -328,12 +290,8 @@ public class Frog {
 		return fo;
 	}
 
-	public String getID() {
+	public int getID() {
 		return ID;
-	}
-
-	public String getFormerID() {
-		return formerID;
 	}
 
 	public String getSpecies() {
@@ -388,12 +346,8 @@ public class Frog {
 		return createElement(document);
 	}
 
-	public void setID(String iD) {
+	public void setID(int iD) {
 		ID = iD;
-	}
-
-	public void setFormerID(String formerID) {
-		this.formerID = formerID;
 	}
 
 	public void setSpecies(String species) {
@@ -454,5 +408,13 @@ public class Frog {
 
 	public String getSurveyID() {
 		return surveyID;
+	}
+
+	/**
+	 * Gets the string name of whoever entered this frog into DB2.0
+	 */
+	public String getRecorder2() {
+		// TODO Auto-generated method stub
+		return recorder2;
 	}
 }

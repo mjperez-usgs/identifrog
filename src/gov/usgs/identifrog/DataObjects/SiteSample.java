@@ -20,6 +20,7 @@ import org.w3c.dom.Element;
  *
  */
 public class SiteSample {
+	private int frogID; //used only for looking up what this belongs to without keeping a reference
 	private String surveyID;
 	private String mass;
 	private String length;
@@ -27,6 +28,7 @@ public class SiteSample {
 	private String dateEntry;
 	private Personel observer;
 	private Personel recorder;
+	private String observer2, recorder2;
 	private String discriminator;
 	private String comments;
 	private Location location;
@@ -115,6 +117,13 @@ public class SiteSample {
 		return element;
 	}
 
+	/**
+	 * Creates a new, blank SiteSample with no data.
+	 */
+	public SiteSample() {
+		
+	}
+	
 	public ArrayList<SiteImage> getSiteImages() {
 		return siteImages;
 	}
@@ -209,5 +218,28 @@ public class SiteSample {
 
 	public void setPathImage(String pathImage) {
 		this.pathImage = pathImage;
+	}
+	
+	public String getObserver2() {
+		return observer2;
+	}
+
+	public void setObserver2(String observer2) {
+		this.observer2 = observer2;
+	}
+
+	public String getRecorder2() {
+		return recorder2;
+	}
+
+	public void setRecorder2(String recorder2) {
+		this.recorder2 = recorder2;
+	}
+	public int getFrogID() {
+		return frogID;
+	}
+
+	public void setFrogID(int i) {
+		this.frogID = i;
 	}
 }

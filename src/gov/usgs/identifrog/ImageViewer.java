@@ -16,7 +16,7 @@ import javax.swing.JPanel;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.Frames.ErrorDialog;
 import gov.usgs.identifrog.Handlers.FolderHandler;
-import gov.usgs.identifrog.Handlers.XMLHandler;
+import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 /**
  * <p>
@@ -226,7 +226,7 @@ public class ImageViewer extends JDialog {
 		}
 		
 		if (parentFrame.getChangesMade()) {
-			XMLHandler file = new XMLHandler(new File(fh.getFileNamePath()), parentFrame.getFrogData().getFrogs());
+			XMLFrogDatabase file = new XMLFrogDatabase(new File(fh.getFileNamePath()), parentFrame.getFrogData().getFrogs());
 			file.WriteXMLFile();
 		}
 		close();

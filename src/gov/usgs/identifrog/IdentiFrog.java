@@ -1,6 +1,7 @@
 package gov.usgs.identifrog;
 
 import gov.usgs.identifrog.Frames.ProjectManagerFrame;
+import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 import gov.usgs.identifrog.logger.GSLogger;
 
 import java.io.FileNotFoundException;
@@ -30,6 +31,7 @@ public class IdentiFrog {
 	protected static final String THUMBNAIL_DIR = "Thumbnail";
 	public static boolean LOGGING = true;
 	public static GSLogger LOGGER;
+	public static XMLFrogDatabase DB;
 	// construct the application
 	public IdentiFrog() throws FileNotFoundException, ParseException, IOException {
 		LOGGER = new GSLogger();
@@ -75,9 +77,7 @@ public class IdentiFrog {
 		// close Splash Screen
 		//splash.dispose();
 		startupFrame.setVisible(true);
-		
 		//TODO: MOVE THIS INTO STARTUP FRAME
-				
 	}
 
 	// main method
@@ -88,5 +88,13 @@ public class IdentiFrog {
 			IdentiFrog.LOGGER.writeMessage(e.getLocalizedMessage());
 		}
 		new IdentiFrog();
+	}
+	
+	/**
+	 * Gets a reference to the singular DB that is currently in use by IdentiFrog. May need loading before first use.
+	 * @return
+	 */
+	public static XMLFrogDatabase getDB(){
+		return DB;
 	}
 }

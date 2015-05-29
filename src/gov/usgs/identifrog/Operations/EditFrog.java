@@ -79,7 +79,7 @@ public class EditFrog extends JDialog {
 		jTextField3.setText(frog.getMass());
 		jTextField4.setText(frog.getLength());
 		jTextField5.setText(frog.getDateCapture());
-		jTextField6.setText(frog.getID());
+		jTextField6.setText(Integer.toString(frog.getID()));
 
 		bUpdate.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -122,7 +122,7 @@ public class EditFrog extends JDialog {
 			return;
 		}
 
-		frog.setID(jTextField6.getText());
+		frog.setID(Integer.parseInt(jTextField6.getText()));
 		frog.setGender(jTextField1.getText().trim());
 		frog.setSpecies(jTextField2.getText().trim());
 		frog.setMass(jTextField3.getText().trim());

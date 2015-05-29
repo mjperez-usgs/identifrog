@@ -7,7 +7,7 @@ import gov.usgs.identifrog.Frames.ParametersDialog;
 import gov.usgs.identifrog.Frames.ProjectManagerFrame;
 import gov.usgs.identifrog.Handlers.DataHandler;
 import gov.usgs.identifrog.Handlers.FolderHandler;
-import gov.usgs.identifrog.Handlers.XMLHandler;
+import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 import gov.usgs.identifrog.Operations.AddFrog;
 import gov.usgs.identifrog.Operations.EditFrog;
 import gov.usgs.identifrog.Operations.XLSXTemplateGeneratorFrame;
@@ -183,10 +183,12 @@ public class MainFrame extends JFrame {
 	}
 
 	private void read() {
-		ArrayList<Frog> frogs = new XMLHandler(fh.getFileNamePath())
-				.ReadXMLFile();
+		XMLFrogDatabase.setFile(new File(fh.getFileNamePath()));
+		XMLFrogDatabase.loadXMLFile();
+		//ArrayList<Frog> frogs = new XMLFrogDatabase(fh.getFileNamePath())
+		//		.loadXMLFile();
 		updateRecentlyOpened(fh.getFileNamePath());
-		frogData.setFrogs(frogs);
+		frogData.setFrogs(XMLFrogDatabase.getFrogs());
 
 		workingAreaPanel.setFrogs(frogs);
 		workingAreaPanel.setFrogsData(frogData);
@@ -272,8 +274,8 @@ public class MainFrame extends JFrame {
 	private void init() throws Exception {
 		// startup
 
-		ArrayList<Frog> frogs = new XMLHandler(fh.getFileNamePath())
-				.ReadXMLFile();
+		ArrayList<Frog> frogs = new XMLFrogDatabase(fh.getFileNamePath())
+				.loadXMLFile();
 		frogData.setFrogs(frogs);
 
 		contentPanel = (JPanel) getContentPane();
@@ -422,7 +424,7 @@ public class MainFrame extends JFrame {
 						try {
 							copyFolder(new File(fh.getMainFolder().toString()),
 									new File(sitePath));
-							XMLHandler copyHandler = new XMLHandler(new File(
+							XMLFrogDatabase copyHandler = new XMLFrogDatabase(new File(
 									sitePath + File.separator
 											+ fh.getFileName()), getFrogData()
 									.getFrogs());
@@ -611,7 +613,7 @@ public class MainFrame extends JFrame {
 		// update cells
 		updateCells();
 		// write xml file
-		XMLHandler file = new XMLHandler(new File(fh.getFileNamePath()),
+		XMLFrogDatabase file = new XMLFrogDatabase(new File(fh.getFileNamePath()),
 				getFrogData().getFrogs());
 		file.WriteXMLFile();
 	}
@@ -645,7 +647,7 @@ public class MainFrame extends JFrame {
 			// update cells
 			updateCells();
 			// write xml file
-			XMLHandler file = new XMLHandler(new File(fh.getFileNamePath()),
+			XMLFrogDatabase file = new XMLFrogDatabase(new File(fh.getFileNamePath()),
 					getFrogData().getFrogs());
 			file.WriteXMLFile();
 		}

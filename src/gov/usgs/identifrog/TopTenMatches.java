@@ -48,8 +48,9 @@ public class TopTenMatches {
 		int col = 6;
 		int otherdbid;
 
-		String digsigtomatch, binaryImgtomatch, queryfrogid, queryspecies, querygender, queryAdditDiscr;
-		String otherfrogid, otherdigsig, otherbinaryImg, otherspecies, othergender, otherAdditDiscr;
+		String digsigtomatch, binaryImgtomatch, queryspecies, querygender, queryAdditDiscr;
+		int queryfrogid, otherfrogid;
+		String otherdigsig, otherbinaryImg, otherspecies, othergender, otherAdditDiscr;
 
 		ArrayList<Frog_Info> Candidates_afterDiscriminateSex = new ArrayList<Frog_Info>();
 		ArrayList<Frog_Info> Candidates_forPass1 = new ArrayList<Frog_Info>();
@@ -87,7 +88,7 @@ public class TopTenMatches {
 			}
 		} else {
 			for (int i = 0; i < frogData.getFrogs().size(); i++) {
-				if (!frogData.getFrogs().get(i).getID().equals(queryfrogid)) {
+				if (frogData.getFrogs().get(i).getID() != queryfrogid) {
 					searchableFrogs.add(frogData.getFrogs().get(i));
 				}
 			}
@@ -100,9 +101,9 @@ public class TopTenMatches {
 			otherdigsig = fh.getSignaturesFolder() + searchableFrogs.get(i).getPathSignature();
 			otherbinaryImg = fh.getBinaryFolder() + searchableFrogs.get(i).getGenericImageName();
 			otherfrogid = searchableFrogs.get(i).getID();
-			String lame = searchableFrogs.get(i).getFormerID();
+			//String lame = searchableFrogs.get(i).getFormerID();
 			// lame = lame.substring(3, lame.length());
-			otherdbid = new Integer(lame).intValue();
+			//otherdbid = new Integer(lame).intValue();
 			// otherdbid = (new Integer(lame)).intValue();
 			othergender = searchableFrogs.get(i).getGender();
 			otherAdditDiscr = searchableFrogs.get(i).getDiscriminator();

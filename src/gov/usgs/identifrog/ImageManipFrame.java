@@ -40,7 +40,7 @@ import javax.swing.event.ChangeListener;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.Frames.ErrorDialog;
 import gov.usgs.identifrog.Handlers.FolderHandler;
-import gov.usgs.identifrog.Handlers.XMLHandler;
+import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 /**
  * <p>
@@ -767,7 +767,7 @@ public class ImageManipFrame extends JFrame {
 				parentFrame.updateCells();
 				parentFrame.getFrogData().getFrogs().get(parentFrame.getFrogData().getFrogs().size() - 1).setPathImage(imageName1);
 				IdentiFrog.LOGGER.writeMessage(parentFrame.getFrogData().getFrogs().size());
-				XMLHandler file = new XMLHandler(new File(fh.getFileNamePath()), parentFrame.getFrogData().getFrogs());
+				XMLFrogDatabase file = new XMLFrogDatabase(new File(fh.getFileNamePath()), parentFrame.getFrogData().getFrogs());
 				file.WriteXMLFile();
 				parentFrame.updateCells(0, false);
 				closeAction();

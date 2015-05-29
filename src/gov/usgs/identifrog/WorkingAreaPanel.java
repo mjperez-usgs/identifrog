@@ -4,6 +4,7 @@ import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.Frames.ErrorDialog;
 import gov.usgs.identifrog.Handlers.DataHandler;
 import gov.usgs.identifrog.Handlers.FolderHandler;
+import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 import gov.usgs.identifrog.Operations.AddFrog;
 
 import java.awt.BorderLayout;
@@ -45,10 +46,10 @@ import javax.swing.table.TableColumn;
  */
 @SuppressWarnings("serial")
 public class WorkingAreaPanel extends JPanel {
-	private ArrayList<Frog> frogs = new ArrayList<Frog>();
+	//private ArrayList<Frog> frogs = new ArrayList<Frog>();
 	private DataHandler frogsData = new DataHandler();
 	private static final int PREFERRED_WIDTH = 180;
-	private static final int PREFFERED_HEIGHT = 80;
+	private static final int PREFERED_HEIGHT = 80;
 	private static final int STANDARD_WIDTH = 75;
 	private static final int STANDARD_HEIGHT = 16;
 	private static final int FROG = 0;
@@ -162,12 +163,12 @@ public class WorkingAreaPanel extends JPanel {
 			           dbTable.getSelectionModel().setSelectionInterval(idx, idx);
 			           //---
 			           //Get currently selected frog ID.
-			           String localID = getSelectedFrog_Id();
+			           int localID = getSelectedFrog_Id();
 				   		if (localID == null) {
 				   			IdentiFrog.LOGGER.writeError("Locally selected ID is null when right click, but one should be selected already!");
 				   			return;
 				   		}
-				   		Frog localFrog = parentFrame.getFrogData().searchFrog(localID);
+				   		Frog localFrog = XMLFrogDatabase.searchFrogByID(localID);
 			           
 			           
 			           //codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
@@ -470,7 +471,7 @@ public class WorkingAreaPanel extends JPanel {
 		if (showThumbnails) {
 			column = dbTable.getColumnModel().getColumn(1); // image in column 1
 			column.setPreferredWidth(PREFERRED_WIDTH);
-			dbTable.setRowHeight(PREFFERED_HEIGHT);
+			dbTable.setRowHeight(PREFERED_HEIGHT);
 		} else {
 			column = dbTable.getColumnModel().getColumn(1);
 			column.setPreferredWidth(STANDARD_WIDTH);
@@ -684,9 +685,8 @@ public class WorkingAreaPanel extends JPanel {
 		}
 	}
 
-	// XXX
-	protected String getSelectedFrog_Id() {
-		String myFrog_ID;
+	protected int getSelectedFrog_Id() {
+		int myFrog_ID;
 		int row = dbTable.getSelectedRow();
 		int col = 12; // col = 12 is where former Frog_ID in GUI
 		try {
