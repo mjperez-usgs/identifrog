@@ -8,7 +8,11 @@ import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.DataObjects.SiteSample;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -40,10 +44,10 @@ import org.xml.sax.SAXException;
  */
 public class XMLFrogDatabase {
 	private static boolean LOADED = false;
-	private static File file;
-	private static ArrayList<Frog> frogs;
+	private static File dbfile;
+	private static ArrayList<Frog> frogs = new ArrayList<Frog>();
 
-	public XMLFrogDatabase() {
+	/*public XMLFrogDatabase() {
 		XMLFrogDatabase.frogs = new ArrayList<Frog>();
 	}
 
@@ -60,6 +64,10 @@ public class XMLFrogDatabase {
 	public XMLFrogDatabase(File file, ArrayList<Frog> frogs) {
 		XMLFrogDatabase.file = file;
 		XMLFrogDatabase.frogs = frogs;
+	}*/
+	
+	public XMLFrogDatabase() throws Exception {
+		throw new Exception("This class is not meant to be initialized, access it statically");
 	}
 
 	/**
@@ -67,7 +75,8 @@ public class XMLFrogDatabase {
 	 * 
 	 * @return true if successful, false otherwise.
 	 */
-	public static boolean CreateXMLFile() {
+	public static boolean createXMLFile() {
+		IdentiFrog.LOGGER.writeMessage("Creating XML DB for the first time");
 		DocumentBuilderFactory docFactory = DocumentBuilderFactory
 				.newInstance();
 		DocumentBuilder docBuilder;
@@ -97,7 +106,7 @@ public class XMLFrogDatabase {
 			return false;
 		}
 		DOMSource source = new DOMSource(doc);
-		StreamResult result = new StreamResult(file);
+		StreamResult result = new StreamResult(dbfile);
 		try {
 			transformer.transform(source, result);
 		} catch (TransformerException e) {
@@ -141,7 +150,7 @@ public class XMLFrogDatabase {
 			return false;
 		}
 		DOMSource source = new DOMSource(doc);
-		StreamResult result = new StreamResult(file);
+		StreamResult result = new StreamResult(dbfile);
 		try {
 			transformer.transform(source, result);
 		} catch (TransformerException e) {
@@ -154,11 +163,12 @@ public class XMLFrogDatabase {
 	/**
 	 * Reads the database XML file and loads frog data into this Frog DB object.
 	 * This method is built for DB 2.0.
-	 * 
-	 * @return Arraylist of Frog objects containing data from the XML database
+	 * Frogs can then be accessed via the getFrogs() method.
 	 * 
 	 */
 	public static void loadXMLFile() {
+		IdentiFrog.LOGGER.writeMessage("Loading XML DB: "+dbfile.toString() +" Size: "+dbfile.length()+" bytes");
+
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder docBuilder = null;
 		Document doc = null;
@@ -168,7 +178,7 @@ public class XMLFrogDatabase {
 			IdentiFrog.LOGGER.writeException(e);
 		}
 		try {
-			doc = docBuilder.parse(file);
+			doc = docBuilder.parse(dbfile);
 		} catch (SAXException e) {
 			IdentiFrog.LOGGER.writeException(e);
 		} catch (IOException e) {
@@ -504,15 +514,30 @@ public class XMLFrogDatabase {
 
 			frogs.add(frog);
 		}
+		IdentiFrog.LOGGER.writeMessage("Loaded XML DB, loaded data for "+frogs.size()+" frogs.");
 		XMLFrogDatabase.LOADED = true;
 	}
 
 	public static File getFile() {
-		return file;
+		return dbfile;
 	}
 
+	/**
+	 * Sets the datafile this database is using for loading and storing values.
+	 * @param file datafile.xml (or backing database file) 
+	 */
 	public static void setFile(File file) {
-		XMLFrogDatabase.file = file;
+		if (!file.getAbsolutePath().toLowerCase().endsWith(IdentiFrog.DB_FILENAME.toLowerCase())) {
+			IdentiFrog.LOGGER.writeError("SETFILE IN XML DB DID NOT USE A DATAFILE.XML FILE");
+		}
+		
+		XMLFrogDatabase.dbfile = file;
+		IdentiFrog.LOGGER.writeMessage("XML Database file set to "+file.toString());
+
+		PROJECT_FOLDER = file.getAbsolutePath();
+		if (PROJECT_FOLDER.endsWith(IdentiFrog.DB_FILENAME)) {
+			PROJECT_FOLDER = PROJECT_FOLDER.substring(0,PROJECT_FOLDER.length()-IdentiFrog.DB_FILENAME.length()-1);
+		}
 	}
 
 	/**
@@ -557,17 +582,18 @@ public class XMLFrogDatabase {
 	 * Gets the list of frogs in this database.
 	 * 
 	 * @return Frogs in this database, or an empty arraylist if the database is
-	 *         not yet loaded.
+	 *         not yet loaded. Prints an error if the DB was not loaded.
 	 */
 	public static ArrayList<Frog> getFrogs() {
 		if (!LOADED) {
+			IdentiFrog.LOGGER.writeError("Accessing getFrogs() before the DB was loaded!");
 			return new ArrayList<Frog>();
 		}
 		return frogs;
 	}
 
 	/**
-	 * Finds a frog by it's ID.
+	 * Finds a frog by its ID.
 	 * 
 	 * @param ID
 	 *            ID of the frog in the DB.
@@ -602,6 +628,9 @@ public class XMLFrogDatabase {
 	 * @return next free ID for a frog to use
 	 */
 	public static int getNextAvailableID() {
+		if (!LOADED) {
+			IdentiFrog.LOGGER.writeError("Attempting to get next available ID before DB has been loaded!");
+		}
 		int nextAvailable = 0;
 		for (Frog frog : frogs) {
 			if (frog.getID() > nextAvailable) {
@@ -610,4 +639,173 @@ public class XMLFrogDatabase {
 		}
 		return nextAvailable + 1;
 	}
+
+	public static void createCopy(File newSitePath) throws IOException {
+		copyFolder(new File(getMainFolder()), newSitePath);
+		setFile(new File(newSitePath+File.separator+IdentiFrog.DB_FILENAME));
+	}
+	
+	/**
+	 * Copies a project folder to another location
+	 * @param src source folder
+	 * @param dest destionation folder
+	 * @throws IOException if an error occurs
+	 */
+	private static void copyFolder(File src, File dest) throws IOException {
+		if (src.isDirectory()) {
+			// if directory not exists, create it
+			if (!dest.exists()) {
+				dest.mkdir();
+				// IdentiFrog.LOGGER.writeMessage("Directory copied from " + src
+				// + "  to " +
+				// dest);
+			}
+			// list all the directory contents
+			String files[] = src.list();
+			for (String file : files) {
+				// construct the src and dest file structure
+				File srcFile = new File(src, file);
+				File destFile = new File(dest, file);
+				// recursive copy
+				copyFolder(srcFile, destFile);
+			}
+		} else {
+			// if file, then copy it
+			// Use bytes stream to support all file types
+			InputStream in = new FileInputStream(src);
+			OutputStream out = new FileOutputStream(dest);
+
+			byte[] buffer = new byte[2048];
+
+			int length;
+			// copy the file content in bytes
+			while ((length = in.read(buffer)) > 0) {
+				out.write(buffer, 0, length);
+			}
+
+			in.close();
+			out.close();
+			// IdentiFrog.LOGGER.writeMessage("File copied from " + src + " to "
+			// + dest);
+		}
+	}
+	
+	/**
+	 * Scans the DB for an existing source hash based on the image to check if an image is being entered twice.
+	 * @param image Source, full resolution image
+	 * @return true if exists in DB already, false otherwise
+	 */
+	public static boolean checkForExistingHashInDB(File image) {
+		//TODO
+		return false;
+	}
+	
+	
+	
+	//=================Migrated from FolderHandler
+	  	private static String PROJECT_FOLDER;
+	  	private static String SITE_NAME;
+		private static final String DEFAULT_PROJECT_FOLDER = System.getProperty("user.home");
+		private static final String DEFAULT_PROJECT_NAME = "IdentiFrog Data";
+		//private static final String filename = "datafile.xml";
+		private static final String IMAGES = "Images", SIGNATURES = "Signatures", BINARY = "Binary", DORSAL = "Dorsal";
+		public static final String THUMB = "Thumbnail";
+		private static final String PENDING="Pending";
+		private static final String[] PROJECT_FOLDERS = { IMAGES, SIGNATURES, BINARY, DORSAL, THUMB, PENDING };
+
+		/**
+		 * Creates a new "Folder Handler", an object that handles folder creation for storing data related to a single site.
+		 * This constructor by default puts the site in the %USERPROFILE%/Identifrog Data folder.
+		 */
+		/*public FolderHandler() {
+		  base = drive + File.separator + register;
+		}*/
+
+		/**
+		 * Creates a new "Folder Handler", an object that handles folder creation for storing data related to a single site.
+		 * This constructor uses the base string (site location data) as the data directory. 
+		 */
+		/*public FolderHandler(String base) {
+			if (base.endsWith(IdentiFrog.DB_FILENAME)) {
+				this.base = base.substring(0,base.length()-IdentiFrog.DB_FILENAME.length()-1);
+			} else {
+				this.base = base;
+			}
+		}*/
+		
+		public static boolean siteFoldersExist() {
+			return new File(XMLFrogDatabase.PROJECT_FOLDER).exists();
+		}
+
+		/**
+		 * Creates folders required for a site. Uses the 'base' variable as the place to put the data.
+		 * @return true if successful, false on any error
+		 * @author mjperez
+		 */
+		public static boolean createFolders() {
+			boolean exists = false;
+			for (String folderName : PROJECT_FOLDERS) {
+				File dataSubfolder = new File(PROJECT_FOLDER + File.separator + folderName);
+				IdentiFrog.LOGGER.writeMessage("Creating data folder: "+dataSubfolder.toString());
+				exists = dataSubfolder.mkdirs();
+				if (!exists) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		public String getFileName() {
+			return IdentiFrog.DB_FILENAME;
+		}
+
+		/**
+		 * Returns the datafile.xml path by adding the folder, the path separator, and the database filename.
+		 * @return Project Folder + (separator) + DB_NAME e.g. C:\project\datafile.xml
+		 */
+		public static String getFileNamePath() {
+			return PROJECT_FOLDER + File.separator + IdentiFrog.DB_FILENAME;
+		}
+
+		// { "Images", "Signatures", "Binary", "Dorsal", "Thumbnail" };
+
+		public static String getMainFolder() {
+			return PROJECT_FOLDER + File.separator;
+		}
+
+		public static String getImagesFolder() {
+			return getMainFolder() + IMAGES + File.separator;
+		}
+
+		public static String getSignaturesFolder() {
+			return getMainFolder() + SIGNATURES + File.separator;
+		}
+
+		public static String getBinaryFolder() {
+			return getMainFolder() + BINARY + File.separator;
+		}
+
+		public static String getDorsalFolder() {
+			return getMainFolder() + DORSAL + File.separator;
+		}
+
+		public static String getThumbnailFolder() {
+			return getMainFolder() + THUMB + File.separator;
+		}
+		
+		/**
+		 * Gets folder path that contains full resolution images pending a signature
+		 * @return
+		 */
+		public static String getPendingFolder() {
+			return getMainFolder() + PENDING + File.separator;
+		}
+
+	  public String getSiteName() {
+	    return XMLFrogDatabase.SITE_NAME;
+	  }
+
+	  public static void setSiteName(String siteName) {
+	    XMLFrogDatabase.SITE_NAME = siteName;
+	  }
 }

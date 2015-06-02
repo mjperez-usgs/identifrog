@@ -1,5 +1,10 @@
 package gov.usgs.identifrog;
 
+import gov.usgs.identifrog.DataObjects.Frog;
+import gov.usgs.identifrog.Frames.ErrorDialog;
+import gov.usgs.identifrog.Frames.MainFrame;
+import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -7,16 +12,13 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.ArrayList;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import gov.usgs.identifrog.DataObjects.Frog;
-import gov.usgs.identifrog.Frames.ErrorDialog;
-import gov.usgs.identifrog.Handlers.FolderHandler;
-import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 /**
  * <p>
@@ -36,7 +38,7 @@ import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 public class ImageViewer extends JDialog {
 	// //////// ATTRIBUTES //////////
 	private File imageFile;
-	private String frogID;
+	private int frogID;
 
 	protected JButton btnShowAllImages = new JButton("Show All Images");
 	protected JButton btnMatch = new JButton("Join", new ImageIcon(ImageViewer.class.getResource("joinFrogMed.gif")));
@@ -52,14 +54,13 @@ public class ImageViewer extends JDialog {
 	private boolean searched = false;
 	private boolean displayAllImages = false;
 	
-	private FolderHandler fh;
 	private boolean shouldShow;
 
 	// //////// CONSTRUCTORS //////////
 	/**
 	 * Overloaded Constructor
 	 * 
-	 * @param frogID
+	 * @param localFrogID
 	 * @param frame
 	 * @param title
 	 * @param modal
@@ -67,15 +68,14 @@ public class ImageViewer extends JDialog {
 	 * @param view
 	 * @param displayAllImages
 	 */
-	public ImageViewer(FolderHandler fh, String frogID, MainFrame frame, String title, boolean modal, File imageFile, boolean view, boolean displayAllImages) {
+	public ImageViewer(int localFrogID, MainFrame frame, String title, boolean modal, File imageFile, boolean view, boolean displayAllImages) {
 		super(frame, title, modal);
 		this.shouldShow = true;
-		this.frogID = frogID;
+		this.frogID = localFrogID;
 		parentFrame = frame;
 		this.view = view;
 		this.imageFile = imageFile;
 		this.displayAllImages = displayAllImages;
-		this.fh = fh;
 
 		try {
 			init();
@@ -96,14 +96,13 @@ public class ImageViewer extends JDialog {
 	 * @param imageFile
 	 * @param view
 	 */
-	public ImageViewer(FolderHandler fh,MatchingDialog matchingDialog, MainFrame frame, String title, boolean modal, File imageFile, boolean view) {
+	public ImageViewer(MatchingDialog matchingDialog, MainFrame frame, String title, boolean modal, File imageFile, boolean view) {
 		super(frame, title, modal);
 
 		this.matchingDialog = matchingDialog;
 		parentFrame = frame;
 		this.view = view;
 		this.imageFile = imageFile;
-		this.fh = fh;
 
 		try {
 			init();
@@ -182,15 +181,15 @@ public class ImageViewer extends JDialog {
 	// //////// ACTIONS //////////
 	void btnShowAllImages_actionPerformed(ActionEvent e) {
 		boolean additImg = false;
-		String searchFrogID = parentFrame.getWorkingAreaPanel().getSelectedFrog_Id();
-		Frog frog = parentFrame.getFrogData().searchFrog(searchFrogID);
+		int searchFrogID = parentFrame.getWorkingAreaPanel().getSelectedFrog_Id();
+		Frog frog = XMLFrogDatabase.searchFrogByID(searchFrogID);
 		searchFrogID = frog.getID();
-		String searchFrogFormerID = frog.getID();
+		int searchFrogFormerID = frog.getID();
 		ArrayList<Frog> localFrogs = parentFrame.getFrogData().getFrogs();
 		for (int i = 0; i < localFrogs.size(); i++) {
 			frog = localFrogs.get(i);
-			if (frog.getID().equals(searchFrogID) && !frog.getFormerID().equals(searchFrogFormerID)) {
-				parentFrame.OpenImageViewer(frog.getID(), "Frog ID: " + frog.getID() + " (" + frog.getGenericImageName() + ")", new File(fh.getDorsalFolder() + frog.getGenericImageName()), false);
+			if (frog.getID() == searchFrogID) {
+				parentFrame.OpenImageViewer(frog.getID(), "Frog ID: " + frog.getID() + " (" + frog.getGenericImageName() + ")", new File(XMLFrogDatabase.getDorsalFolder() + frog.getGenericImageName()), false);
 				additImg = true;
 			}
 		}
@@ -204,15 +203,16 @@ public class ImageViewer extends JDialog {
 			new ErrorDialog("You must first search for matches.");
 			return;
 		}
-		String joinFrogId = parentFrame.getWorkingAreaPanel().getSelectedFrog_Id(true).substring(4);
-		if (joinFrogId == null) {
+		int joinFrogId = parentFrame.getWorkingAreaPanel().getSelectedFrog_Id(true);
+		if (joinFrogId == -1) {
 			new ErrorDialog("You must select a row first.");
 			return;
 		}
 		parentFrame.setChangesMade(true);
 		// XXX
 		int frogIDList = new Integer(joinFrogId);
-		int frogIDImage = new Integer(parentFrame.getMatchForg().getFormerID());
+		System.err.println("Running debug code (10) in ImageViewer (match action performed) ");
+		int frogIDImage = new Integer(10);
 		
 		IdentiFrog.LOGGER.writeMessage("DEBUG: Frog ID in the List " + frogIDList);
 		IdentiFrog.LOGGER.writeMessage("DEBUG: Frog ID in the Image " + frogIDImage);
@@ -220,14 +220,13 @@ public class ImageViewer extends JDialog {
 		// parentFrame.getFrogData().searchFrog(parentFrame.getMatchForg().getFormerID()).setID(new Integer(frogIDTemp).toString());
 		
 		if (frogIDList < frogIDImage) {
-		  parentFrame.getFrogData().searchFrog(new Integer(frogIDImage).toString()).setID(new Integer(frogIDList).toString());
+			XMLFrogDatabase.searchFrogByID(frogIDImage).setID(frogIDList);
 		} else {
-		  parentFrame.getFrogData().searchFrog(new Integer(frogIDList).toString()).setID(new Integer(frogIDImage).toString());
+			XMLFrogDatabase.searchFrogByID(frogIDList).setID(frogIDList);
 		}
 		
 		if (parentFrame.getChangesMade()) {
-			XMLFrogDatabase file = new XMLFrogDatabase(new File(fh.getFileNamePath()), parentFrame.getFrogData().getFrogs());
-			file.WriteXMLFile();
+			XMLFrogDatabase.WriteXMLFile();
 		}
 		close();
 	}
@@ -239,12 +238,12 @@ public class ImageViewer extends JDialog {
 	}
 
 	// //////// GETTERS //////////
-	public String getFrogID() {
+	public int getFrogID() {
 		return frogID;
 	}
 
 	// //////// SETTERS //////////
-	public void setFrogID(String frogID) {
+	public void setFrogID(int frogID) {
 		this.frogID = frogID;
 	}
 

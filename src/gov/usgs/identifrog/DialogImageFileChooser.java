@@ -3,7 +3,9 @@ package gov.usgs.identifrog;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Rectangle;
+import java.awt.Window;
 import java.io.File;
+
 import javax.imageio.ImageIO;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -44,6 +46,22 @@ public class DialogImageFileChooser extends JDialog {
 	public DialogImageFileChooser(Frame frame, String title, boolean modal, String WorkDir) {
 		super(frame, title, modal);
 		parentFrame = frame;
+		Title = title;
+		setWorkingDirectory(WorkDir);
+		try {
+			jbInit();
+			pack();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	/**
+	 * This constructor takes a string indicating the starting directory along with all other Dialog
+	 * parameters
+	 */
+	public DialogImageFileChooser(String title, boolean modal, String WorkDir) {
+		parentFrame = null;
 		Title = title;
 		setWorkingDirectory(WorkDir);
 		try {
@@ -106,16 +124,14 @@ public class DialogImageFileChooser extends JDialog {
 	 *Returns the path and name of the selected file, "null" if canceled, "Error" if there was an
 	 * error
 	 */
-	@Override
 	public String getName() {
 		return Name;
 	}
 
 	/**
-	 *Returns the path and name of the selected file, "null" if canceled, "Error" if there was an
-	 * error
+	 *Returns the file type the user selected, eg PNG, JPEG
 	 */
-	public String getFilepath() {
+	public String getFileType() {
 		return fileType;
 	}
 

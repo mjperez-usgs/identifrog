@@ -1,12 +1,15 @@
 package gov.usgs.identifrog;
 
+import gov.usgs.identifrog.DataObjects.Frog;
+import gov.usgs.identifrog.Frames.MainFrame;
+import gov.usgs.identifrog.Handlers.DataHandler;
+import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+
 import javax.swing.JOptionPane;
-import gov.usgs.identifrog.DataObjects.Frog;
-import gov.usgs.identifrog.Handlers.DataHandler;
-import gov.usgs.identifrog.Handlers.FolderHandler;
 
 /**
  * <p>
@@ -31,11 +34,9 @@ public class TopTenMatches {
 	public double defaultSpotDifferencePass2 = 2;
 	public int topTen = 10;
 	private MainFrame parentFrame;
-	private FolderHandler fh;
 
-	public TopTenMatches(MainFrame frame, FolderHandler fh) {
+	public TopTenMatches(MainFrame frame) {
 		parentFrame = frame;
-		this.fh = fh;
 	}
 
 	// XXX
@@ -72,8 +73,8 @@ public class TopTenMatches {
 		double myHammingDist = -1.0;
 
 		boolean queryHasOneSpot = false;
-		digsigtomatch = fh.getSignaturesFolder() + frog.getPathSignature();
-		binaryImgtomatch = fh.getBinaryFolder() + frog.getGenericImageName();
+		digsigtomatch = XMLFrogDatabase.getSignaturesFolder() + frog.getPathSignature();
+		binaryImgtomatch = XMLFrogDatabase.getBinaryFolder() + frog.getGenericImageName();
 		queryfrogid = frog.getID();
 		querygender = frog.getGender();
 		queryspecies = frog.getSpecies();
@@ -81,11 +82,12 @@ public class TopTenMatches {
 		parentFrame.setMatchForg(frog);
 		ArrayList<Frog> searchableFrogs = new ArrayList<Frog>();
 		if (includeQueryImages) {
-			for (int i = 0; i < frogData.getFrogs().size(); i++) {
+			/*for (int i = 0; i < frogData.getFrogs().size(); i++) {
 				if (!frogData.getFrogs().get(i).getFormerID().equals(queryfrogid)) {
 					searchableFrogs.add(frogData.getFrogs().get(i));
 				}
-			}
+			}*/
+			System.err.println("Running commented out code in TopTenMatches includeQueryImages()");
 		} else {
 			for (int i = 0; i < frogData.getFrogs().size(); i++) {
 				if (frogData.getFrogs().get(i).getID() != queryfrogid) {
@@ -98,8 +100,8 @@ public class TopTenMatches {
 		// remember about row count will be decreasing after passes!
 		/************************* DESCRIMINATE BY SEX ***************************/
 		for (int i = 0; i < searchableFrogs.size(); i++) {
-			otherdigsig = fh.getSignaturesFolder() + searchableFrogs.get(i).getPathSignature();
-			otherbinaryImg = fh.getBinaryFolder() + searchableFrogs.get(i).getGenericImageName();
+			otherdigsig = XMLFrogDatabase.getSignaturesFolder() + searchableFrogs.get(i).getPathSignature();
+			otherbinaryImg = XMLFrogDatabase.getBinaryFolder() + searchableFrogs.get(i).getGenericImageName();
 			otherfrogid = searchableFrogs.get(i).getID();
 			//String lame = searchableFrogs.get(i).getFormerID();
 			// lame = lame.substring(3, lame.length());
@@ -110,13 +112,13 @@ public class TopTenMatches {
 			otherspecies = searchableFrogs.get(i).getSpecies();
 
 			if (discriminateBySex && querygender.equalsIgnoreCase(othergender) && queryspecies.equalsIgnoreCase(otherspecies)) {
-				Frog_Info dbFrog_Info = new Frog_Info(otherdbid, otherfrogid, otherAdditDiscr, 0, otherdigsig, otherbinaryImg);
+				Frog_Info dbFrog_Info = new Frog_Info(/*otherdbid,*/ otherfrogid, otherAdditDiscr, 0, otherdigsig, otherbinaryImg);
 				// zero is meaningless here
 				Candidates_afterDiscriminateSex.add(dbFrog_Info);
 				++rowcount;
 			}
 			if (!discriminateBySex) {
-				Frog_Info dbFrog_Info = new Frog_Info(otherdbid, otherfrogid, otherAdditDiscr, 0, otherdigsig, otherbinaryImg);
+				Frog_Info dbFrog_Info = new Frog_Info(/*otherdbid,*/ otherfrogid, otherAdditDiscr, 0, otherdigsig, otherbinaryImg);
 				Candidates_afterDiscriminateSex.add(dbFrog_Info);
 				++rowcount;
 			}
@@ -356,7 +358,7 @@ public class TopTenMatches {
 		Object[][] retArray = new Object[rowcount][col];
 		// Matches has candidates already in decreasing order
 		for (int i = 0; i < Matches.size(); i++) {
-			String myFrogID = Matches.get(i).frogid;
+			int myFrogID = Matches.get(i).frogid;
 			String myscore = "" + Matches.get(i).dist;
 			if (Matches.get(i).dist > HammingDistanceThreshold) {
 				myscore = myscore + "*";
@@ -365,17 +367,17 @@ public class TopTenMatches {
 		}
 
 		for (int i = 0; i < Matches.size(); ++i) {
-			String myFrodDbId = Matches.get(i).dbid;
+			int myFrodDbId = Matches.get(i).dbid;
 
 			String myscore = "" + Matches.get(i).dist;
 			// check if the match is improbable
 			if (Matches.get(i).dist > HammingDistanceThreshold) {
 				myscore = myscore + "*";
 			}
-			Frog f = frogData.searchFrog(Matches.get(i).frogid);
+			Frog f = XMLFrogDatabase.searchFrogByID(Matches.get(i).frogid);
 			retArray[row][MROW] = f.getID();
-			retArray[row][FILENAME] = fh.getThumbnailFolder() + f.getGenericImageName();
-			retArray[row][MFROG_ID] = "FROG" + f.getFormerID();
+			retArray[row][FILENAME] = XMLFrogDatabase.getThumbnailFolder() + f.getGenericImageName();
+			retArray[row][MFROG_ID] = f.getID();
 			retArray[row][SCORE] = myscore;
 			retArray[row][MCAPDATE] = f.getDateCapture();
 			retArray[row][MLOCNAME] = f.getLocation().getName();
@@ -412,21 +414,22 @@ public class TopTenMatches {
 
 	private class Frog_Info {
 		// public int dbid;
-		public String dbid;
-		public String frogid, additDiscr;
+		public int dbid;
+		public String additDiscr;
+		public int frogid;
 		public double dist;
 		public String signature, binaryImg;
 
-		public Frog_Info(int db_id, String frog_id, String addDiscr, double dist, String signature, String biImage) {
-			// this.dbid = db_id;
-			frogid = frog_id;
+		public Frog_Info( int otherfrogid, String addDiscr, double dist, String signature, String biImage) {
+			frogid = otherfrogid;
 			additDiscr = addDiscr;
 			this.dist = dist;
 			this.signature = signature;
 			binaryImg = biImage;
 		}
 
-		public Frog_Info(String db_id, String frog_id, String addDiscr, double dist, String signature, String biImage) {
+	
+		public Frog_Info(int db_id, int frog_id, String addDiscr, double dist, String signature, String biImage) {
 			dbid = db_id;
 			frogid = frog_id;
 			additDiscr = addDiscr;
@@ -450,11 +453,11 @@ public class TopTenMatches {
 		}
 	}
 
-	private boolean isUnique(String frog_id, ArrayList<Frog_Info> Current_Candidates) {
+	private boolean isUnique(int frogid, ArrayList<Frog_Info> Current_Candidates) {
 		int i = 0;
 		boolean unique = true;
 		while (i < Current_Candidates.size() && unique) {
-			if (frog_id.equals(Current_Candidates.get(i).frogid)) {
+			if (frogid == Current_Candidates.get(i).frogid) {
 				unique = false;
 			} else {
 				++i;

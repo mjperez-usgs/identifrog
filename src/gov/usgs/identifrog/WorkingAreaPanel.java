@@ -2,10 +2,10 @@ package gov.usgs.identifrog;
 
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.Frames.ErrorDialog;
+import gov.usgs.identifrog.Frames.MainFrame;
 import gov.usgs.identifrog.Handlers.DataHandler;
-import gov.usgs.identifrog.Handlers.FolderHandler;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
-import gov.usgs.identifrog.Operations.AddFrog;
+import gov.usgs.identifrog.Operations.FrogEditor;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -85,12 +85,13 @@ public class WorkingAreaPanel extends JPanel {
 	public boolean discriminatorSex = false;
 	public boolean additDiscriminator = false;
 	public boolean includeQueryImg = false;
-	private static String BLANK_FROG_ID = "-"; //this is what shows up for frog id in the list if no rows exist
-	private Object[][] emptyFrogCells = { { BLANK_FROG_ID, new ImageIcon("IconFrog.png"), "-", "-", "-", "-", "-", new Integer(0), new Double(0), new Double(0), "-", "-", "-", "-", "-" } };
+	private static int BLANK_FROG_ID = -1; //this is what shows up for frog id in the list if no rows exist
+	private Object[][] emptyFrogCells = { { BLANK_FROG_ID, new ImageIcon(this.getClass().getResource("/resources/IconFrog.png")), "-", "-", "-", "-", "-", new Integer(0), new Double(0), new Double(0), "-", "-", "-", "-", "-" } };
 	private Object[][] emptyEntryPersonCells = { { "-", "-", "-" } };
 	private Object[][] emptyObserverCells = { { "-", "-", "-" } };
 	private Object[][] emptyLocationCells = { { "-", "-", "-", new Double(0), new Double(0), "-", "-", "-" } };
-	private Object[][] emptyMatchingCells = { { "-", new ImageIcon("IconFrog.png"), "-", new Double(0), "-", "-" } };
+	private ImageIcon frogIcon = new ImageIcon(this.getClass().getResource("/resources/IconFrog.png"));
+	private Object[][] emptyMatchingCells = { { "-", frogIcon, "-", new Double(0), "-", "-" } };
 	private JLabel labSort = new JLabel();
 	// private JComboBox ComboBoxSortBy;
 	// private JCheckBox CheckBoxAscending = new JCheckBox();
@@ -110,11 +111,9 @@ public class WorkingAreaPanel extends JPanel {
 	private JButton btnNext = new JButton("Next Page", new ImageIcon(WorkingAreaPanel.class.getResource("IconButtonNext32.png")));
 	private JCheckBox chkAllImages = new JCheckBox("All Images", true);
 
-	private FolderHandler fh;
 	
-	public WorkingAreaPanel(MainFrame frame, FolderHandler fh) {
+	public WorkingAreaPanel(MainFrame frame) {
 		parentFrame = frame;
-		this.fh = fh;
 		try {
 			init();
 		} catch (Exception e) {
@@ -125,7 +124,7 @@ public class WorkingAreaPanel extends JPanel {
 	void init() throws Exception {
 		maxPageRows = node.getInt("maxPageRows", 10);
 		Threshold = node.getDouble("threshold", 75.0);
-		topTenMatches = new TopTenMatches(parentFrame,fh);
+		topTenMatches = new TopTenMatches(parentFrame);
 		// AHSAN
 		updateCells(currentMatrixType, 5, false, true);
 		setLayout(borderLayout1);
@@ -164,7 +163,7 @@ public class WorkingAreaPanel extends JPanel {
 			           //---
 			           //Get currently selected frog ID.
 			           int localID = getSelectedFrog_Id();
-				   		if (localID == null) {
+				   		if (localID < 0) {
 				   			IdentiFrog.LOGGER.writeError("Locally selected ID is null when right click, but one should be selected already!");
 				   			return;
 				   		}
@@ -189,8 +188,8 @@ public class WorkingAreaPanel extends JPanel {
 							@Override
 							public void actionPerformed(ActionEvent e) {
 								IdentiFrog.LOGGER.writeMessage("Opening Frog Editor via Right Click Menu: "+localFrog.toString());
-								AddFrog editFrogWindow = new AddFrog(WorkingAreaPanel.this.parentFrame, fh, "Edit Frog", localFrog);
-								editFrogWindow.setButImage(new File(fh.getMainFolder()+IdentiFrog.THUMBNAIL_DIR+File.separator+localFrog.getGenericImageName()));
+								FrogEditor editFrogWindow = new FrogEditor(WorkingAreaPanel.this.parentFrame, "Edit Frog", localFrog);
+								editFrogWindow.setButImage(new File(XMLFrogDatabase.getMainFolder()+XMLFrogDatabase.THUMB+File.separator+localFrog.getGenericImageName()));
 								editFrogWindow.pack();
 								editFrogWindow.setVisible(true);
 							}
@@ -238,19 +237,19 @@ public class WorkingAreaPanel extends JPanel {
 	 * Updates cell data in the table. If this method returns false, the table view should not be updated.
 	 * @return boolean indicating if the table should be updated or not.
 	 */
-	protected boolean updateCells() {
+	public boolean updateCells() {
 		return updateCells(currentMatrixType);
 	}
 
-	protected boolean updateCells(int matrixType) {
+	public boolean updateCells(int matrixType) {
 		return updateCells(matrixType, lastType, wasAscending, wasAllImagesDisplay);
 	}
 
-	protected boolean updateCells(int sortType, boolean ascending, boolean allImages) {
+	public boolean updateCells(int sortType, boolean ascending, boolean allImages) {
 		return updateCells(currentMatrixType, sortType, ascending, allImages);
 	}
 
-	protected boolean updateCells(int matrixType, int sortType, boolean ascending, boolean allImagesDisp) {
+	public boolean updateCells(int matrixType, int sortType, boolean ascending, boolean allImagesDisp) {
 		System.gc();
 		Object[][] badCells = emptyFrogCells;
 		try {
@@ -258,7 +257,7 @@ public class WorkingAreaPanel extends JPanel {
 				currentMatrixType = FROG;
 				frogsData = parentFrame.getFrogData();
 				// replace with frogsArray(fh)
-				cells = frogsData.frogsArray(fh,allImagesDisp);
+				cells = frogsData.frogsArray(allImagesDisp);
 				parentFrame.setButtonsOn(true);
 				badCells = emptyFrogCells;
 			} else if (matrixType == OBSERVER) {
@@ -284,8 +283,7 @@ public class WorkingAreaPanel extends JPanel {
 				// "\nInclude Query Images = " + includeQueryImg);
 				// cells = topTenMatches.getMatches(lastFrogDBID, sortType, ascending,
 				// includeQueryImg, discriminatorSex, additDiscriminator);
-				String myID = this.getSelectedFrog_Id();
-				Frog myFrog = frogsData.searchFrog(myID);
+				Frog myFrog = XMLFrogDatabase.searchFrogByID(this.getSelectedFrog_Id());
 				// if (allImagesDisp) {
 				cells = topTenMatches.getMatches(frogsData, myFrog, sortType, ascending, includeQueryImg, discriminatorSex, additDiscriminator);
 				if (cells == null) {
@@ -299,7 +297,7 @@ public class WorkingAreaPanel extends JPanel {
 			} else {
 				currentMatrixType = FROG;
 			// replace with frogsArray(fh)
-        cells = frogsData.frogsArray(fh,allImagesDisp);
+				cells = frogsData.frogsArray(allImagesDisp);
 				parentFrame.setButtonsOn(true);
 				badCells = emptyFrogCells;
 			}
@@ -542,7 +540,15 @@ public class WorkingAreaPanel extends JPanel {
 		} // getColumnName(int c)
 
 		@SuppressWarnings("unchecked")
+		/**
+		 * This method tells Swing what to use to render the JTable cell. 
+		 * e.g. if it should draw a string or an icon/image.
+		 * Removing this method breaks empty frog cells and dorsal views
+		 */
 		public Class getColumnClass(int c) {
+			System.out.println("Renderer: "+getValueAt(0, c).getClass());
+            return getValueAt(0, c).getClass();
+		}/*
 			Class cls;
 			try {
 				cls = pageCells[0][c].getClass();
@@ -556,7 +562,7 @@ public class WorkingAreaPanel extends JPanel {
 					return null;
 				}
 			}
-		}
+		}*/
 
 		public boolean isCellEditable(int r, int c) {
 			return false;
@@ -566,12 +572,12 @@ public class WorkingAreaPanel extends JPanel {
 			return pageCells[r][c];
 		}
 
-		public void setValueAt(Object obj, int r, int c) {
+		public void setValueAt(int obj, int r, int c) {
 			pageCells[r][c] = obj;
 		}
 	} // end table model class
 
-	protected void rowOffset() {
+	public void rowOffset() {
 		int offset = (page - 1) * maxPageRows;
 		int rows = maxPageRows;
 		if (offset + maxPageRows >= cells.length) {
@@ -592,7 +598,7 @@ public class WorkingAreaPanel extends JPanel {
 					// column
 					// 1
 					if (!showThumbnails || cells[r + offset][c] == null) {
-						pageCells[r][c] = new ImageIcon("IconFrog.png");
+						pageCells[r][c] = new ImageIcon(this.getClass().getClassLoader().getResource("/resources/IconFrog.png"));
 					} else {
 						pageCells[r][c] = new ImageIcon(cells[r + offset][c].toString());
 					}
@@ -603,7 +609,7 @@ public class WorkingAreaPanel extends JPanel {
 		}
 	}
 
-	protected void butBack_actionPerformed(ActionEvent e) {
+	public void butBack_actionPerformed(ActionEvent e) {
 		page--;
 		if (page == 1) {
 			btnPrevious.setEnabled(false);
@@ -624,7 +630,7 @@ public class WorkingAreaPanel extends JPanel {
 		// this.refreshTable();
 	}
 
-	protected void butNext_actionPerformed(ActionEvent e) {
+	public void butNext_actionPerformed(ActionEvent e) {
 		page++;
 		rowOffset();
 		btnPrevious.setEnabled(true);
@@ -644,7 +650,7 @@ public class WorkingAreaPanel extends JPanel {
 		}
 	}
 
-	protected void setShowThumbnails(boolean showThumbnails) {
+	public void setShowThumbnails(boolean showThumbnails) {
 		this.showThumbnails = showThumbnails;
 		// rowOffset();
 		try {
@@ -660,11 +666,11 @@ public class WorkingAreaPanel extends JPanel {
 		}
 	}
 
-	protected void refreshRows() {
+	public void refreshRows() {
 		setMaxPageRows(maxPageRows);
 	}
 
-	protected void setMaxPageRows(int maxPageRows) {
+	public void setMaxPageRows(int maxPageRows) {
 		this.maxPageRows = maxPageRows;
 		page = 1;
 		btnPrevious.setEnabled(false);
@@ -685,34 +691,32 @@ public class WorkingAreaPanel extends JPanel {
 		}
 	}
 
-	protected int getSelectedFrog_Id() {
+	public int getSelectedFrog_Id() {
 		int myFrog_ID;
 		int row = dbTable.getSelectedRow();
 		int col = 12; // col = 12 is where former Frog_ID in GUI
 		try {
-			myFrog_ID = (String) pageCells[row][col];
+			myFrog_ID = (Integer) pageCells[row][col];
 			return myFrog_ID;
 		} catch (Exception ex) {
 			new ErrorDialog("You must select a row first.");
-			return null;
+			return -1;
 		}
 	}
 
-	protected String getSelectedFrog_Id(boolean search) {
-		String myFrog_ID;
+	public int getSelectedFrog_Id(boolean search) {
 		int row = dbTable.getSelectedRow();
 		int col = 2; // col = 12 is where former Frog_ID in GUI
 		try {
-			myFrog_ID = (String) pageCells[row][col];
-			return myFrog_ID;
+			return (Integer) pageCells[row][col];
 		} catch (Exception ex) {
 			new ErrorDialog("You must select a row first.");
-			return null;
+			return -1;
 		}
 	}
 
 	@SuppressWarnings("unused")
-	protected Integer[] getSelectedRowDbId() {
+	public Integer[] getSelectedRowDbId() {
 		int[] row = dbTable.getSelectedRows();
 		Integer[] dbid = new Integer[row.length];
 		int col = 0;
@@ -730,7 +734,7 @@ public class WorkingAreaPanel extends JPanel {
 		 */
 	}
 
-	protected int getSelectedRowVisitID() {
+	public int getSelectedRowVisitID() {
 		int row = dbTable.getSelectedRow();
 		int col = 9; // 9 is visit_ID column
 		try {
@@ -745,19 +749,19 @@ public class WorkingAreaPanel extends JPanel {
 		}
 	}
 
-	protected int getLastType() {
+	public int getLastType() {
 		return lastType;
 	}
 
-	protected boolean isWasAscending() {
+	public boolean isWasAscending() {
 		return wasAscending;
 	}
 
-	protected boolean isWasAllImages() {
+	public boolean isWasAllImages() {
 		return wasAllImagesDisplay;
 	}
 
-	protected void CheckBoxAllImages_actionPerformed(ActionEvent e) {
+	public void CheckBoxAllImages_actionPerformed(ActionEvent e) {
 		updateCells(currentMatrixType, lastType, false, chkAllImages.isSelected()); // Ascending=false
 		// for
 		// now
@@ -785,15 +789,15 @@ public class WorkingAreaPanel extends JPanel {
 		if (e.getClickCount() == 2 && currentMatrixType == FROG) {
 			// double click was detected
 			IdentiFrog.LOGGER.writeMessage("WorkingAreaPanel.tableMouseClicked(e)");
-			String localFrogID = getSelectedFrog_Id();
-			if (localFrogID.equals(BLANK_FROG_ID)) {
+			int localFrogID = getSelectedFrog_Id();
+			if (localFrogID == BLANK_FROG_ID) {
 				return;
 			}
 			IdentiFrog.LOGGER.writeMessage("\tSearch Frog ID = " + localFrogID);
 			
 			
-			Frog localFrog = frogsData.searchFrog(localFrogID);
-			String localImagename = fh.getDorsalFolder() + localFrog.getGenericImageName();
+			Frog localFrog = XMLFrogDatabase.searchFrogByID(localFrogID);
+			String localImagename = XMLFrogDatabase.getDorsalFolder() + localFrog.getGenericImageName();
 			parentFrame.OpenImageViewer(localFrogID, "Frog ID: " + localFrog.getID() + " (" + localFrog.getGenericImageName() + ")", new File(localImagename), true);
 		}
 		
@@ -810,7 +814,7 @@ public class WorkingAreaPanel extends JPanel {
 		return dbTable;
 	}
 
-	protected File getImageFileFromSelectedRow() {
+	public File getImageFileFromSelectedRow() {
 		int row = dbTable.getSelectedRow();
 		int actualRow = (page - 1) * maxPageRows + row;
 		String filename = cells[actualRow][1].toString(); // image in column 1
@@ -855,7 +859,7 @@ public class WorkingAreaPanel extends JPanel {
 		}
 	}
 
-	protected void showMatches() {
+	public void showMatches() {
 		// ComboBoxViewBy.setEnabled(false);
 		currentMatrixType = MATCHING;
 		try {
@@ -869,7 +873,7 @@ public class WorkingAreaPanel extends JPanel {
 		}
 	}
 
-	protected void doneMatches() {
+	public void doneMatches() {
 		// ComboBoxViewBy.setEnabled(true);
 		currentMatrixType = FROG;
 		ComboBoxViewBy.setSelectedIndex(FROG);
@@ -906,14 +910,6 @@ public class WorkingAreaPanel extends JPanel {
 
 	public int getMaxPageRows() {
 		return maxPageRows;
-	}
-
-	public ArrayList<Frog> getFrogs() {
-		return frogs;
-	}
-
-	public void setFrogs(ArrayList<Frog> frogs) {
-		this.frogs = frogs;
 	}
 
 	public DataHandler getFrogsData() {

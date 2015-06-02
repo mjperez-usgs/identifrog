@@ -1,5 +1,10 @@
 package gov.usgs.identifrog;
 
+import gov.usgs.identifrog.DataObjects.Frog;
+import gov.usgs.identifrog.Frames.ErrorDialog;
+import gov.usgs.identifrog.Frames.MainFrame;
+import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -21,6 +26,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.prefs.Preferences;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -37,10 +43,6 @@ import javax.swing.SwingWorker;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import gov.usgs.identifrog.DataObjects.Frog;
-import gov.usgs.identifrog.Frames.ErrorDialog;
-import gov.usgs.identifrog.Handlers.FolderHandler;
-import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 /**
  * <p>
@@ -60,7 +62,7 @@ public class ImageManipFrame extends JFrame {
 	public String installDir;
 	private SliderListener listener = new SliderListener();
 	private BorderLayout borderLayout1 = new BorderLayout();
-	private Image icon = Toolkit.getDefaultToolkit().getImage("IconFrog.png");
+	private Image icon = Toolkit.getDefaultToolkit().getImage("/resources/IconFrog.png");
 	private ImagePanel imagePanel;
 	private FillSpot fillSpot;
 	private DigSignature digSignature;
@@ -151,7 +153,6 @@ public class ImageManipFrame extends JFrame {
 	public int imageInEllipse_width = 0;
 	public int imageInEllipse_heigth = 0;
 	
-	private FolderHandler fh;
 
 	/**
 	 * Frame Constructor
@@ -163,11 +164,10 @@ public class ImageManipFrame extends JFrame {
 	 * @param frogId
 	 *            int The Database ID that uniquely identifies the frog
 	 */
-	public ImageManipFrame(MainFrame parent, File imageFile, int db_id, FolderHandler fh) {
+	public ImageManipFrame(MainFrame parent, File imageFile, int db_id) {
 		parentFrame = parent;
 		Image = imageFile;
 		DbId = db_id;
-		this.fh = fh;
 		parentFrame.setCursor(new Cursor(Cursor.WAIT_CURSOR));
 		try {
 			init();
@@ -180,10 +180,10 @@ public class ImageManipFrame extends JFrame {
 
 	// graphical user interface initialization
 	private void init() throws Exception {
-		installDir = fh.getMainFolder();
+		installDir = XMLFrogDatabase.getMainFolder();
 		setIconImage(icon);
 		setJMenuBar(jMenuBar1);
-		imagePanel = new ImagePanel(ImageManipFrame.this,fh, Image);
+		imagePanel = new ImagePanel(ImageManipFrame.this, Image);
 		digSignature = new DigSignature();
 		getContentPane().setLayout(borderLayout1);
 		panelStatus.setLayout(borderLayout2);
@@ -743,11 +743,11 @@ public class ImageManipFrame extends JFrame {
 			case 2:// when final Next button pressed
 				// binaryImage 256x128 is used to create signature
 				parentFrame.setChangesMade(true);
-				String imageName1 = imagePanel.exportDownsampledImage(fh.getBinaryFolder());
-				BufferedImage binaryImage = imagePanel.saveBinaryImage(fh.getBinaryFolder());
+				String imageName1 = imagePanel.exportDownsampledImage(XMLFrogDatabase.getBinaryFolder());
+				BufferedImage binaryImage = imagePanel.saveBinaryImage(XMLFrogDatabase.getBinaryFolder());
 
-				String sigFileLocarion = fh.getSignaturesFolder() + imageName1;
-				String binaryImageLocation = fh.getBinaryFolder() + imageName1;
+				String sigFileLocarion = XMLFrogDatabase.getSignaturesFolder() + imageName1;
+				String binaryImageLocation = XMLFrogDatabase.getBinaryFolder() + imageName1;
 				IdentiFrog.LOGGER.writeMessage("imageName1 " + imageName1);
 				IdentiFrog.LOGGER.writeMessage("sigFileLocation " + sigFileLocarion);
 				IdentiFrog.LOGGER.writeMessage("binaryImageLocation " + binaryImageLocation);
@@ -767,8 +767,7 @@ public class ImageManipFrame extends JFrame {
 				parentFrame.updateCells();
 				parentFrame.getFrogData().getFrogs().get(parentFrame.getFrogData().getFrogs().size() - 1).setPathImage(imageName1);
 				IdentiFrog.LOGGER.writeMessage(parentFrame.getFrogData().getFrogs().size());
-				XMLFrogDatabase file = new XMLFrogDatabase(new File(fh.getFileNamePath()), parentFrame.getFrogData().getFrogs());
-				file.WriteXMLFile();
+				XMLFrogDatabase.WriteXMLFile();
 				parentFrame.updateCells(0, false);
 				closeAction();
 

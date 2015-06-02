@@ -1,22 +1,26 @@
-package gov.usgs.identifrog;
+package gov.usgs.identifrog.Frames;
 
+import gov.usgs.identifrog.ChoiceDialog;
+import gov.usgs.identifrog.DialogImageFileChooser;
+import gov.usgs.identifrog.IdentiFrog;
+import gov.usgs.identifrog.ImageViewer;
+import gov.usgs.identifrog.MarkExport;
+import gov.usgs.identifrog.MatchingDialog;
+import gov.usgs.identifrog.SaveAsDialog;
+import gov.usgs.identifrog.SearchCriteriaDialog;
+import gov.usgs.identifrog.Site;
+import gov.usgs.identifrog.ThumbnailCreator;
+import gov.usgs.identifrog.WorkingAreaPanel;
 import gov.usgs.identifrog.DataObjects.Frog;
-import gov.usgs.identifrog.Frames.AboutDialog;
-import gov.usgs.identifrog.Frames.ErrorDialog;
-import gov.usgs.identifrog.Frames.ParametersDialog;
-import gov.usgs.identifrog.Frames.ProjectManagerFrame;
 import gov.usgs.identifrog.Handlers.DataHandler;
-import gov.usgs.identifrog.Handlers.FolderHandler;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
-import gov.usgs.identifrog.Operations.AddFrog;
-import gov.usgs.identifrog.Operations.EditFrog;
+import gov.usgs.identifrog.Operations.FrogEditor;
 import gov.usgs.identifrog.Operations.XLSXTemplateGeneratorFrame;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.Dimension;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -28,10 +32,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -76,18 +78,17 @@ public class MainFrame extends JFrame {
 	private Preferences root = Preferences.userRoot();
 	public final Preferences node = root.node("edu/isu/aadis/defaults");
 
-	private Image icon = Toolkit.getDefaultToolkit().getImage("IconFrog.png");
 	private ImageIcon imageNew = new ImageIcon(
-			MainFrame.class.getResource("IconNew32.png"));
+			MainFrame.class.getResource("/resources/IconNew32.png"));
 	private ImageIcon imageDelete = new ImageIcon(
-			MainFrame.class.getResource("IconDelete32.png"));
+			MainFrame.class.getResource("/resources/IconDelete32.png"));
 	private ImageIcon imageHelp = new ImageIcon(
-			MainFrame.class.getResource("IconHelp32.png"));
+			MainFrame.class.getResource("/resources/IconHelp32.png"));
 
 	private ImageIcon imageFind = new ImageIcon(
-			MainFrame.class.getResource("IconFind32.png"));
+			MainFrame.class.getResource("/resources/IconFind32.png"));
 	private ImageIcon imageEdit = new ImageIcon(
-			MainFrame.class.getResource("IconEdit32.png"));
+			MainFrame.class.getResource("/resources/IconEdit32.png"));
 
 	private JButton bFind = new JButton("", imageFind); // disabled icons are
 														// set in init()
@@ -116,25 +117,25 @@ public class MainFrame extends JFrame {
 	private JMenuBar mainMenu = new JMenuBar();
 	private JMenu menuFile = new JMenu("File");
 	private JMenuItem menuItemCreateXLSX = new JMenuItem(
-			"Create Batch Template",new ImageIcon(MainFrame.class.getResource("IconXLS16.png")));
+			"Create Batch Template",new ImageIcon(MainFrame.class.getResource("/resources/IconXLS16.png")));
 	private JMenuItem MenuItemNew = new JMenuItem("New Frog Image",
-			new ImageIcon(MainFrame.class.getResource("IconNew16.png")));
+			new ImageIcon(MainFrame.class.getResource("/resources/IconNew16.png")));
 	private JMenuItem MenuItemMarkExport = new JMenuItem("Export to MARK");
 	private JMenuItem menuItemFileExit = new JMenuItem("Exit");
 	private JMenu menuHelp = new JMenu("Help");
 	private JMenuItem menuItemHelpAbout = new JMenuItem("About");
 	private JMenu menuDatabase = new JMenu("Project");
 	private JMenuItem MenuItemSearch = new JMenuItem("Search for a Match",
-			new ImageIcon(MainFrame.class.getResource("IconFind16.png")));
+			new ImageIcon(MainFrame.class.getResource("/resources/IconFind16.png")));
 	private JMenuItem menuItemProjectManager = new JMenuItem("Project Manager");
 	// private JMenuItem menuItemOpenSite = new JMenuItem("Open Existing Site");
 	private JMenuItem menuItemSaveSiteAs = new JMenuItem("Save Site As");
 	private JMenuItem MenuItemEdit = new JMenuItem("Edit Frog", new ImageIcon(
-			MainFrame.class.getResource("IconEdit16.png")));
+			MainFrame.class.getResource("/resources/IconEdit16.png")));
 	private JMenuItem MenuItemDelete = new JMenuItem("Delete Frog",
-			new ImageIcon(MainFrame.class.getResource("IconDelete16.png")));
+			new ImageIcon(MainFrame.class.getResource("/resources/IconDelete16.png")));
 	private JMenuItem MenuItemHelp = new JMenuItem("User Manual",
-			new ImageIcon(MainFrame.class.getResource("IconHelp16.png")));
+			new ImageIcon(MainFrame.class.getResource("/resources/IconHelp16.png")));
 	private JCheckBoxMenuItem CheckBoxMenuItemShowThumbs = new JCheckBoxMenuItem(
 			"Show Thumbnails", true);
 	private JMenuItem MenuItemParams = new JMenuItem("Rows per Page");
@@ -147,19 +148,17 @@ public class MainFrame extends JFrame {
 	private int viewerX = 0;
 	private int viewerY = 0;
 
-	private FolderHandler fh;
 
 	/**
 	 * MainFrame Constructor
 	 */
-	public MainFrame(FolderHandler fh) {
+	public MainFrame() {
 		enableEvents(AWTEvent.WINDOW_EVENT_MASK);
-		setIconImage(icon);
-		this.fh = fh;
-		workingFolder = fh.getMainFolder();
-		thumbnailFolder = new File(fh.getThumbnailFolder());
+		setIconImage(getToolkit().getImage(getClass().getResource("/resources/IconFrog.png")));
+		workingFolder = XMLFrogDatabase.getMainFolder();
+		thumbnailFolder = new File(XMLFrogDatabase.getThumbnailFolder());
 		thumbnailCreator = new ThumbnailCreator(thumbnailFolder);
-		this.setTitle("IdentiFrog - " + fh.getFileNamePath());
+		this.setTitle("IdentiFrog - " + XMLFrogDatabase.getFileNamePath());
 		try {
 			init();
 		} catch (Exception e) {
@@ -173,7 +172,7 @@ public class MainFrame extends JFrame {
 	 * 
 	 * @param state
 	 */
-	protected void setButtonState(boolean state) {
+	public void setButtonState(boolean state) {
 		bFind.setEnabled(state);
 		bEdit.setEnabled(state);
 		bDelete.setEnabled(state);
@@ -182,23 +181,25 @@ public class MainFrame extends JFrame {
 		MenuItemSearch.setEnabled(state);
 	}
 
+	/**
+	 * Loads the XML DB into memory and updates the recent projects list. Additionally causes the UI to refresh.
+	 */
 	private void read() {
-		XMLFrogDatabase.setFile(new File(fh.getFileNamePath()));
+		XMLFrogDatabase.setFile(new File(XMLFrogDatabase.getFileNamePath()));
 		XMLFrogDatabase.loadXMLFile();
-		//ArrayList<Frog> frogs = new XMLFrogDatabase(fh.getFileNamePath())
+		//ArrayList<Frog> frogs = new XMLFrogDatabase(XMLFrogDatabase.getFileNamePath())
 		//		.loadXMLFile();
-		updateRecentlyOpened(fh.getFileNamePath());
+		updateRecentlyOpened(XMLFrogDatabase.getFileNamePath());
 		frogData.setFrogs(XMLFrogDatabase.getFrogs());
 
-		workingAreaPanel.setFrogs(frogs);
-		workingAreaPanel.setFrogsData(frogData);
+		//workingAreaPanel.setFrogsData(frogData);
 		workingAreaPanel.refreshRows();
 
 		setFrogData(frogData);
 		// update cells
 		updateCells();
 
-		this.setTitle("IdentiFrog " + fh.getFileNamePath());
+		this.setTitle("IdentiFrog " + XMLFrogDatabase.getFileNamePath());
 	}
 
 	private void updateRecentlyOpened(String fileNamePath) {
@@ -273,13 +274,13 @@ public class MainFrame extends JFrame {
 	 */
 	private void init() throws Exception {
 		// startup
-
-		ArrayList<Frog> frogs = new XMLFrogDatabase(fh.getFileNamePath())
-				.loadXMLFile();
+		//XMLFrogDatabase.setFile(new File(XMLFrogDatabase.getFileNamePath()));
+		XMLFrogDatabase.loadXMLFile();
+		ArrayList<Frog> frogs = XMLFrogDatabase.getFrogs();
 		frogData.setFrogs(frogs);
 
 		contentPanel = (JPanel) getContentPane();
-		workingAreaPanel = new WorkingAreaPanel(MainFrame.this, fh);
+		workingAreaPanel = new WorkingAreaPanel(MainFrame.this);
 		setFrogData(workingAreaPanel.getFrogsData());
 
 		contentPanel.setLayout(borderLayout1);
@@ -409,7 +410,6 @@ public class MainFrame extends JFrame {
 				JFileChooser fileChooser = new JFileChooser(System
 						.getProperty("user.home"));
 				// if user selects the OK button then perform the following:
-				// XXX Add comments here
 				if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
 					String sitePath = fileChooser.getSelectedFile()
 							.getAbsolutePath();
@@ -422,14 +422,14 @@ public class MainFrame extends JFrame {
 								"Site Exists", JOptionPane.OK_OPTION);
 					} else {
 						try {
-							copyFolder(new File(fh.getMainFolder().toString()),
-									new File(sitePath));
-							XMLFrogDatabase copyHandler = new XMLFrogDatabase(new File(
+							XMLFrogDatabase.createCopy(new File(sitePath));
+							//copyFolder(new File(XMLFrogDatabase.getMainFolder().toString()),
+							//		new File(sitePath));new File(sitePath + File.separator+ fh.getFileName()));
+							/*XMLFrogDatabase copyHandler = new XMLFrogDatabase()
 									sitePath + File.separator
 											+ fh.getFileName()), getFrogData()
 									.getFrogs());
-							copyHandler.WriteXMLFile();
-							fh = new FolderHandler(sitePath);
+							copyHandler.WriteXMLFile();*/
 							read();
 						} catch (IOException e) {
 							IdentiFrog.LOGGER.writeException(e);
@@ -491,45 +491,6 @@ public class MainFrame extends JFrame {
 		contentPanel.add(workingAreaPanel, BorderLayout.CENTER);
 	}
 
-	public static void copyFolder(File src, File dest) throws IOException {
-		if (src.isDirectory()) {
-			// if directory not exists, create it
-			if (!dest.exists()) {
-				dest.mkdir();
-				// IdentiFrog.LOGGER.writeMessage("Directory copied from " + src
-				// + "  to " +
-				// dest);
-			}
-			// list all the directory contents
-			String files[] = src.list();
-			for (String file : files) {
-				// construct the src and dest file structure
-				File srcFile = new File(src, file);
-				File destFile = new File(dest, file);
-				// recursive copy
-				copyFolder(srcFile, destFile);
-			}
-		} else {
-			// if file, then copy it
-			// Use bytes stream to support all file types
-			InputStream in = new FileInputStream(src);
-			OutputStream out = new FileOutputStream(dest);
-
-			byte[] buffer = new byte[2048];
-
-			int length;
-			// copy the file content in bytes
-			while ((length = in.read(buffer)) > 0) {
-				out.write(buffer, 0, length);
-			}
-
-			in.close();
-			out.close();
-			// IdentiFrog.LOGGER.writeMessage("File copied from " + src + " to "
-			// + dest);
-		}
-	}
-
 	// File | Exit action performed
 	public void menuItemFileExit_actionPerformed(ActionEvent e) {
 		closeAction();
@@ -546,7 +507,7 @@ public class MainFrame extends JFrame {
 		String localFilename = image.getName();
 		localFilename = localFilename
 				.substring(0, (localFilename.length() - 4)) + ".png";
-		File testFile = new File(fh.getThumbnailFolder() + localFilename);
+		File testFile = new File(XMLFrogDatabase.getThumbnailFolder() + localFilename);
 		if (testFile.exists()) {
 			JOptionPane
 					.showMessageDialog(
@@ -557,11 +518,9 @@ public class MainFrame extends JFrame {
 									+ "To re-enter the image, first delete it from the database.");
 			return;
 		}
-		AddFrog addFrogObject = new AddFrog(MainFrame.this, fh,
+		FrogEditor addFrogObject = new FrogEditor(MainFrame.this,
 				"Frog Information", true, image);
 		addFrogObject.pack();
-		// garbage collector
-		System.gc();
 		File temporaryThumbnail = new File(
 				System.getProperty("java.io.tmpdir"), "tempThumb.jpg");
 		if (temporaryThumbnail.exists()) {
@@ -591,12 +550,12 @@ public class MainFrame extends JFrame {
 	 * @throws Exception
 	 */
 	private void editFrog() throws Exception {
-		String localID = workingAreaPanel.getSelectedFrog_Id();
-		if (localID == null) {
+		int localID = workingAreaPanel.getSelectedFrog_Id();
+		if (localID == -1) {
 			return;
 		}
-		Frog localFrog = frogData.searchFrog(localID);
-		AddFrog editFrogFrame = new AddFrog(this, fh, "Edit Frog", localFrog);
+		Frog localFrog = XMLFrogDatabase.searchFrogByID(localID);
+		FrogEditor editFrogFrame = new FrogEditor(this, "Edit Frog", localFrog);
 
 		/*
 		 * EditFrog editFrogFrame = new EditFrog(MainFrame.this,
@@ -613,9 +572,7 @@ public class MainFrame extends JFrame {
 		// update cells
 		updateCells();
 		// write xml file
-		XMLFrogDatabase file = new XMLFrogDatabase(new File(fh.getFileNamePath()),
-				getFrogData().getFrogs());
-		file.WriteXMLFile();
+		XMLFrogDatabase.WriteXMLFile();
 	}
 
 	/**
@@ -624,21 +581,21 @@ public class MainFrame extends JFrame {
 	 * @throws Exception
 	 */
 	private void deleteFrog() throws Exception {
-		String localID = workingAreaPanel.getSelectedFrog_Id();
-		if (localID == null) {
+		int localID = workingAreaPanel.getSelectedFrog_Id();
+		if (localID == -1) {
 			return;
 		}
 		if (ChoiceDialog.choiceMessage("Do you want to delete this row?") == 0) {
-			Frog localFrog = frogData.searchFrog(localID);
+			Frog localFrog = XMLFrogDatabase.searchFrogByID(localID);
 			String localImageName = localFrog.getGenericImageName();
 			String localSignatureName = localFrog.getPathSignature();
 			// check if exists then delete
-			new File(fh.getImagesFolder() + localImageName).delete();
-			new File(fh.getDorsalFolder() + localImageName).delete();
-			new File(fh.getThumbnailFolder() + localImageName).delete();
-			new File(fh.getBinaryFolder() + localImageName).delete();
-			new File(fh.getSignaturesFolder() + localSignatureName).delete();
-			frogData.removeFrog(localID);
+			new File(XMLFrogDatabase.getImagesFolder() + localImageName).delete();
+			new File(XMLFrogDatabase.getDorsalFolder() + localImageName).delete();
+			new File(XMLFrogDatabase.getThumbnailFolder() + localImageName).delete();
+			new File(XMLFrogDatabase.getBinaryFolder() + localImageName).delete();
+			new File(XMLFrogDatabase.getSignaturesFolder() + localSignatureName).delete();
+			XMLFrogDatabase.removeFrog(localID);
 			// garbage collector
 			System.gc();
 			if (frogData.getFrogs().size() == 1) {
@@ -647,9 +604,7 @@ public class MainFrame extends JFrame {
 			// update cells
 			updateCells();
 			// write xml file
-			XMLFrogDatabase file = new XMLFrogDatabase(new File(fh.getFileNamePath()),
-					getFrogData().getFrogs());
-			file.WriteXMLFile();
+			XMLFrogDatabase.WriteXMLFile();
 		}
 	}
 
@@ -699,9 +654,9 @@ public class MainFrame extends JFrame {
 		runManual();
 	}
 
-	public Image getIcon() {
-		return icon;
-	}
+	/*public Image getIcon() {
+		return getToolkit().getImage(getClass().getResource("/resources/IconFrog.png"));
+	}*/
 
 	protected void MenuItemNew_actionPerformed(ActionEvent e) {
 		DialogImageFileChooser imageChooser = new DialogImageFileChooser(
@@ -768,8 +723,8 @@ public class MainFrame extends JFrame {
 		}
 		// TODO fix this
 		// File dorspath = workingAreaPanel.getDorsalImageFileFromSelectedRow();
-		File dorsalImage = new File(fh.getDorsalFolder()
-				+ frogData.searchFrog(workingAreaPanel.getSelectedFrog_Id())
+		File dorsalImage = new File(XMLFrogDatabase.getDorsalFolder()
+				+ XMLFrogDatabase.searchFrogByID(workingAreaPanel.getSelectedFrog_Id())
 						.getGenericImageName());
 		setButtonsOn(false);
 		// IdentiFrog.LOGGER.writeMessage("In butFind Action Performed tfrog[0].intValue() is "
@@ -887,10 +842,10 @@ public class MainFrame extends JFrame {
 		return thumbnailCreator;
 	}
 
-	public void OpenImageViewer(String frogId, String title, File imageFile,
+	public void OpenImageViewer(int localFrogID, String title, File imageFile,
 			boolean displayallimages) {
 		if (imageFile.exists()) {
-			ImageViewer imageViewer = new ImageViewer(fh, frogId,
+			ImageViewer imageViewer = new ImageViewer(localFrogID,
 					MainFrame.this, title, false, imageFile, true,
 					displayallimages);
 			imageViewer.setLocation(viewerX, viewerY);
@@ -914,7 +869,7 @@ public class MainFrame extends JFrame {
 		workingAreaPanel.setLastFrogID(DbID);
 		if (matchingDialog == null || !matchingDialog.isOpen()) {
 			matchingDialog = new MatchingDialog(MainFrame.this, imageFile,
-					DbID, fh);
+					DbID);
 		}
 	}
 
@@ -928,7 +883,7 @@ public class MainFrame extends JFrame {
 	 * 
 	 * @param on
 	 */
-	protected void setButtonsOn(boolean on) {
+	public void setButtonsOn(boolean on) {
 		// bDelete.setEnabled(on);
 		// bEdit.setEnabled(on);
 		// bFind.setEnabled(on);

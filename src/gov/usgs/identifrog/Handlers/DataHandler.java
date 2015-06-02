@@ -24,26 +24,6 @@ public class DataHandler {
     this.frogs = frogs;
   }
 
-  public int getNextAvailableID() {
-    int nextAvailable = 0;
-    for (Frog frog : frogs) {
-    	if (frog.getID() > nextAvailable) {
-    		nextAvailable = frog.getID();
-    	}
-    }
-    return nextAvailable+1;
-	  
-	/*ArrayList<Integer> arrayID = new ArrayList<Integer>();
-    if (frogs.size() == 0) {
-      return 1;
-    } else {
-      for (int i = 0; i < frogs.size(); i++) {
-        arrayID.add(new Integer(frogs.get(i).getFormerID()));
-      }
-      Collections.sort(arrayID);
-      return arrayID.get(arrayID.size() - 1) + 1;
-    }*/
-  }
   
  
 /*
@@ -96,7 +76,7 @@ public class DataHandler {
     return locations;
   }
 
-  public Object[][] frogsArray(FolderHandler fh, boolean allFrogs) {
+  public Object[][] frogsArray(boolean allFrogs) {
     ArrayList<Frog> localFrogs = new ArrayList<Frog>();
     boolean allFrogsLocal = true;
     if (allFrogsLocal) {
@@ -107,7 +87,7 @@ public class DataHandler {
     // NOTE: replace frogList with frogs
     Object[][] array = new Object[localFrogs.size()][];
     for (int i = 0; i < localFrogs.size(); i++) {
-      array[i] = localFrogs.get(i).toArray(fh);
+      array[i] = localFrogs.get(i).toArray();
     }
     return array;
   }

@@ -1,8 +1,9 @@
 package gov.usgs.identifrog.DataObjects;
 
-import gov.usgs.identifrog.Handlers.FolderHandler;
+import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -86,6 +87,23 @@ public class Frog {
 		this.dateEntry = dateEntry;
 		this.observer = observer;
 		this.recorder = recorder;
+		this.discriminator = discriminator;
+		this.comments = comments;
+		this.location = location;
+	}
+	
+	public Frog(int ID, String surveyID, String species, String gender, String mass, String length, String dateCapture, String dateEntry, String observer, String recorder,
+			String discriminator, String comments, Location location) {
+		this.ID = ID;
+		this.surveyID = surveyID;
+		this.species = species;
+		this.gender = gender;
+		this.mass = mass;
+		this.length = length;
+		this.dateCapture = dateCapture;
+		this.dateEntry = dateEntry;
+		this.observer2 = observer;
+		this.recorder2 = recorder;
 		this.discriminator = discriminator;
 		this.comments = comments;
 		this.location = location;
@@ -272,7 +290,7 @@ public class Frog {
 		return buffer;
 	}
 
-	public Object[] toArray(FolderHandler fh) {
+	public Object[] toArray() {
 		Object fo[] = new Object[ListItem.getSize()];
 		fo[ListItem.ID.getValue()] = "FROG" + ID;
 		fo[ListItem.SURVEYID.getValue()] = surveyID;
@@ -286,7 +304,7 @@ public class Frog {
 		fo[ListItem.RECORDER.getValue()] = recorder.getName();
 		fo[ListItem.DISCRIMINATOR.getValue()] = discriminator;
 		fo[ListItem.LOCATIONNAME.getValue()] = location.getName();
-		fo[ListItem.DORSALVIEW.getValue()] = fh.getThumbnailFolder() + pathImage;
+		fo[ListItem.DORSALVIEW.getValue()] = XMLFrogDatabase.getThumbnailFolder() + pathImage;
 		return fo;
 	}
 
@@ -416,5 +434,17 @@ public class Frog {
 	public String getRecorder2() {
 		// TODO Auto-generated method stub
 		return recorder2;
+	}
+
+	/**
+	 * Gets an arraylist of all site images this frog has
+	 * @return
+	 */
+	public ArrayList<SiteImage> getAllSiteImages() {
+		ArrayList<SiteImage> images = new ArrayList<SiteImage>();
+		for (SiteSample sample : siteSamples) {
+			images.addAll(sample.getSiteImages());
+		}
+		return images;
 	}
 }

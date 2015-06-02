@@ -2,13 +2,10 @@ package gov.usgs.identifrog.Frames;
 
 import gov.usgs.identifrog.ExtensionFileFilter;
 import gov.usgs.identifrog.IdentiFrog;
-import gov.usgs.identifrog.MainFrame;
 import gov.usgs.identifrog.Site;
-import gov.usgs.identifrog.Handlers.FolderHandler;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 import java.awt.Dimension;
-import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -40,7 +37,6 @@ import javax.swing.border.TitledBorder;
 
 public class ProjectManagerFrame extends JDialog implements ActionListener {
 	public static final String RECENT_SITES_FILE = "recentsites.idf";
-	private Image icon = Toolkit.getDefaultToolkit().getImage("IconFrog.png");
 	private JButton openSite, createSite;
 	private ArrayList<Site> recentSites;
 	private MainFrame mf;
@@ -62,7 +58,8 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 		// TODO Auto-generated method stub
 		setMinimumSize(new Dimension(400,300));
 		setTitle("IdentiFrog Project Manager");
-		setIconImage(icon);
+		//new ImageIcon(this.getClass().getClassLoader().getResource("/resources/IconFrog.png"));
+		setIconImage(new ImageIcon(this.getClass().getResource("/resources/IconFrog.png")).getImage());
 		if (mf == null) {
 			//close if this is opened by main()
 			addWindowListener(new WindowAdapter() { 
@@ -204,17 +201,17 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 	}
 	
 	public void createSite(String location, String siteName){
-		FolderHandler fh = new FolderHandler(location+File.separator+siteName);
-		XMLFrogDatabase file = new XMLFrogDatabase(fh.getFileNamePath());
-		if (!fh.FoldersExist()) {
-			fh.createFolders();
-			file.CreateXMLFile();
+		IdentiFrog.LOGGER.writeMessage("Creating new site in folder "+location+" with name "+siteName);
+		XMLFrogDatabase.setFile(new File(location+File.separator+siteName+File.separator+IdentiFrog.DB_FILENAME));
+		if (!XMLFrogDatabase.siteFoldersExist()) {
+			XMLFrogDatabase.createFolders();
+			XMLFrogDatabase.createXMLFile();
 		}
-		File f = new File(fh.getFileNamePath());
+		File f = new File(XMLFrogDatabase.getFileNamePath());
 		if (f.exists() && f.length() == 0) {
-			file.CreateXMLFile();
+			XMLFrogDatabase.createXMLFile();
 		}
-		loadSite(fh.getFileNamePath());
+		loadSite(XMLFrogDatabase.getFileNamePath());
 		/*
 		// create an instance of the MainFrame
 		MainFrame frame = new MainFrame(fh);
@@ -243,8 +240,7 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 	}
 	
 	public void loadSite(String dataFilePath){
-		IdentiFrog.LOGGER.writeMessage("Loading site datafile: "+dataFilePath);
-		
+		IdentiFrog.LOGGER.writeMessage("Project manager is preparing to load sitefile: "+dataFilePath);
 		
 		File dfile = new File(dataFilePath);
 		if (!dfile.exists()) {
@@ -252,9 +248,7 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 		    JOptionPane.showMessageDialog(null, "Could not open site, the datafile.xml file does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		FolderHandler fh = new FolderHandler(dataFilePath);
-		// create an instance of the MainFrame
-		MainFrame frame = new MainFrame(fh);
+		XMLFrogDatabase.setFile(dfile);
 		
 		//gathersiteinfo
 		IdentiFrog.LOGGER.writeMessage("Gathering information to update most recent list");
@@ -315,6 +309,9 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 			// TODO Auto-generated catch block
 			IdentiFrog.LOGGER.writeException(e);
 		}
+		
+		// create an instance of the MainFrame
+		MainFrame frame = new MainFrame();
 		
 		// center the window
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();

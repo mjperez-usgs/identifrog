@@ -1,9 +1,10 @@
 package gov.usgs.identifrog;
 
-import gov.usgs.identifrog.Handlers.FolderHandler;
+import gov.usgs.identifrog.Frames.MainFrame;
 
 import java.awt.BorderLayout;
 import java.io.File;
+
 import javax.swing.JPanel;
 
 /**
@@ -25,12 +26,10 @@ public class MatchingDialog {
 	private boolean open;
 	protected static ChoiceDialog choiceDialog = new ChoiceDialog();
 	ImageViewer imageViewer;
-	private FolderHandler fh;
 
-	public MatchingDialog(MainFrame frame, File ImageFile, int FrogDbId, FolderHandler fh) {
+	public MatchingDialog(MainFrame frame, File ImageFile, int FrogDbId) {
 		parentFrame = frame;
 		imageFile = ImageFile;
-		this.fh = fh;
 		setFrogDBID(FrogDbId);
 
 		try {
@@ -52,7 +51,7 @@ public class MatchingDialog {
 
 	protected void OpenImageViewer(String title, File imageFile) {
 		if (imageFile.exists()) {
-			imageViewer = new ImageViewer(fh,MatchingDialog.this, parentFrame, title, false, imageFile, false);
+			imageViewer = new ImageViewer(MatchingDialog.this, parentFrame, title, false, imageFile, false);
 			open = true;
 			if (imageViewer.shouldShow()) {
 				imageViewer.setVisible(true);
@@ -69,7 +68,7 @@ public class MatchingDialog {
 		}// else
 	}
 
-	protected boolean isOpen() {
+	public boolean isOpen() {
 		return open;
 	}
 

@@ -1,6 +1,6 @@
 package gov.usgs.identifrog.Operations;
 
-import gov.usgs.identifrog.MainFrame;
+import gov.usgs.identifrog.Frames.MainFrame;
 
 import javax.swing.JDialog;
 import javax.swing.JLabel;

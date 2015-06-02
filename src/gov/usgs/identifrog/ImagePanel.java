@@ -1,5 +1,8 @@
 package gov.usgs.identifrog;
 
+import gov.usgs.identifrog.Frames.ErrorDialog;
+import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -35,10 +38,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.prefs.Preferences;
+
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
-import gov.usgs.identifrog.Frames.ErrorDialog;
-import gov.usgs.identifrog.Handlers.FolderHandler;
 
 /**
  * <p>
@@ -227,7 +229,6 @@ public class ImagePanel extends JPanel {
 	public ArrayList<SpotFiller> spotFilledCoor = new ArrayList<SpotFiller>();
 	public int filledSpotNumber = 0;
 	
-	private FolderHandler fh;
 
 	/**
 	 * Constructor for with an image
@@ -237,10 +238,9 @@ public class ImagePanel extends JPanel {
 	 * @param filename
 	 *            name of the image to be manipulated
 	 */
-	public ImagePanel(ImageManipFrame frame, FolderHandler fh, File inputfile) {
+	public ImagePanel(ImageManipFrame frame, File inputfile) {
 		parentFrame = frame;
 		imageFile = inputfile;
-		this.fh = fh;
 		
 		IdentiFrog.LOGGER.writeMessage("ImagePanel inputfile = " + inputfile.getName());
 
@@ -393,13 +393,13 @@ public class ImagePanel extends JPanel {
 		resampleImage(ratioH1 * image.getWidth(), (int) dorImgHeight);
 
 		saveImage(image, dir, getImageName());
-		saveImage(image, fh.getDorsalFolder(), localFilename);
+		saveImage(image, XMLFrogDatabase.getDorsalFolder(), localFilename);
 
 		// next 2 lines create thumb nail ratioW x 64
 		double ratioH2 = thumbImgHeight / image.getHeight();
 		resampleImage(ratioH2 * image.getWidth(), thumbImgHeight);
 
-		saveImage(image, fh.getThumbnailFolder(), localFilename);
+		saveImage(image, XMLFrogDatabase.getThumbnailFolder(), localFilename);
 		return localFilename;
 	}
 

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+
 import gov.usgs.identifrog.DataObjects.Frog;
 
 /**
@@ -23,7 +24,7 @@ public class MarkExport {
 	// //////// METHODS //////////
 	public static void saveToMark(ArrayList<Frog> frogs, String path) {
 		ArrayList<String> surveyList = getUniqueSurveyList(frogs);
-		ArrayList<String> frogList = getUniqueFrogList(frogs);
+		ArrayList<Integer> frogList = getUniqueFrogList(frogs);
 
 		String delim = ",";
 		String stop = "\n";
@@ -77,24 +78,27 @@ public class MarkExport {
 		return list;
 	}
 
-	private static ArrayList<String> getFrogList(ArrayList<Frog> frogs) {
-		ArrayList<String> list = new ArrayList<String>();
+	/**
+	 * Gets a list of all Frog IDs
+	 * @param frogs array of frogs to create a list from
+	 * @return list of frog IDs
+	 */
+	private static ArrayList<Integer> getFrogList(ArrayList<Frog> frogs) {
+		ArrayList<Integer> list = new ArrayList<Integer>();
 		for (int i = 0; i < frogs.size(); i++) {
-			list.add(Integer.toString(frogs.get(i).getID())); //TODO
+			list.add(frogs.get(i).getID()); //TODO
 		}
 		return list;
 	}
 
 	private static ArrayList<String> getUniqueSurveyList(ArrayList<Frog> frogs) {
 		ArrayList<String> list = getSurveyList(frogs);
-		list = makeUniqueList(list);
-		return list;
+		return makeUniqueList(list);
 	}
 
-	private static ArrayList<String> getUniqueFrogList(ArrayList<Frog> frogs) {
-		ArrayList<String> list = getFrogList(frogs);
-		list = makeUniqueList(list);
-		return list;
+	private static ArrayList<Integer> getUniqueFrogList(ArrayList<Frog> frogs) {
+		ArrayList<Integer> list = getFrogList(frogs);
+		return makeUniqueIntegerList(list);
 	}
 
 	private static ArrayList<String> makeUniqueList(ArrayList<String> list) {
@@ -105,18 +109,32 @@ public class MarkExport {
 		Collections.sort(list);
 		return list;
 	}
+	
+	/**
+	 * Creates a unique integer list. This method exists because of limits on the Java language syntax.
+	 * @param list List to check for uniqueness
+	 * @return Unique list that is sorted low to high
+	 */
+	private static ArrayList<Integer> makeUniqueIntegerList(ArrayList<Integer> list) {
+		HashSet<Integer> hs = new HashSet<Integer>();
+		hs.addAll(list);
+		list.clear();
+		list.addAll(hs);
+		Collections.sort(list);
+		return list;
+	}
 
-	private static ArrayList<Frog> getInstancesOfFrog(ArrayList<Frog> frogs, String frogID) {
+	private static ArrayList<Frog> getInstancesOfFrog(ArrayList<Frog> frogs, int frogID) {
 		ArrayList<Frog> list = new ArrayList<Frog>();
 		for (int i = 0; i < frogs.size(); i++) {
-			if (frogs.get(i).getID().equals(frogID)) {
+			if (frogs.get(i).getID() == frogID) {
 				list.add(frogs.get(i));
 			}
 		}
 		return list;
 	}
 
-	private static char isFrogInSurvey(ArrayList<Frog> frogs, String frogID, String surveyID) {
+	private static char isFrogInSurvey(ArrayList<Frog> frogs, int frogID, String surveyID) {
 		ArrayList<Frog> afrog = getInstancesOfFrog(frogs, frogID);
 		for (int i = 0; i < afrog.size(); i++) {
 			if (afrog.get(i).getSurveyID().equals(surveyID)) {

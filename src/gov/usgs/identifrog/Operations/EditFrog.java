@@ -10,9 +10,9 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import gov.usgs.identifrog.IdentiFrog;
-import gov.usgs.identifrog.MainFrame;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.Frames.ErrorDialog;
+import gov.usgs.identifrog.Frames.MainFrame;
 
 /**
  * <p>

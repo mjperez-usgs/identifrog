@@ -17,7 +17,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 
 import gov.usgs.identifrog.IdentiFrog;
-import gov.usgs.identifrog.MainFrame;
 import gov.usgs.identifrog.WorkingAreaPanel;
 
 /**

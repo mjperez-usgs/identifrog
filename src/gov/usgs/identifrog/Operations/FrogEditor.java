@@ -1,19 +1,22 @@
 package gov.usgs.identifrog.Operations;
 
 import gov.usgs.identifrog.ChoiceDialog;
+import gov.usgs.identifrog.DialogImageFileChooser;
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.ImageManipFrame;
-import gov.usgs.identifrog.MainFrame;
 import gov.usgs.identifrog.DataObjects.DateLabelFormatter;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
 import gov.usgs.identifrog.DataObjects.Personel;
+import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.DataObjects.SiteSample;
+import gov.usgs.identifrog.Frames.MainFrame;
 import gov.usgs.identifrog.Handlers.DataHandler;
-import gov.usgs.identifrog.Handlers.FolderHandler;
+import gov.usgs.identifrog.Handlers.FrogEditorImageRenderer;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -24,7 +27,9 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -32,28 +37,34 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
-import java.util.Random;
 import java.util.prefs.Preferences;
 
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
+import org.imgscalr.Scalr;
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
@@ -70,7 +81,7 @@ import org.jdatepicker.impl.UtilDateModel;
  * @author Oksana V. Kelly modified the code written by Mike Ramshaw from IdentiFrog 2005
  */
 @SuppressWarnings("serial")
-public class AddFrog extends JDialog {
+public class FrogEditor extends JDialog implements ListSelectionListener {
 	protected MainFrame parentFrame;
 
 	private Preferences root = Preferences.userRoot();
@@ -85,7 +96,7 @@ public class AddFrog extends JDialog {
 
 	String surveyID;
 	private boolean isNewImage = true;
-	protected String frogID;
+	protected int frogID;
 	protected String species;
 	protected String pathSignature;
 	protected String pathImage;
@@ -117,26 +128,35 @@ public class AddFrog extends JDialog {
 	private String nextAvailFrogId;
 	private String thumbnailFilename;
 	private Frog frog; //null if not in edit mode
-	private FolderHandler fh;
 	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-
+	private boolean MEMORY_COPY = true; //Discard the base frog if this is true when closing
+	private ArrayList<SiteImage> images;
+	
 	/**
-	 * This is the standard add-frog window (not edit)
+	 * This is the standard add-frog window that comes up when a "New Frog" is entered.
 	 * @param frame Parent frame
 	 * @param fh Folder handler that is associated with the project
 	 * @param title Window title
 	 * @param modal if this window should block others
 	 * @param image Image to load for this frog since it's not in the DB yet.
 	 */
-	public AddFrog(MainFrame frame,FolderHandler fh, String title, boolean modal, File image) {
+	public FrogEditor(MainFrame frame, String title, boolean modal, File image) {
 		super((Frame) frame, title, modal);
+		IdentiFrog.LOGGER.writeMessage("Opening FrogEditor's NEW FROG frog editor");
 		this.image = image;
 		parentFrame = frame;
-		this.fh = fh;
+		
+		
 		try {
+			images = new ArrayList<SiteImage>();
+			SiteImage simage = new SiteImage();
+			simage.setProcessed(false);
+			simage.setSourceFilePath(image.getAbsolutePath());
+    		//generate thumbnail in memory
+			simage = createListThumbnail(simage);
+			images.add(simage);
 			init();
 			LocalDate now = LocalDate.now();
-			IdentiFrog.LOGGER.writeMessage("New Frog, current date from LocalDate: "+now.getYear()+"-"+now.getMonthValue()+"-"+now.getDayOfMonth());
 			entryDatePicker.getModel().setDate(now.getYear(), now.getMonthValue()-1, now.getDayOfMonth()); //-1 cause it's 0 indexed
 			entryDatePicker.getModel().setSelected(true);
 		} catch (Exception e) {
@@ -151,17 +171,18 @@ public class AddFrog extends JDialog {
 	 * @param title Title of the page
 	 * @param frog Frog to edita and populate the interface with
 	 */
-	public AddFrog(MainFrame frame,FolderHandler fh, String title, Frog frog) {
+	public FrogEditor(MainFrame frame, String title, Frog frog) {
 		super((Frame) frame, title);
+		MEMORY_COPY = false;
+		IdentiFrog.LOGGER.writeMessage("Opening FrogEditor's EXISTING FROG frog editor");
 		parentFrame = frame;
-		this.fh = fh;
 		this.frog = frog;
-		
+		images = frog.getAllSiteImages();
 		try {
 			init();
 			//load frog
 			textSurveyID.setText(frog.getSurveyID());
-			textFrog_ID.setText(frog.getID());
+			textFrog_ID.setText(Integer.toString(frog.getID()));
 			Calendar entryCal = Calendar.getInstance();
 			entryCal.setTime(df.parse(frog.getDateEntry()));
 			entryDatePicker.getModel().setDate(entryCal.get(Calendar.YEAR),entryCal.get(Calendar.MONTH), entryCal.get(Calendar.DAY_OF_MONTH));
@@ -217,6 +238,8 @@ public class AddFrog extends JDialog {
 			 *
 		}
 	};*/
+	JList<SiteImage> imageList = new JList<SiteImage>();
+	DefaultListModel<SiteImage> listModel = new DefaultListModel<SiteImage>();
 	JButton butFillPreviousFrogInfo = new JButton();
 	JButton butDebugPopulate = new JButton();
 	JLabel labEntryPersonTitle = new JLabel();
@@ -330,6 +353,27 @@ public class AddFrog extends JDialog {
 		//yearComboBox = new JComboBox<Object>(year);
 		
 		//start init
+		//Images
+		for (SiteImage simage : images) {
+			listModel.addElement(simage);
+		}
+		
+		imageList = new JList<SiteImage>(listModel);
+		//imageList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		imageList.addListSelectionListener(this);
+        imageList.setFont(new Font("Arial",Font.BOLD,35));
+		imageList.setCellRenderer(new FrogEditorImageRenderer());
+		imageList.setSelectionBackground(Color.RED);
+		imageList.setBackground(Color.RED);
+
+		//Data
+		
+		
+		
+		
+		
+		
+		
 		String coordinateType;
 		if (node.get("lastLatLong", "").equals("true")) {
 			coordinateType = "Lat/Long";
@@ -341,7 +385,7 @@ public class AddFrog extends JDialog {
 		Personel rc = new Personel("recorder", node.get("lastEntryFirstName", ""), node.get("lastEntryLastName", ""));
 		Location lc = new Location(node.get("lastLocationName", ""), node.get("lastLocationDesc", ""), coordinateType, node.get("lastX", ""), node.get("lastY", ""), node.get("lastDatum", ""), node
 				.get("lastZone", ""));
-		lastFrog = new Frog(node.get("lastFrog_ID", ""), node.get("lastFormerID", ""), node.get("lastSurveyID", ""), node.get("lastSpecies", ""), node.get("lastSex", ""), node.get("lastMass", ""),
+		lastFrog = new Frog(Integer.parseInt(node.get("lastFrog_ID", "")), node.get("lastFormerID", ""), node.get("lastSurveyID", ""), node.get("lastSpecies", ""), node.get("lastSex", ""), node.get("lastMass", ""),
 				node.get("lastLength", ""), dateCapture, "", ob, rc, node.get("lastDiscriminator", ""), node.get("lastFrogComments", ""), lc, "");
 		frogData = parentFrame.getFrogData();
 
@@ -356,11 +400,11 @@ public class AddFrog extends JDialog {
 		 * if (maxFrogId >= maxFormerFrogId) { nextAvailFrogId = "" + (maxFrogId + 1); } else {
 		 * nextAvailFrogId = "" + (maxFormerFrogId + 1); }
 		 */
-		nextAvailFrogId = Integer.toString(frogData.getNextAvailableID());
+		nextAvailFrogId = Integer.toString(XMLFrogDatabase.getNextAvailableID());
 		ArrayList<String> observers = XMLFrogDatabase.getObservers();
 		ArrayList<String> recorders = XMLFrogDatabase.getRecorders();
 		comboObserver = new JComboBox<String>(observers.toArray(new String[observers.size()]));
-		comboObserver = new JComboBox<String>(recorders.toArray(new String[recorders.size()]));
+		comboRecorder = new JComboBox<String>(recorders.toArray(new String[recorders.size()]));
 		
 		
 		// combobox for ObsLastName
@@ -409,32 +453,32 @@ public class AddFrog extends JDialog {
 		
 		//Images panel
 		JPanel imagesPanel = new JPanel(new BorderLayout());
-		
+		imagesPanel.setMinimumSize(new Dimension(100, 50));
 		
 		addImageButton.setMaximumSize(new Dimension(160,15));
+		addImageButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				SiteImage newImage = addImage();
+				if (newImage != null) {
+					listModel.addElement(newImage);
+				}
+			}
+		});
+		imagesPanel.add(imageList, BorderLayout.CENTER);
 		imagesPanel.add(addImageButton,BorderLayout.SOUTH);
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		
 		
 		//site survey panel
 		JPanel panelSiteSurvey = new JPanel();
 		panelSiteSurvey.setLayout(new BoxLayout(panelSiteSurvey, BoxLayout.PAGE_AXIS));
-		panelSiteSurvey.setAlignmentX(Component.LEFT_ALIGNMENT);
+		panelSiteSurvey.setAlignmentX(Component.CENTER_ALIGNMENT);
 		TitledBorder siteSurveyBorder = BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),"Site Survey");
 		siteSurveyBorder.setTitleFont(level1TitleFont);
 		panelSiteSurvey.setBorder(siteSurveyBorder);
 		
-		panelEntryPersonInfo.setLayout(null);
+		panelEntryPersonInfo.setLayout(new BoxLayout(panelEntryPersonInfo, BoxLayout.LINE_AXIS));
 		TitledBorder entryPersonBorder = BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),"Data Entry");
 		entryPersonBorder.setTitleFont(level2TitleFont);
 		panelEntryPersonInfo.setBorder(entryPersonBorder);
@@ -460,7 +504,7 @@ public class AddFrog extends JDialog {
 		butFillPreviousFrogInfo.setBounds(new Rectangle(180, 10, 180, 35));// 8
 		butFillPreviousFrogInfo.setText("Populate from History");
 		butFillPreviousFrogInfo.setVisible(true);
-		butFillPreviousFrogInfo.setIcon(new ImageIcon(MainFrame.class.getResource("IconRefresh32.png")));
+		butFillPreviousFrogInfo.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconRefresh32.png")));
 		butFillPreviousFrogInfo.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				butFillPreviousFrogInfo_actionPerformed(e);
@@ -469,7 +513,7 @@ public class AddFrog extends JDialog {
 		//Debugging button
 		butDebugPopulate.setText("Debug: Autopopulate");
 		butDebugPopulate.setVisible(false);
-		butDebugPopulate.setIcon(new ImageIcon(MainFrame.class.getResource("IconDebug32.png")));
+		butDebugPopulate.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconDebug32.png")));
 		butDebugPopulate.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				butDebugAutopopulate_actionPerformed(e);
@@ -535,10 +579,20 @@ public class AddFrog extends JDialog {
 		JPanel observerPanel = new JPanel();
 		observerPanel.setLayout(new BoxLayout(observerPanel, BoxLayout.PAGE_AXIS));
 		JLabel observerLabel = new JLabel("Observer");
-		
+		comboObserver.setMaximumSize(new Dimension(650,30));
 		
 		observerPanel.add(observerLabel);
 		observerPanel.add(comboObserver);
+		
+		//PANEL Recorder INFO
+		JPanel recorderPanel = new JPanel();
+		recorderPanel.setLayout(new BoxLayout(recorderPanel, BoxLayout.PAGE_AXIS));
+		JLabel recorderLabel = new JLabel("Recorder");
+		
+		comboRecorder.setMaximumSize(new Dimension(200,30));
+
+		recorderPanel.add(recorderLabel);
+		recorderPanel.add(comboRecorder);
 		/*labObserverLastName.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
 		labObserverLastName.setBounds(new Rectangle(13, 20, 90, 20));
 		labObserverLastName.setText("Last Name");
@@ -580,9 +634,9 @@ public class AddFrog extends JDialog {
 		idPanel.add(labFrog_ID);
 		idPanel.add(textFrog_ID);
 		
-		labFRO.setText("<html><div style=\"width:115px;\">If you want to add an image to an existing frog, use the right click menu for that frog to add one.</div></html>");
-		labFRO.setFont(new Font("MS Sans Serif", Font.PLAIN, 11));
-		labFRO.setBounds(new Rectangle(10, 102, 149, 140));
+		//labFRO.setText("<html><div style=\"width:115px;\">If you want to add an image to an existing frog, use the right click menu for that frog to add one.</div></html>");
+		//labFRO.setFont(new Font("MS Sans Serif", Font.PLAIN, 11));
+		//labFRO.setBounds(new Rectangle(10, 102, 149, 140));
 		
 		textFrog_ID.setColumns(143);
 		textFrog_ID.setText(nextAvailFrogId);
@@ -772,7 +826,7 @@ public class AddFrog extends JDialog {
 		textZone.setFont(new Font("MS Sans Serif", Font.PLAIN, 13));
 		textZone.setBounds(new Rectangle(223, 152, 200, 25));
 		textZone.setColumns(200);
-		butNewEntry.setIcon(new ImageIcon(MainFrame.class.getResource("IconSave32.png")));
+		butNewEntry.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconSave32.png")));
 		butNewEntry.setText("Save Entry");
 		butNewEntry.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -783,14 +837,14 @@ public class AddFrog extends JDialog {
 		labImage.setBorder(BorderFactory.createEtchedBorder());
 		labImage.setBounds(new Rectangle(8, 6, 165, 133));
 		butCancel.setVerifyInputWhenFocusTarget(true);
-		butCancel.setIcon(new ImageIcon(MainFrame.class.getResource("IconCancel32.png")));
+		butCancel.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconCancel32.png")));
 		butCancel.setText("Cancel");
 		butCancel.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				butCancel_actionPerformed(e);
 			}
 		});
-		butClearAll.setIcon(new ImageIcon(MainFrame.class.getResource("IconBlank32.png")));
+		butClearAll.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconBlank32.png")));
 		butClearAll.setText("Clear All");
 		butClearAll.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -814,13 +868,14 @@ public class AddFrog extends JDialog {
 		panelEntryPersonInfo.add(labEntryPersonTitle);
 		//panelEntryPersonInfo.add(entryDatePicker);
 		//panelEntryPersonInfo.add(labEntrydate);
-		panelEntryPersonInfo.add(labEntryLastName, null);
+		//panelEntryPersonInfo.add(labEntryLastName, null);
 		//panelEntryPersonInfo.add(comboEntryLastName, null);
-		panelEntryPersonInfo.add(labEntryFirstName, null);
-		panelObserverInfo.add(recorderPanel);
-
+		//panelEntryPersonInfo.add(labEntryFirstName, null);
+		panelEntryPersonInfo.add(Box.createHorizontalGlue());
+		panelEntryPersonInfo.add(recorderPanel);
 		//panelEntryPersonInfo.add(comboEntryFirstName, null);
-		panelObserverInfo.add(observerPanel);
+		panelEntryPersonInfo.add(observerPanel);
+		panelEntryPersonInfo.add(Box.createHorizontalGlue());
 		//panelObserverInfo.add(labObserverTitle, null);
 		//panelObserverInfo.add(labObserverLastName, null);
 		//panelObserverInfo.add(comboObserverLastName, null);
@@ -828,7 +883,7 @@ public class AddFrog extends JDialog {
 		//panelObserverInfo.add(comboObserverFirstName, null);
 		
 		panelSiteSurvey.add(panelEntryPersonInfo);
-		panelSiteSurvey.add(panelObserverInfo);
+		//panelSiteSurvey.add(panelObserverInfo);
 		panelSiteSurvey.add(panelLocation);
 		
 		/*panelFrogInfo.add(labFrogTitle, null);
@@ -899,6 +954,7 @@ public class AddFrog extends JDialog {
 		//getContentPane().add(panelAllInfo, BorderLayout.CENTER);
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                 imagesPanel, panelAllInfo);
+		splitPane.setDividerLocation(110);
 		add(splitPane);
 		pack();
 	}
@@ -919,7 +975,7 @@ public class AddFrog extends JDialog {
 		/*comboEntryFirstName.setSelectedItem(lastFrog.getRecorder().getFirstName());
 		comboObserverLastName.setSelectedItem(lastFrog.getObserver().getLastName());
 		comboObserverFirstName.setSelectedItem(lastFrog.getObserver().getFirstName());*/
-		textFrog_ID.setText(lastFrog.getID());
+		textFrog_ID.setText(Integer.toString(lastFrog.getID()));
 		// textFrog_ID.setText(nextAvailFrogId);
 		textSurveyID.setText(lastFrog.getSurveyID());
 		textSpecies.setText(lastFrog.getSpecies());
@@ -954,7 +1010,8 @@ public class AddFrog extends JDialog {
 	protected void setLastValues() {
 		//Personel ob = new Personel("observer", (String) comboObserverFirstName.getSelectedItem(), (String) comboObserverLastName.getSelectedItem());
 		//Personel rc = new Personel("recorder", (String) comboEntryFirstName.getSelectedItem(), (String) comboEntryLastName.getSelectedItem());
-		
+		String obsvr = "Observer String";
+		String rcrdr = "Recorder String";
 		String coordinateType;
 		if (LatLongButton.isSelected()) {
 			coordinateType = "Lat/Long";
@@ -969,8 +1026,30 @@ public class AddFrog extends JDialog {
 		//		String dateCapture = (String) yearComboBox.getSelectedItem() + "-" + (String) monthComboBox.getSelectedItem() + "-" + (String) dayComboBox.getSelectedItem();
 
 		Location lc = new Location((String) comboLocationName.getSelectedItem(), textLocDesc.getText(), coordinateType, textX.getText(), textY.getText(), textDatum.getText(), textZone.getText());
-		lastFrog = new Frog(textFrog_ID.getText(), "", textSurveyID.getText(), textSpecies.getText(), (String) sexComboBox.getSelectedItem(), textMass.getText(), textLength.getText(), dateCapture,
-				"", ob, rc, "", textFrogComments.getText(), lc, "");
+		lastFrog = new Frog(frogID, 
+				textSurveyID.getText(), 
+				textSpecies.getText(), 
+				(String) sexComboBox.getSelectedItem(), 
+				textMass.getText(), textLength.getText(), 
+				dateCapture,
+				"",
+				obsvr, rcrdr,
+				"",
+				textFrogComments.getText(), 
+				lc);
+/*		this.ID = ID;
+		this.surveyID = surveyID;
+		this.species = species;
+		this.gender = gender;
+		this.mass = mass;
+		this.length = length;
+		this.dateCapture = dateCapture;
+		this.dateEntry = dateEntry;
+		this.observer = observer;
+		this.recorder = recorder;
+		this.discriminator = discriminator;
+		this.comments = comments;
+		this.location = location;*/
 	}
 
 	void butFillPreviousFrogInfo_actionPerformed(ActionEvent e) {
@@ -1158,11 +1237,11 @@ public class AddFrog extends JDialog {
 		if (validateField()) {
 			Date eDate = (Date) entryDatePicker.getModel().getValue();
 			entrydate = df.format(eDate);
-			entryLastName = (String) comboEntryLastName.getSelectedItem();
+			/*entryLastName = (String) comboEntryLastName.getSelectedItem();
 			entryFirstName = (String) comboEntryFirstName.getSelectedItem();
 			obsLastName = (String) comboObserverLastName.getSelectedItem();
-			obsFirstName = (String) comboObserverFirstName.getSelectedItem();
-			frogID = textFrog_ID.getText().trim();
+			obsFirstName = (String) comboObserverFirstName.getSelectedItem();*/
+			//frogID = textFrog_ID.getText().trim();
 			species = textSpecies.getText().trim();
 			gender = (String) sexComboBox.getSelectedItem();
 			// Additional Discriminator
@@ -1188,13 +1267,13 @@ public class AddFrog extends JDialog {
 			} else if (UTMButton.isSelected()) {
 				locCoorType = "UTM";
 			}
-			formerID = Integer.toString(parentFrame.getFrogData().getNextAvailableID());
+			formerID = Integer.toString(XMLFrogDatabase.getNextAvailableID());
 			if (datum == null) {
 				datum = "";
 			}
-			Personel ob = new Personel("observer", obsFirstName, obsLastName);
-			Personel rc = new Personel("recorder", entryFirstName,
-					entryLastName);
+			//Personel ob = new Personel("observer", obsFirstName, obsLastName);
+			//Personel rc = new Personel("recorder", entryFirstName,
+			//		entryLastName);
 			Location lc = new Location(locationName, locationDescription,
 					locCoorType, textX.getText(), textY.getText(), datum,
 					Integer.toString(zone));
@@ -1210,8 +1289,8 @@ public class AddFrog extends JDialog {
 			firstSample.setLength(textLength.getText());
 			firstSample.setDateCapture(capturedate);
 			firstSample.setDateEntry(entrydate);
-			firstSample.setRecorder(rc);
-			firstSample.setObserver(ob);
+			firstSample.setRecorder2("Placeholder");
+			firstSample.setObserver2("PlaceholdeR");
 			firstSample.setDiscriminator(addDiscriminator);
 			firstSample.setComments(comments);
 			firstSample.setLocation(lc);
@@ -1229,11 +1308,11 @@ public class AddFrog extends JDialog {
 				setLastValues();
 	
 				node.put("lastEntryLastName", f.getRecorder().getLastName());
-				node.put("lastFormerID", f.getFormerID());
+				//node.put("lastFormerID", f.getFormerID());
 				node.put("lastEntryFirstName", f.getRecorder().getFirstName());
 				node.put("lastObserverLastName", f.getObserver().getLastName());
 				node.put("lastObserverFirstName", f.getObserver().getFirstName());
-				node.put("lastFrog_ID", f.getID());
+				node.put("lastFrog_ID", Integer.toString(f.getID()));
 				node.put("lastSurveyID", f.getSurveyID());
 				node.put("lastSpecies", f.getSpecies());
 				node.put("lastSex", f.getGender());
@@ -1308,7 +1387,7 @@ public class AddFrog extends JDialog {
 	private void openDigSigFrame(int frogdbid) {
 		// Garbage Collector
 		System.gc();
-		iFrame = new ImageManipFrame(parentFrame, image, frogdbid,fh);
+		iFrame = new ImageManipFrame(parentFrame, image, frogdbid);
 		iFrame.setTitle("Signature Creation");
 		iFrame.pack();
 		// Signature Creation Window
@@ -1324,10 +1403,10 @@ public class AddFrog extends JDialog {
 
 	void butClearAll_actionPerformed(ActionEvent e) {
 		if (ChoiceDialog.choiceMessage("This will clear all entered information on this screen.\n" + "Do you want to continue?") == 0) {
-			comboEntryLastName.setSelectedIndex(0);
+			/*comboEntryLastName.setSelectedIndex(0);
 			comboEntryFirstName.setSelectedIndex(0);
 			comboObserverLastName.setSelectedIndex(0);
-			comboObserverFirstName.setSelectedIndex(0);
+			comboObserverFirstName.setSelectedIndex(0);*/
 			textFrog_ID.setText("");
 			textSpecies.setText("");
 			sexComboBox.setSelectedItem(-1);
@@ -1374,14 +1453,14 @@ public class AddFrog extends JDialog {
 				"Clifton",  
 				"Kory"  
 		};
-		comboEntryLastName.addItem("Lastname");
-		comboEntryLastName.getEditor().setItem("Lastname");
-		Random rand = new Random();
-	    int randomNum = rand.nextInt(firstnames.length);
-		comboEntryFirstName.getEditor().setItem(firstnames[randomNum]);
+		//comboEntryLastName.addItem("Lastname");
+		//comboEntryLastName.getEditor().setItem("Lastname");
+		//Random rand = new Random();
+	    //int randomNum = rand.nextInt(firstnames.length);
+		/*comboEntryFirstName.getEditor().setItem(firstnames[randomNum]);
 		comboObserverLastName.getEditor().setItem("Perez");
-		comboObserverFirstName.getEditor().setItem("Mike");
-		textFrog_ID.setText(Integer.toString(frogData.getNextAvailableID()));
+		comboObserverFirstName.getEditor().setItem("Mike");*/
+		textFrog_ID.setText(Integer.toString(XMLFrogDatabase.getNextAvailableID()));
 		textSpecies.setText("Jumpy");
 		sexComboBox.setSelectedItem("M");
 		//dayComboBox.setSelectedItem("16");
@@ -1423,5 +1502,60 @@ public class AddFrog extends JDialog {
 	 */
 	public Frog getFrog() {
 		return frog;
+	}
+
+	@Override
+	public void valueChanged(ListSelectionEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/**
+	 * This method is called when the add image button is clicked.
+	 * @return
+	 */
+	public SiteImage addImage(){
+		String home = System.getProperty("user.home");
+		DialogImageFileChooser imageChooser = new DialogImageFileChooser(
+				"Choose Frog Photograph...", false,
+				home);
+		String filename = imageChooser.getName();
+		if (filename != null) {
+			SiteImage image = new SiteImage();
+			image.setSourceFilePath(imageChooser.getName());
+			image.setProcessed(false);
+			//TODO - check for duplicates
+			
+			
+			return createListThumbnail(image);
+		}
+		return null;
+	}
+	
+	/**
+	 * Creates a thumbnail for viewing in the left hand side of the FrogEditor window. Will load greyscale if necessary.
+	 * @param image SiteImage to create thumbnail for
+	 * @return Modified image with laoded thumbnails
+	 */
+	public SiteImage createListThumbnail(SiteImage image){
+		IdentiFrog.LOGGER.writeMessage("Generating list thumbnail for "+image);
+		BufferedImage src;
+		try {
+			if (image.isProcessed()){
+				src = ImageIO.read(new File(XMLFrogDatabase.getThumbnailFolder()+image.getImageFileName()));
+			} else {
+				src = ImageIO.read(new File(image.getSourceFilePath()));
+			}
+			BufferedImage thumbnail = Scalr.resize(src, Scalr.Method.SPEED, Scalr.Mode.FIT_TO_WIDTH,
+		               100, 75, Scalr.OP_ANTIALIAS);
+			image.setSourceFileThumbnail(thumbnail);
+			if (!image.isSignatureGenerated()) {
+				image.generateGreyscaleImage();
+			}
+			return image;
+		} catch (IOException e) {
+			IdentiFrog.LOGGER.writeExceptionWithMessage("Unable to generate thumbnail for image (in memory): "+image.toString(), e);
+		}
+		return null;
 	}
 }

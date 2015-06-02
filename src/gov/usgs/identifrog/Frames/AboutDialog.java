@@ -1,7 +1,6 @@
 package gov.usgs.identifrog.Frames;
 
 import gov.usgs.identifrog.IdentiFrog;
-import gov.usgs.identifrog.MainFrame;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;

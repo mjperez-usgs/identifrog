@@ -1,5 +1,7 @@
 package gov.usgs.identifrog;
 
+import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
+
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
@@ -10,8 +12,8 @@ import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.io.File;
 import java.io.IOException;
+
 import javax.imageio.ImageIO;
-import gov.usgs.identifrog.Handlers.FolderHandler;
 
 /**
  * <p>
@@ -31,8 +33,8 @@ public class ThumbnailCreator {
 	/**
 	 * Default Constructor
 	 */
-	public ThumbnailCreator(FolderHandler fh) {
-		thumbnailFolder = new File(fh.getThumbnailFolder());
+	public ThumbnailCreator() {
+		thumbnailFolder = new File(XMLFrogDatabase.getThumbnailFolder());
 	}
 
 	/**
