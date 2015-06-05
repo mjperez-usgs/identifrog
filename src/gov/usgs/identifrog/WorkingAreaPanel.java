@@ -2,10 +2,10 @@ package gov.usgs.identifrog;
 
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.Frames.ErrorDialog;
+import gov.usgs.identifrog.Frames.FrogEditor;
 import gov.usgs.identifrog.Frames.MainFrame;
 import gov.usgs.identifrog.Handlers.DataHandler;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
-import gov.usgs.identifrog.Operations.FrogEditor;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -260,7 +260,7 @@ public class WorkingAreaPanel extends JPanel {
 				cells = frogsData.frogsArray(allImagesDisp);
 				parentFrame.setButtonsOn(true);
 				badCells = emptyFrogCells;
-			} else if (matrixType == OBSERVER) {
+			/*} else if (matrixType == OBSERVER) {
 				currentMatrixType = OBSERVER;
 				cells = frogsData.personelArray("observer");
 				badCells = emptyObserverCells;
@@ -274,7 +274,7 @@ public class WorkingAreaPanel extends JPanel {
 				currentMatrixType = RECORDER;
 				cells = frogsData.personelArray("recorder");
 				badCells = emptyEntryPersonCells;
-				parentFrame.setButtonsOn(false);
+				parentFrame.setButtonsOn(false);*/
 			} else if (matrixType == MATCHING) {
 				currentMatrixType = MATCHING;
 				// JOptionPane

@@ -18,8 +18,8 @@ public class Frog {
 	private String dateCapture;
 	private String dateEntry;
 	private String observer2, recorder2;
-	private Personel observer;
-	private Personel recorder;
+	private User observer;
+	private User recorder;
 	private String discriminator;
 	private String comments;
 	private Location location;
@@ -75,7 +75,7 @@ public class Frog {
 	 * @param comments
 	 * @param location
 	 */
-	public Frog(int ID, String surveyID, String species, String gender, String mass, String length, String dateCapture, String dateEntry, Personel observer, Personel recorder,
+	public Frog(int ID, String surveyID, String species, String gender, String mass, String length, String dateCapture, String dateEntry, User observer, User recorder,
 			String discriminator, String comments, Location location) {
 		this.ID = ID;
 		this.surveyID = surveyID;
@@ -128,7 +128,7 @@ public class Frog {
 		siteSamples.add(sample);
 	}
 
-	public Frog(int ID, String formerID, String surveyID, String species, String gender, String mass, String length, String dateCapture, String dateEntry, Personel observer, Personel recorder,
+	public Frog(int ID, String formerID, String surveyID, String species, String gender, String mass, String length, String dateCapture, String dateEntry, User observer, User recorder,
 			String discriminator, String comments, Location location, String pathImage) {
 		this.ID = ID;
 		this.surveyID = surveyID;
@@ -207,11 +207,11 @@ public class Frog {
 		date.setAttribute("entry", getDateEntry());
 		element.appendChild(date);
 		// CREATE PERSONEL OBSERVER ELEMENT
-		Personel elementObserver = new Personel(getObserver(), document);
-		element.appendChild(elementObserver.getElement());
+		//User elementObserver = new User(getObserver(), document);
+		//element.appendChild(elementObserver.getElement());
 		// CREATE PERSONEL RECORDER ELEMENT
-		Personel elementRecorder = new Personel(getRecorder(), document);
-		element.appendChild(elementRecorder.getElement());
+		//User elementRecorder = new User(getRecorder(), document);
+		//element.appendChild(elementRecorder.getElement());
 		// CREATE DISCRIMINATOR ELEMENT
 		Element discriminator = document.createElement("discriminator");
 		discriminator.appendChild(document.createTextNode(getDiscriminator()));
@@ -332,11 +332,11 @@ public class Frog {
 		return dateEntry;
 	}
 
-	public Personel getObserver() {
+	public User getObserver() {
 		return observer;
 	}
 
-	public Personel getRecorder() {
+	public User getRecorder() {
 		return recorder;
 	}
 
@@ -388,11 +388,11 @@ public class Frog {
 		this.dateEntry = dateEntry;
 	}
 
-	public void setObserver(Personel observer) {
+	public void setObserver(User observer) {
 		this.observer = observer;
 	}
 
-	public void setRecorder(Personel recorder) {
+	public void setRecorder(User recorder) {
 		this.recorder = recorder;
 	}
 

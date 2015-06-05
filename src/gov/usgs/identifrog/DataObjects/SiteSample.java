@@ -26,8 +26,8 @@ public class SiteSample {
 	private String length;
 	private String dateCapture;
 	private String dateEntry;
-	private Personel observer;
-	private Personel recorder;
+	private User observer;
+	private User recorder;
 	private String observer2, recorder2;
 	private String discriminator;
 	private String comments;
@@ -77,12 +77,12 @@ public class SiteSample {
 		// SET ENTRY ATTRIBUTE OF DATE
 		date.setAttribute("entry", getDateEntry());
 
-		// CREATE PERSONEL OBSERVER ELEMENT
-		Personel elementObserver = new Personel(getObserver(), document);
-
-		// CREATE PERSONEL RECORDER ELEMENT
-		Personel elementRecorder = new Personel(getRecorder(), document);
-
+		// CREATE USER LINKS (to user DB)
+		Element recorderElem = document.createElement("recorder");
+		Element observerElem = document.createElement("observer");
+		recorderElem.setTextContent(Integer.toString(recorder.getID()));
+		observerElem.setTextContent(Integer.toString(observer.getID()));
+		
 		// CREATE DISCRIMINATOR ELEMENT
 		Element discriminator = document.createElement("discriminator");
 		discriminator.appendChild(document.createTextNode(getDiscriminator()));
@@ -100,12 +100,12 @@ public class SiteSample {
 
 		element.appendChild(surveyid);
 		element.appendChild(comments);
-		element.appendChild(elementRecorder.getElement());
+		element.appendChild(recorderElem);
 		element.appendChild(discriminator);
 		element.appendChild(elementLocation.getElement());
 		element.appendChild(biometrics);
 		element.appendChild(date);
-		element.appendChild(elementObserver.getElement());
+		element.appendChild(observerElem);
 
 		Element images = document.createElement("images");
 
@@ -172,19 +172,19 @@ public class SiteSample {
 		this.dateEntry = dateEntry;
 	}
 
-	public Personel getObserver() {
+	public User getObserver() {
 		return observer;
 	}
 
-	public void setObserver(Personel observer) {
+	public void setObserver(User observer) {
 		this.observer = observer;
 	}
 
-	public Personel getRecorder() {
+	public User getRecorder() {
 		return recorder;
 	}
 
-	public void setRecorder(Personel recorder) {
+	public void setRecorder(User recorder) {
 		this.recorder = recorder;
 	}
 

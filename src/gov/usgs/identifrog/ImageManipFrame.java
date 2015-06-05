@@ -767,7 +767,7 @@ public class ImageManipFrame extends JFrame {
 				parentFrame.updateCells();
 				parentFrame.getFrogData().getFrogs().get(parentFrame.getFrogData().getFrogs().size() - 1).setPathImage(imageName1);
 				IdentiFrog.LOGGER.writeMessage(parentFrame.getFrogData().getFrogs().size());
-				XMLFrogDatabase.WriteXMLFile();
+				XMLFrogDatabase.writeXMLFile();
 				parentFrame.updateCells(0, false);
 				closeAction();
 

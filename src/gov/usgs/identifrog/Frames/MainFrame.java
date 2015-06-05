@@ -14,7 +14,6 @@ import gov.usgs.identifrog.WorkingAreaPanel;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.Handlers.DataHandler;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
-import gov.usgs.identifrog.Operations.FrogEditor;
 import gov.usgs.identifrog.Operations.XLSXTemplateGeneratorFrame;
 
 import java.awt.AWTEvent;
@@ -78,17 +77,12 @@ public class MainFrame extends JFrame {
 	private Preferences root = Preferences.userRoot();
 	public final Preferences node = root.node("edu/isu/aadis/defaults");
 
-	private ImageIcon imageNew = new ImageIcon(
-			MainFrame.class.getResource("/resources/IconNew32.png"));
-	private ImageIcon imageDelete = new ImageIcon(
-			MainFrame.class.getResource("/resources/IconDelete32.png"));
-	private ImageIcon imageHelp = new ImageIcon(
-			MainFrame.class.getResource("/resources/IconHelp32.png"));
+	private ImageIcon imageNew = new ImageIcon(MainFrame.class.getResource("/resources/IconNew32.png"));
+	private ImageIcon imageDelete = new ImageIcon(MainFrame.class.getResource("/resources/IconDelete32.png"));
+	private ImageIcon imageHelp = new ImageIcon(MainFrame.class.getResource("/resources/IconHelp32.png"));
 
-	private ImageIcon imageFind = new ImageIcon(
-			MainFrame.class.getResource("/resources/IconFind32.png"));
-	private ImageIcon imageEdit = new ImageIcon(
-			MainFrame.class.getResource("/resources/IconEdit32.png"));
+	private ImageIcon imageFind = new ImageIcon(MainFrame.class.getResource("/resources/IconFind32.png"));
+	private ImageIcon imageEdit = new ImageIcon(MainFrame.class.getResource("/resources/IconEdit32.png"));
 
 	private JButton bFind = new JButton("", imageFind); // disabled icons are
 														// set in init()
@@ -99,8 +93,7 @@ public class MainFrame extends JFrame {
 	private JButton bHelp = new JButton("", imageHelp);
 	//
 	@SuppressWarnings("unused")
-	private JButton btnPrevious = new JButton("Previous Page", new ImageIcon(
-			WorkingAreaPanel.class.getResource("IconButtonPrevious32.png")));
+	private JButton btnPrevious = new JButton("Previous Page", new ImageIcon(WorkingAreaPanel.class.getResource("IconButtonPrevious32.png")));
 	//
 	private JToolBar barButtons = new JToolBar("", SwingConstants.HORIZONTAL);
 
@@ -116,28 +109,22 @@ public class MainFrame extends JFrame {
 
 	private JMenuBar mainMenu = new JMenuBar();
 	private JMenu menuFile = new JMenu("File");
-	private JMenuItem menuItemCreateXLSX = new JMenuItem(
-			"Create Batch Template",new ImageIcon(MainFrame.class.getResource("/resources/IconXLS16.png")));
-	private JMenuItem MenuItemNew = new JMenuItem("New Frog Image",
-			new ImageIcon(MainFrame.class.getResource("/resources/IconNew16.png")));
+	private JMenuItem menuItemCreateXLSX = new JMenuItem("Create Batch Template", new ImageIcon(
+			MainFrame.class.getResource("/resources/IconXLS16.png")));
+	private JMenuItem MenuItemNew = new JMenuItem("New Frog Image", new ImageIcon(MainFrame.class.getResource("/resources/IconNew16.png")));
 	private JMenuItem MenuItemMarkExport = new JMenuItem("Export to MARK");
 	private JMenuItem menuItemFileExit = new JMenuItem("Exit");
 	private JMenu menuHelp = new JMenu("Help");
 	private JMenuItem menuItemHelpAbout = new JMenuItem("About");
 	private JMenu menuDatabase = new JMenu("Project");
-	private JMenuItem MenuItemSearch = new JMenuItem("Search for a Match",
-			new ImageIcon(MainFrame.class.getResource("/resources/IconFind16.png")));
+	private JMenuItem MenuItemSearch = new JMenuItem("Search for a Match", new ImageIcon(MainFrame.class.getResource("/resources/IconFind16.png")));
 	private JMenuItem menuItemProjectManager = new JMenuItem("Project Manager");
 	// private JMenuItem menuItemOpenSite = new JMenuItem("Open Existing Site");
 	private JMenuItem menuItemSaveSiteAs = new JMenuItem("Save Site As");
-	private JMenuItem MenuItemEdit = new JMenuItem("Edit Frog", new ImageIcon(
-			MainFrame.class.getResource("/resources/IconEdit16.png")));
-	private JMenuItem MenuItemDelete = new JMenuItem("Delete Frog",
-			new ImageIcon(MainFrame.class.getResource("/resources/IconDelete16.png")));
-	private JMenuItem MenuItemHelp = new JMenuItem("User Manual",
-			new ImageIcon(MainFrame.class.getResource("/resources/IconHelp16.png")));
-	private JCheckBoxMenuItem CheckBoxMenuItemShowThumbs = new JCheckBoxMenuItem(
-			"Show Thumbnails", true);
+	private JMenuItem MenuItemEdit = new JMenuItem("Edit Frog", new ImageIcon(MainFrame.class.getResource("/resources/IconEdit16.png")));
+	private JMenuItem MenuItemDelete = new JMenuItem("Delete Frog", new ImageIcon(MainFrame.class.getResource("/resources/IconDelete16.png")));
+	private JMenuItem MenuItemHelp = new JMenuItem("User Manual", new ImageIcon(MainFrame.class.getResource("/resources/IconHelp16.png")));
+	private JCheckBoxMenuItem CheckBoxMenuItemShowThumbs = new JCheckBoxMenuItem("Show Thumbnails", true);
 	private JMenuItem MenuItemParams = new JMenuItem("Rows per Page");
 	private JMenuItem MenuItemSearchCriteria = new JMenuItem("Search Criteria");
 
@@ -147,7 +134,6 @@ public class MainFrame extends JFrame {
 	private TitledBorder titledBorder1 = new TitledBorder("");
 	private int viewerX = 0;
 	private int viewerY = 0;
-
 
 	/**
 	 * MainFrame Constructor
@@ -182,7 +168,8 @@ public class MainFrame extends JFrame {
 	}
 
 	/**
-	 * Loads the XML DB into memory and updates the recent projects list. Additionally causes the UI to refresh.
+	 * Loads the XML DB into memory and updates the recent projects list.
+	 * Additionally causes the UI to refresh.
 	 */
 	private void read() {
 		XMLFrogDatabase.setFile(new File(XMLFrogDatabase.getFileNamePath()));
@@ -209,15 +196,13 @@ public class MainFrame extends JFrame {
 		newSite.setLastModified(new Date());
 		File file = new File(fileNamePath);
 		String siteName = file.getParent();
-		siteName = siteName.substring(siteName.lastIndexOf(File.separator) + 1,
-				siteName.length());
+		siteName = siteName.substring(siteName.lastIndexOf(File.separator) + 1, siteName.length());
 		newSite.setSiteName(siteName);
 
 		// load recent site info for parsing
 		ArrayList<Site> recentSites = null;
 		try {
-			ObjectInputStream in = new ObjectInputStream(new FileInputStream(
-					ProjectManagerFrame.RECENT_SITES_FILE));
+			ObjectInputStream in = new ObjectInputStream(new FileInputStream(ProjectManagerFrame.RECENT_SITES_FILE));
 			recentSites = (ArrayList<Site>) in.readObject();
 			in.close();
 		} catch (Exception e) {
@@ -242,9 +227,7 @@ public class MainFrame extends JFrame {
 		// replace it.
 		if (!updated) {
 			for (Site site : recentSites) {
-				if (leastRecentSite == null
-						|| leastRecentSite.getLastModified().before(
-								site.getLastModified())) {
+				if (leastRecentSite == null || leastRecentSite.getLastModified().before(site.getLastModified())) {
 					leastRecentSite = site;
 				}
 			}
@@ -253,8 +236,7 @@ public class MainFrame extends JFrame {
 
 		ObjectOutputStream out;
 		try {
-			out = new ObjectOutputStream(new FileOutputStream(
-					ProjectManagerFrame.RECENT_SITES_FILE));
+			out = new ObjectOutputStream(new FileOutputStream(ProjectManagerFrame.RECENT_SITES_FILE));
 			out.writeObject(recentSites);
 			out.close();
 			out.flush();
@@ -287,25 +269,16 @@ public class MainFrame extends JFrame {
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 
-		setSize((int) (screen.getWidth() * 0.95),
-				(int) (screen.getHeight() * 0.92));
+		setSize((int) (screen.getWidth() * 0.95), (int) (screen.getHeight() * 0.92));
 		// setTitle("IdentiFrog Beta");
 
 		lStatusBar.setBorder(titledBorder1);
 		// put menu bar here
-		menuItemFileExit
-				.addActionListener(new MainFrame_menuItemFileExit_ActionAdapter(
-						this));
-		menuItemHelpAbout
-				.addActionListener(new MainFrame_menuItemHelpAbout_ActionAdapter(
-						this));
-		MenuItemNew.setAccelerator(javax.swing.KeyStroke.getKeyStroke('N',
-				InputEvent.CTRL_MASK, false));
-		MenuItemNew.addActionListener(new MainFrame_MenuItemNew_actionAdapter(
-				this));
-		MenuItemMarkExport
-				.addActionListener(new MainFrame_MenuItemMarkExport_actionAdapter(
-						this));
+		menuItemFileExit.addActionListener(new MainFrame_menuItemFileExit_ActionAdapter(this));
+		menuItemHelpAbout.addActionListener(new MainFrame_menuItemHelpAbout_ActionAdapter(this));
+		MenuItemNew.setAccelerator(javax.swing.KeyStroke.getKeyStroke('N', InputEvent.CTRL_MASK, false));
+		MenuItemNew.addActionListener(new MainFrame_MenuItemNew_actionAdapter(this));
+		MenuItemMarkExport.addActionListener(new MainFrame_MenuItemMarkExport_actionAdapter(this));
 		menuItemCreateXLSX.addActionListener(new MainFrame_menuItemCreateXLSX_actionAdapter(this));
 		// find button verify input when focus target
 		bFind.setVerifyInputWhenFocusTarget(true);
@@ -322,41 +295,20 @@ public class MainFrame extends JFrame {
 		bOpen.addActionListener(new MainFrame_butOpen_actionAdapter(this));
 		bHelp.addActionListener(new MainFrame_butHelp_actionAdapter(this));
 		//
-		MenuItemSearch.setAccelerator(javax.swing.KeyStroke.getKeyStroke('S',
-				InputEvent.CTRL_MASK, false));
-		MenuItemEdit.setAccelerator(javax.swing.KeyStroke.getKeyStroke('E',
-				InputEvent.CTRL_MASK, false));
-		CheckBoxMenuItemShowThumbs.setAccelerator(javax.swing.KeyStroke
-				.getKeyStroke('T', InputEvent.CTRL_MASK, false));
-		MenuItemParams.setAccelerator(javax.swing.KeyStroke.getKeyStroke('P',
-				InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
-		MenuItemSearchCriteria.setAccelerator(javax.swing.KeyStroke
-				.getKeyStroke('S',
-						InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
-		MenuItemDelete.setAccelerator(javax.swing.KeyStroke.getKeyStroke('D',
-				InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
+		MenuItemSearch.setAccelerator(javax.swing.KeyStroke.getKeyStroke('S', InputEvent.CTRL_MASK, false));
+		MenuItemEdit.setAccelerator(javax.swing.KeyStroke.getKeyStroke('E', InputEvent.CTRL_MASK, false));
+		CheckBoxMenuItemShowThumbs.setAccelerator(javax.swing.KeyStroke.getKeyStroke('T', InputEvent.CTRL_MASK, false));
+		MenuItemParams.setAccelerator(javax.swing.KeyStroke.getKeyStroke('P', InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
+		MenuItemSearchCriteria.setAccelerator(javax.swing.KeyStroke.getKeyStroke('S', InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
+		MenuItemDelete.setAccelerator(javax.swing.KeyStroke.getKeyStroke('D', InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
 		//
-		MenuItemSearch
-				.addActionListener(new MainFrame_MenuItemSearch_actionAdapter(
-						this));
-		MenuItemEdit
-				.addActionListener(new MainFrame_MenuItemEdit_actionAdapter(
-						this));
-		MenuItemDelete
-				.addActionListener(new MainFrame_MenuItemDelete_actionAdapter(
-						this));
-		MenuItemHelp
-				.addActionListener(new MainFrame_MenuItemHelp_actionAdapter(
-						this));
-		CheckBoxMenuItemShowThumbs
-				.addActionListener(new MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter(
-						this));
-		MenuItemParams
-				.addActionListener(new MainFrame_MenuItemParams_actionAdapter(
-						this));
-		MenuItemSearchCriteria
-				.addActionListener(new MainFrame_MenuItemSearchCriteria_actionAdapter(
-						this));
+		MenuItemSearch.addActionListener(new MainFrame_MenuItemSearch_actionAdapter(this));
+		MenuItemEdit.addActionListener(new MainFrame_MenuItemEdit_actionAdapter(this));
+		MenuItemDelete.addActionListener(new MainFrame_MenuItemDelete_actionAdapter(this));
+		MenuItemHelp.addActionListener(new MainFrame_MenuItemHelp_actionAdapter(this));
+		CheckBoxMenuItemShowThumbs.addActionListener(new MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter(this));
+		MenuItemParams.addActionListener(new MainFrame_MenuItemParams_actionAdapter(this));
+		MenuItemSearchCriteria.addActionListener(new MainFrame_MenuItemSearchCriteria_actionAdapter(this));
 
 		// ActionListeners for Add Site Functionality
 		menuItemProjectManager.addActionListener(new ActionListener() {
@@ -383,8 +335,7 @@ public class MainFrame extends JFrame {
 				 * JOptionPane.showConfirmDialog(null, message,
 				 * "Site Already Exists", JOptionPane.OK_OPTION); } }
 				 */
-				ProjectManagerFrame pmf = new ProjectManagerFrame(
-						MainFrame.this);
+				ProjectManagerFrame pmf = new ProjectManagerFrame(MainFrame.this);
 				pmf.setLocationRelativeTo(MainFrame.this);
 				pmf.setVisible(true);
 			}
@@ -407,29 +358,25 @@ public class MainFrame extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				// open file chooser in user's home directory
-				JFileChooser fileChooser = new JFileChooser(System
-						.getProperty("user.home"));
+				JFileChooser fileChooser = new JFileChooser(System.getProperty("user.home"));
 				// if user selects the OK button then perform the following:
 				if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
-					String sitePath = fileChooser.getSelectedFile()
-							.getAbsolutePath();
+					String sitePath = fileChooser.getSelectedFile().getAbsolutePath();
 					// setup data folders and database xml file
 					if (new File(sitePath).exists()) {
-						String message = "Site with the name/path "
-								+ fileChooser.getSelectedFile().getName()
-								+ " already exists.";
-						JOptionPane.showConfirmDialog(null, message,
-								"Site Exists", JOptionPane.OK_OPTION);
+						String message = "Site with the name/path " + fileChooser.getSelectedFile().getName() + " already exists.";
+						JOptionPane.showConfirmDialog(null, message, "Site Exists", JOptionPane.OK_OPTION);
 					} else {
 						try {
 							XMLFrogDatabase.createCopy(new File(sitePath));
 							//copyFolder(new File(XMLFrogDatabase.getMainFolder().toString()),
 							//		new File(sitePath));new File(sitePath + File.separator+ fh.getFileName()));
-							/*XMLFrogDatabase copyHandler = new XMLFrogDatabase()
-									sitePath + File.separator
-											+ fh.getFileName()), getFrogData()
-									.getFrogs());
-							copyHandler.WriteXMLFile();*/
+							/*
+							 * XMLFrogDatabase copyHandler = new
+							 * XMLFrogDatabase() sitePath + File.separator +
+							 * fh.getFileName()), getFrogData() .getFrogs());
+							 * copyHandler.WriteXMLFile();
+							 */
 							read();
 						} catch (IOException e) {
 							IdentiFrog.LOGGER.writeException(e);
@@ -505,42 +452,32 @@ public class MainFrame extends JFrame {
 		// step 1: make sure that the same image is not being recorded more than
 		// once
 		String localFilename = image.getName();
-		localFilename = localFilename
-				.substring(0, (localFilename.length() - 4)) + ".png";
+		localFilename = localFilename.substring(0, (localFilename.length() - 4)) + ".png";
 		File testFile = new File(XMLFrogDatabase.getThumbnailFolder() + localFilename);
 		if (testFile.exists()) {
-			JOptionPane
-					.showMessageDialog(
-							this,
-							"The image '"
-									+ image.getName()
-									+ "' has already been entered.\n"
-									+ "To re-enter the image, first delete it from the database.");
+			JOptionPane.showMessageDialog(this, "The image '" + image.getName() + "' has already been entered.\n"
+					+ "To re-enter the image, first delete it from the database.");
 			return;
 		}
-		FrogEditor addFrogObject = new FrogEditor(MainFrame.this,
-				"Frog Information", true, image);
+		FrogEditor addFrogObject = new FrogEditor(MainFrame.this, "Frog Information", true, image);
 		addFrogObject.pack();
-		File temporaryThumbnail = new File(
-				System.getProperty("java.io.tmpdir"), "tempThumb.jpg");
-		if (temporaryThumbnail.exists()) {
-			temporaryThumbnail.delete();
-		}
-		IdentiFrog.LOGGER.writeMessage(System.getProperty("java.io.tmpdir")
-				+ "tempThumb.jpg");
-		File thumbnailImageFile = thumbnailCreator.createThumbnailforEntry(
-				image, addFrogObject.getButImage().getWidth(), addFrogObject
-						.getButImage().getWidth(), temporaryThumbnail, true);
-		if (thumbnailImageFile != null) {
-			addFrogObject.setButImage(thumbnailImageFile);
+		//File temporaryThumbnail = new File(System.getProperty("java.io.tmpdir"), "tempThumb.jpg");
+		//if (temporaryThumbnail.exists()) {
+		//	temporaryThumbnail.delete();
+		//}
+		//.addFrogObject.IdentiFrog.LOGGER.writeMessage(System.getProperty("java.io.tmpdir") + "tempThumb.jpg");
+		//File thumbnailImageFile = thumbnailCreator.createThumbnailforEntry(image, addFrogObject.getButImage().getWidth(), addFrogObject.getButImage()
+		//		.getWidth(), temporaryThumbnail, true);
+		//if (thumbnailImageFile != null) {
+			//addFrogObject.setButImage(thumbnailImageFile);
 			// add biometrics information window on the screen
-			int move = (int) (getWidth() * 0.28);
-			addFrogObject.setLocation((getX() + move), getY());
+			//int move = (int) (getWidth() * 0.28);
+			//addFrogObject.setLocation((getX() + move), getY());
 			addFrogObject.setVisible(true);
-		} else {
-			new ErrorDialog("Did not import image!");
-		}
-		temporaryThumbnail.deleteOnExit();
+		//} else {
+		//	new ErrorDialog("Did not import image!");
+		//}
+		//temporaryThumbnail.deleteOnExit();
 		updateCells();
 	}
 
@@ -572,7 +509,7 @@ public class MainFrame extends JFrame {
 		// update cells
 		updateCells();
 		// write xml file
-		XMLFrogDatabase.WriteXMLFile();
+		XMLFrogDatabase.writeXMLFile();
 	}
 
 	/**
@@ -604,7 +541,7 @@ public class MainFrame extends JFrame {
 			// update cells
 			updateCells();
 			// write xml file
-			XMLFrogDatabase.WriteXMLFile();
+			XMLFrogDatabase.writeXMLFile();
 		}
 	}
 
@@ -618,8 +555,7 @@ public class MainFrame extends JFrame {
 		Dimension dialogSize = dlg.getPreferredSize();
 		Dimension frameSize = getSize();
 		Point loc = getLocation();
-		dlg.setLocation((frameSize.width - dialogSize.width) / 2 + loc.x,
-				(frameSize.height - dialogSize.height) / 2 + loc.y);
+		dlg.setLocation((frameSize.width - dialogSize.width) / 2 + loc.x, (frameSize.height - dialogSize.height) / 2 + loc.y);
 		dlg.setModal(true);
 		dlg.pack();
 		dlg.setVisible(true);
@@ -654,14 +590,15 @@ public class MainFrame extends JFrame {
 		runManual();
 	}
 
-	/*public Image getIcon() {
-		return getToolkit().getImage(getClass().getResource("/resources/IconFrog.png"));
-	}*/
+	/*
+	 * public Image getIcon() { return
+	 * getToolkit().getImage(getClass().getResource("/resources/IconFrog.png"));
+	 * }
+	 */
 
 	protected void MenuItemNew_actionPerformed(ActionEvent e) {
-		DialogImageFileChooser imageChooser = new DialogImageFileChooser(
-				MainFrame.this, "Choose Frog Photograph...", false,
-				workingFolder);
+		DialogImageFileChooser imageChooser = new DialogImageFileChooser(MainFrame.this, "Choose Frog Photograph...", false,
+				System.getProperty("user.home"));
 		String filename = imageChooser.getName();
 		if (filename != null) {
 			currentFile = new File(filename);
@@ -672,8 +609,7 @@ public class MainFrame extends JFrame {
 
 	@SuppressWarnings("static-access")
 	protected void MenuItemMarkExport_actionPerformed(ActionEvent e) {
-		saveAsDialog = new SaveAsDialog(MainFrame.this, "Save As...", false,
-				workingFolder);
+		saveAsDialog = new SaveAsDialog(MainFrame.this, "Save As...", false, workingFolder);
 		String filePath = saveAsDialog.getName();
 		if (filePath != null) {
 			try {
@@ -724,8 +660,7 @@ public class MainFrame extends JFrame {
 		// TODO fix this
 		// File dorspath = workingAreaPanel.getDorsalImageFileFromSelectedRow();
 		File dorsalImage = new File(XMLFrogDatabase.getDorsalFolder()
-				+ XMLFrogDatabase.searchFrogByID(workingAreaPanel.getSelectedFrog_Id())
-						.getGenericImageName());
+				+ XMLFrogDatabase.searchFrogByID(workingAreaPanel.getSelectedFrog_Id()).getGenericImageName());
 		setButtonsOn(false);
 		// IdentiFrog.LOGGER.writeMessage("In butFind Action Performed tfrog[0].intValue() is "
 		// +
@@ -738,8 +673,7 @@ public class MainFrame extends JFrame {
 		try {
 			editFrog();
 		} catch (Exception ex) {
-			IdentiFrog.LOGGER
-					.writeMessage("MainFrame.butEdit_actionPerfomed() Exception");
+			IdentiFrog.LOGGER.writeMessage("MainFrame.butEdit_actionPerfomed() Exception");
 			IdentiFrog.LOGGER.writeMessage(ex.getMessage());
 		}
 	}
@@ -769,15 +703,12 @@ public class MainFrame extends JFrame {
 				IdentiFrog.LOGGER.writeException(e);
 			}
 		} else {
-			new ErrorDialog(
-					"Desktop services not supported on this OS. You can view the manual at "
-							+ url + ".");
+			new ErrorDialog("Desktop services not supported on this OS. You can view the manual at " + url + ".");
 		}
 	}
 
 	protected void CheckBoxMenuItemShowThumbs_actionPerformed(ActionEvent e) {
-		workingAreaPanel.setShowThumbnails(CheckBoxMenuItemShowThumbs
-				.isSelected());
+		workingAreaPanel.setShowThumbnails(CheckBoxMenuItemShowThumbs.isSelected());
 	}
 
 	public void setDBRows(int rows) {
@@ -790,13 +721,11 @@ public class MainFrame extends JFrame {
 
 	private void OpenParametersDialog() {
 		if (parametersDialog == null) {
-			parametersDialog = new ParametersDialog(MainFrame.this, "Database",
-					false);
+			parametersDialog = new ParametersDialog(MainFrame.this, "Database", false);
 			Dimension dlgSize = parametersDialog.getPreferredSize();
 			Dimension frmSize = getSize();
 			Point loc = getLocation();
-			parametersDialog.setLocation((frmSize.width - dlgSize.width) / 2
-					+ loc.x, (frmSize.height - dlgSize.height) / 2 + loc.y);
+			parametersDialog.setLocation((frmSize.width - dlgSize.width) / 2 + loc.x, (frmSize.height - dlgSize.height) / 2 + loc.y);
 			parametersDialog.pack();
 		}
 		parametersDialog.setVisible(true);
@@ -808,13 +737,11 @@ public class MainFrame extends JFrame {
 
 	private void OpenSearchCriteriaDialog() {
 		if (searchCriteriaDialog == null) {
-			searchCriteriaDialog = new SearchCriteriaDialog(MainFrame.this,
-					"Database", false);
+			searchCriteriaDialog = new SearchCriteriaDialog(MainFrame.this, "Database", false);
 			Dimension dlgSize = searchCriteriaDialog.getPreferredSize();
 			Dimension frmSize = getSize();
 			Point loc = getLocation();
-			searchCriteriaDialog.setLocation((frmSize.width - dlgSize.width)
-					/ 2 + loc.x, (frmSize.height - dlgSize.height) / 2 + loc.y);
+			searchCriteriaDialog.setLocation((frmSize.width - dlgSize.width) / 2 + loc.x, (frmSize.height - dlgSize.height) / 2 + loc.y);
 			searchCriteriaDialog.pack();
 		}
 		searchCriteriaDialog.setVisible(true);
@@ -842,12 +769,9 @@ public class MainFrame extends JFrame {
 		return thumbnailCreator;
 	}
 
-	public void OpenImageViewer(int localFrogID, String title, File imageFile,
-			boolean displayallimages) {
+	public void OpenImageViewer(int localFrogID, String title, File imageFile, boolean displayallimages) {
 		if (imageFile.exists()) {
-			ImageViewer imageViewer = new ImageViewer(localFrogID,
-					MainFrame.this, title, false, imageFile, true,
-					displayallimages);
+			ImageViewer imageViewer = new ImageViewer(localFrogID, MainFrame.this, title, false, imageFile, true, displayallimages);
 			imageViewer.setLocation(viewerX, viewerY);
 			imageViewer.setVisible(true);
 			viewerX += 20;
@@ -857,19 +781,15 @@ public class MainFrame extends JFrame {
 				viewerY = 0;
 			}
 		} else {
-			IdentiFrog.LOGGER
-					.writeMessage("Unable to find image file while opening image viewer: "
-							+ imageFile.getAbsolutePath());
-			new ErrorDialog("Cannot find image file: "
-					+ imageFile.getAbsolutePath());
+			IdentiFrog.LOGGER.writeMessage("Unable to find image file while opening image viewer: " + imageFile.getAbsolutePath());
+			new ErrorDialog("Cannot find image file: " + imageFile.getAbsolutePath());
 		}
 	}
 
 	private void OpenMatchingDialog(File imageFile, int DbID) {
 		workingAreaPanel.setLastFrogID(DbID);
 		if (matchingDialog == null || !matchingDialog.isOpen()) {
-			matchingDialog = new MatchingDialog(MainFrame.this, imageFile,
-					DbID);
+			matchingDialog = new MatchingDialog(MainFrame.this, imageFile, DbID);
 		}
 	}
 
@@ -964,8 +884,7 @@ class MainFrame_butHelp_actionAdapter implements java.awt.event.ActionListener {
 	}
 }
 
-class MainFrame_MenuItemNew_actionAdapter implements
-		java.awt.event.ActionListener {
+class MainFrame_MenuItemNew_actionAdapter implements java.awt.event.ActionListener {
 	MainFrame adaptee;
 
 	MainFrame_MenuItemNew_actionAdapter(MainFrame adaptee) {
@@ -977,8 +896,7 @@ class MainFrame_MenuItemNew_actionAdapter implements
 	}
 }
 
-class MainFrame_MenuItemMarkExport_actionAdapter implements
-		java.awt.event.ActionListener {
+class MainFrame_MenuItemMarkExport_actionAdapter implements java.awt.event.ActionListener {
 	MainFrame adaptee;
 
 	MainFrame_MenuItemMarkExport_actionAdapter(MainFrame adaptee) {
@@ -990,8 +908,7 @@ class MainFrame_MenuItemMarkExport_actionAdapter implements
 	}
 }
 
-class MainFrame_menuItemCreateXLSX_actionAdapter implements
-		java.awt.event.ActionListener {
+class MainFrame_menuItemCreateXLSX_actionAdapter implements java.awt.event.ActionListener {
 	MainFrame adaptee;
 
 	MainFrame_menuItemCreateXLSX_actionAdapter(MainFrame adaptee) {
@@ -1039,8 +956,7 @@ class MainFrame_butEdit_actionAdapter implements java.awt.event.ActionListener {
 	}
 }
 
-class MainFrame_butDelete_actionAdapter implements
-		java.awt.event.ActionListener {
+class MainFrame_butDelete_actionAdapter implements java.awt.event.ActionListener {
 	MainFrame adaptee;
 
 	MainFrame_butDelete_actionAdapter(MainFrame adaptee) {
@@ -1052,8 +968,7 @@ class MainFrame_butDelete_actionAdapter implements
 	}
 }
 
-class MainFrame_MenuItemEdit_actionAdapter implements
-		java.awt.event.ActionListener {
+class MainFrame_MenuItemEdit_actionAdapter implements java.awt.event.ActionListener {
 	MainFrame adaptee;
 
 	MainFrame_MenuItemEdit_actionAdapter(MainFrame adaptee) {
@@ -1065,8 +980,7 @@ class MainFrame_MenuItemEdit_actionAdapter implements
 	}
 }
 
-class MainFrame_MenuItemSearch_actionAdapter implements
-		java.awt.event.ActionListener {
+class MainFrame_MenuItemSearch_actionAdapter implements java.awt.event.ActionListener {
 	MainFrame adaptee;
 
 	MainFrame_MenuItemSearch_actionAdapter(MainFrame adaptee) {
@@ -1078,8 +992,7 @@ class MainFrame_MenuItemSearch_actionAdapter implements
 	}
 }
 
-class MainFrame_MenuItemDelete_actionAdapter implements
-		java.awt.event.ActionListener {
+class MainFrame_MenuItemDelete_actionAdapter implements java.awt.event.ActionListener {
 	MainFrame adaptee;
 
 	MainFrame_MenuItemDelete_actionAdapter(MainFrame adaptee) {
@@ -1091,8 +1004,7 @@ class MainFrame_MenuItemDelete_actionAdapter implements
 	}
 }
 
-class MainFrame_MenuItemHelp_actionAdapter implements
-		java.awt.event.ActionListener {
+class MainFrame_MenuItemHelp_actionAdapter implements java.awt.event.ActionListener {
 	MainFrame adaptee;
 
 	MainFrame_MenuItemHelp_actionAdapter(MainFrame adaptee) {
@@ -1104,8 +1016,7 @@ class MainFrame_MenuItemHelp_actionAdapter implements
 	}
 }
 
-class MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter implements
-		java.awt.event.ActionListener {
+class MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter implements java.awt.event.ActionListener {
 	MainFrame adaptee;
 
 	MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter(MainFrame adaptee) {
@@ -1117,8 +1028,7 @@ class MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter implements
 	}
 }
 
-class MainFrame_MenuItemParams_actionAdapter implements
-		java.awt.event.ActionListener {
+class MainFrame_MenuItemParams_actionAdapter implements java.awt.event.ActionListener {
 	MainFrame adaptee;
 
 	MainFrame_MenuItemParams_actionAdapter(MainFrame adaptee) {
@@ -1130,8 +1040,7 @@ class MainFrame_MenuItemParams_actionAdapter implements
 	}
 }
 
-class MainFrame_MenuItemSearchCriteria_actionAdapter implements
-		java.awt.event.ActionListener {
+class MainFrame_MenuItemSearchCriteria_actionAdapter implements java.awt.event.ActionListener {
 	MainFrame adaptee;
 
 	MainFrame_MenuItemSearchCriteria_actionAdapter(MainFrame adaptee) {

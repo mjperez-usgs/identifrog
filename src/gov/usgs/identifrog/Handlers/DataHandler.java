@@ -7,7 +7,7 @@ import java.util.List;
 
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
-import gov.usgs.identifrog.DataObjects.Personel;
+import gov.usgs.identifrog.DataObjects.User;
 
 /**
  * Used to store the backing data for the jtable displayed on the screen. Essentially holds the database in memory and can perform queries and operations on it in memory.
@@ -48,8 +48,8 @@ public class DataHandler {
 
 
 
-  public ArrayList<Personel> uniquePersonels(String type) {
-    ArrayList<Personel> personel = new ArrayList<Personel>();
+  public ArrayList<User> uniquePersonels(String type) {
+    ArrayList<User> personel = new ArrayList<User>();
     if (type.equals("observer")) {
       for (int i = 0; i < frogs.size(); i++) {
         personel.add(frogs.get(i).getObserver());
@@ -59,7 +59,7 @@ public class DataHandler {
         personel.add(frogs.get(i).getRecorder());
       }
     }
-    HashSet<Personel> uniquePersonel = new HashSet<Personel>(personel);
+    HashSet<User> uniquePersonel = new HashSet<User>(personel);
     personel.clear();
     personel.addAll(uniquePersonel);
     return personel;
@@ -108,14 +108,14 @@ public class DataHandler {
     return new DataHandler(uniqueFrogs);
   }
 
-  public Object[][] personelArray(String type) {
-    ArrayList<Personel> personel = uniquePersonels(type);
+  /*public Object[][] personelArray(String type) {
+    ArrayList<User> personel = uniquePersonels(type);
     Object[][] array = new Object[personel.size()][];
     for (int i = 0; i < personel.size(); i++) {
       array[i] = personel.get(i).toArray();
     }
     return array;
-  }
+  }*/
 
   public Object[][] locationArray() {
     ArrayList<Location> locations = uniqueLocations();

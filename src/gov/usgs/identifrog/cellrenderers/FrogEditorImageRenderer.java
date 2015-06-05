@@ -1,6 +1,7 @@
-package gov.usgs.identifrog.Handlers;
+package gov.usgs.identifrog.cellrenderers;
  
 import gov.usgs.identifrog.DataObjects.SiteImage;
+import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -27,7 +28,7 @@ public class FrogEditorImageRenderer extends JPanel implements ListCellRenderer<
 		cellImage = new JLabel();
 		cellLabel = new JLabel("Loading");
     	cellImage.setOpaque(true);
-    	cellLabel.setOpaque(true);
+    	//cellLabel.setOpaque(true);
     	setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
     	cellImage.setAlignmentX(Component.CENTER_ALIGNMENT);
     	cellLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -36,7 +37,13 @@ public class FrogEditorImageRenderer extends JPanel implements ListCellRenderer<
     @Override
     public Component getListCellRendererComponent(JList<? extends SiteImage> list, SiteImage image, int index,
         boolean isSelected, boolean cellHasFocus) {
-        
+    	if (isSelected) {
+            setBackground(list.getSelectionBackground());
+            setForeground(list.getSelectionForeground());
+        } else {
+            setBackground(list.getBackground());
+            setForeground(list.getForeground());
+        }
     	
     	ImageIcon icon = null;
     	if (image.isProcessed()) {
@@ -75,5 +82,4 @@ public class FrogEditorImageRenderer extends JPanel implements ListCellRenderer<
         //setText(country.getName());
         return this;
     }
-     
 }

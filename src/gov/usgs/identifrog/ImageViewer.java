@@ -226,7 +226,7 @@ public class ImageViewer extends JDialog {
 		}
 		
 		if (parentFrame.getChangesMade()) {
-			XMLFrogDatabase.WriteXMLFile();
+			XMLFrogDatabase.writeXMLFile();
 		}
 		close();
 	}
