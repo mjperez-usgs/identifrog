@@ -8,6 +8,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -24,6 +25,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
@@ -35,7 +37,6 @@ public class UsersFrame extends JDialog implements ActionListener {
 	private JDialog callingDialog;
 	JButton okButton;
 	JList<User> recorderList, observerList;
-	
 	public UsersFrame(){
 		setupFrame();
 		//setVisible(true);
@@ -55,7 +56,6 @@ public class UsersFrame extends JDialog implements ActionListener {
 
 	private void setupFrame() {
 		// TODO Auto-generated method stub
-		setMinimumSize(new Dimension(400,300));
 		setTitle("Data Users");
 		//new ImageIcon(this.getClass().getClassLoader().getResource("/resources/IconFrog.png"));
 		setIconImage(new ImageIcon(this.getClass().getResource("/resources/IconFrog.png")).getImage());
@@ -91,161 +91,146 @@ public class UsersFrame extends JDialog implements ActionListener {
 		observerList.setModel(observerModel);
 		recorderList.setModel(recorderModel);
 		
+		observerList.setVisibleRowCount(10);
+		observerList.setFixedCellHeight(15);
+		observerList.setFixedCellWidth(100);
+		recorderList.setVisibleRowCount(10);
+		recorderList.setFixedCellHeight(15);
+		recorderList.setFixedCellWidth(100);
+		
 		okButton = new JButton("Save Users");
+		okButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				ArrayList<User> recorders = new ArrayList<User>(), observers = new ArrayList<User>();
+				for (int i = 0; i < recorderModel.getSize(); i++) {
+					recorders.add(recorderModel.get(i));
+				}
+				for (int i = 0; i < observerModel.getSize(); i++) {
+					observers.add(observerModel.get(i));
+				}
+				
+				XMLFrogDatabase.setRecorders(recorders);
+				XMLFrogDatabase.setObservers(observers);
+				XMLFrogDatabase.writeXMLFile();
+				dispose();
+			}
+		});
 		
 		
-		JPanel recorderListPanel = new JPanel(new BorderLayout());
-		JPanel observerListPanel = new JPanel(new BorderLayout());
+		//JPanel recorderListPanel = new JPanel(new BorderLayout());
+		//JPanel observerListPanel = new JPanel(new BorderLayout());
 		TitledBorder recBorder = new TitledBorder(new EtchedBorder(), "Recorders");
 		TitledBorder obsBorder = new TitledBorder(new EtchedBorder(), "Observers");
-		Dimension listMinSize = new Dimension(150,100);
+		//Dimension listMinSize = new Dimension(70,350);
+		//Dimension listMaxSize = new Dimension(150,10000);
+
+
+		JScrollPane recScrollPane = new JScrollPane(recorderList);
+		recScrollPane.setBorder(recBorder);
+
+		////recScrollPane.setMinimumSize(listMinSize);
+		//recScrollPane.setMinimumSize(listMaxSize);
 		
-		
-		recorderListPanel.setBorder(recBorder);
-		recorderListPanel.setMinimumSize(listMinSize);
-		recorderListPanel.add(recorderList, BorderLayout.CENTER);
-		
-		observerListPanel.setBorder(obsBorder);
-		observerListPanel.setMinimumSize(listMinSize);
-		observerListPanel.add(observerList, BorderLayout.CENTER);
-		
-		JPanel contentPanel = new JPanel(new BorderLayout());
-		contentPanel.setBorder(new EmptyBorder(5,5,5,5));
-		contentPanel.add(observerListPanel,BorderLayout.WEST);
-		contentPanel.add(recorderListPanel,BorderLayout.EAST);
-		contentPanel.add(okButton,BorderLayout.SOUTH);
-		
+		JScrollPane obsScrollPane = new JScrollPane(observerList);
+		obsScrollPane.setBorder(obsBorder);
+		//obsScrollPane.setMinimumSize(listMinSize);
+		//obsScrollPane.setMinimumSize(listMaxSize);
 		
 		JPanel userPanel = new JPanel(new GridBagLayout());
+		userPanel.setMinimumSize(new Dimension(250,275));
 		GridBagConstraints c = new GridBagConstraints();
 
 		JButton saveUser = new JButton("Save User");
-		JCheckBox isObserver = new JCheckBox("Observer"), isRecorder = new JCheckBox("Recorder");
+		JCheckBox checkIsObserver = new JCheckBox("Observer"), checkIsRecorder = new JCheckBox("Recorder");
 		JTextField fName = new JTextField();
 		JTextField lName = new JTextField();
 		
-		//textfields
-		c.gridx = 1;
-		c.gridy = 0;
-		c.weightx = 0.7;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.insets = new Insets(TOP_ROW_PADDING,0,0,0);  //top padding
+		saveUser.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if (checkIsObserver.isSelected()) {
+					User user = new User();
+					user.setFirstName(fName.getText());
+					user.setLastName(lName.getText());
+					user.setID(XMLFrogDatabase.getNextAvailableObserverID());
+					observerModel.addElement(user);
+				}
+				if (checkIsRecorder.isSelected()) {
+					User user = new User();
+					user.setFirstName(fName.getText());
+					user.setLastName(lName.getText());
+					user.setID(XMLFrogDatabase.getNextAvailableRecorderID());
+					recorderModel.addElement(user);
+				}
+				fName.setText("");
+				lName.setText("");
+			}
+		});
 
-		userPanel.add(fName, c);
-		c.gridy = 1;
-		userPanel.add(lName, c);
+		Insets topPaddingInsets = new Insets(TOP_ROW_PADDING,0,0,0);
+		Insets leftPaddingInsets = new Insets(0,5,0,0);
+		Insets noInsets = new Insets(0,0,0,0);
 		
-		//labels
+		//labels row
+		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
 		c.gridy = 0;
-		c.weightx = 0.3;
-		c.insets = new Insets(TOP_ROW_PADDING,0,0,0);  //top padding
-
+		c.weightx = 1;
+		c.insets = noInsets;
+		
 		JLabel fLabel = new JLabel("First name"), lLabel = new JLabel("Last name");
 		userPanel.add(fLabel,c);
-		c.gridy = 1;
+		c.gridx = 1;
+		c.insets = leftPaddingInsets;
 		userPanel.add(lLabel,c);
-		
+
+		//textfields row
+		c.gridx = 0;
+		c.gridy = 1;
+		c.insets = noInsets;
+		userPanel.add(fName, c);
+		c.gridx = 1;
+		c.insets = leftPaddingInsets;
+		userPanel.add(lName, c);
+				
 		//checkboxes
 		c = new GridBagConstraints();
 		c.gridx = 0;
 		c.gridy = 2;
-		c.insets = new Insets(TOP_ROW_PADDING,0,0,0);  //top padding
-		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = topPaddingInsets;
 		c.weightx = 1;
-		userPanel.add(isObserver,c);
+		userPanel.add(checkIsObserver,c);
 		c.gridx = 1;
-		userPanel.add(isRecorder,c);
+		userPanel.add(checkIsRecorder,c);
 		
 		//Save button
 		c = new GridBagConstraints();
 		c.gridy = 4;
-		c.insets = new Insets(TOP_ROW_PADDING,0,0,0);  //top padding
+		c.insets = topPaddingInsets;
 		c.gridwidth = 2;
-		c.fill = GridBagConstraints.HORIZONTAL;
+		//c.fill = GridBagConstraints.HORIZONTAL;
 		userPanel.add(saveUser, c);
 		
-		contentPanel.add(userPanel,BorderLayout.CENTER);
+		JPanel usersPanel = new JPanel(new GridLayout(1,3));
+		usersPanel.add(obsScrollPane);
+		usersPanel.add(userPanel);
+		usersPanel.add(recScrollPane);
 		
-		
-		//add(observerList);
-		//add(recorderList);
-		add(contentPanel);
-		/*
-		ImageIcon openIcon = new ImageIcon(this.getClass().getResource("/resources/IconSite128.png"));
-		openSite = new JButton("Open existing site", openIcon);
-		openSite.setVerticalTextPosition(SwingConstants.BOTTOM);
-		openSite.setHorizontalTextPosition(SwingConstants.CENTER);
-		openSite.setMinimumSize(new Dimension(132,132));
-		openSite.addActionListener(this);
-	    
-	    //openSite.setIcon(new ImageIcon(img));
-		ImageIcon createIcon = new ImageIcon(this.getClass().getResource("/resources/IconBook128.png"));
-		createSite = new JButton("Create new site", createIcon);
-		createSite.setVerticalTextPosition(SwingConstants.BOTTOM);
-		createSite.setHorizontalTextPosition(SwingConstants.CENTER);
-		createSite.setMinimumSize(new Dimension(132,132));
-		createSite.addActionListener(this);
-		//img = Toolkit.getDefaultToolkit().getImage("IconBook128.png");
-	    //createSite.setIcon(new ImageIcon(img));
-		
-		
-		JPanel buttonPanel = new JPanel();
-		buttonPanel.setLayout(new BoxLayout(buttonPanel,BoxLayout.LINE_AXIS));
-		buttonPanel.add(Box.createHorizontalGlue());
-		buttonPanel.add(openSite);
-		buttonPanel.add(Box.createHorizontalGlue());
-		buttonPanel.add(createSite);
-		buttonPanel.add(Box.createHorizontalGlue());
-		
-		
-		
-		JPanel verticalPanel = new JPanel();
-		verticalPanel.add(Box.createVerticalGlue());
-		verticalPanel.setLayout(new BoxLayout(verticalPanel,BoxLayout.PAGE_AXIS));
-		verticalPanel.add(buttonPanel);
-		verticalPanel.add(Box.createVerticalGlue());
-		
-		//Recent sites panel
-		JPanel recentSitesPanel = new JPanel();
-		Border border = BorderFactory.createEtchedBorder();
-		TitledBorder title = BorderFactory.createTitledBorder(border,"Recently opened sites");
-		title.setTitleJustification(TitledBorder.CENTER);
-		recentSitesPanel.setBorder(title);
-		recentSitesPanel.setLayout(new BoxLayout(recentSitesPanel,BoxLayout.LINE_AXIS));
-		recentSitesPanel.add(Box.createHorizontalGlue());
-		
-		//start population
-		getRecentSites();
-		for (Site site : recentSites) {
-			JButton recentSite = createRecentSiteButton(site);
-			recentSitesPanel.add(recentSite);
-			recentSitesPanel.add(Box.createHorizontalGlue());
-		}
-		
-		if (recentSites.size() <= 0) {
-			JLabel noSites = new JLabel ("No recently opened sites");
-			noSites.setEnabled(false);
-			recentSitesPanel.add(noSites);
-		}
-		
-		//end population
-		recentSitesPanel.add(Box.createHorizontalGlue());
-		verticalPanel.add(recentSitesPanel);
-		
-		//version
-		JPanel versionPanel = new JPanel();
-		versionPanel.setLayout(new BoxLayout(versionPanel,BoxLayout.LINE_AXIS));
-		versionPanel.add(Box.createHorizontalGlue());
-		JLabel versionInfo = new JLabel("IdentiFrog "+IdentiFrog.HR_VERSION);
-		versionInfo.setEnabled(false);
-		versionPanel.add(versionInfo);
-		versionPanel.add(Box.createHorizontalGlue());
-		
-		verticalPanel.add(versionPanel);
-		add(verticalPanel);
-		*/
+		userPanel.setBorder(new EmptyBorder(5,5,5,5));
+
+		add(obsScrollPane, BorderLayout.WEST);
+		add(userPanel);
+		add(recScrollPane, BorderLayout.EAST);
+		add(okButton, BorderLayout.SOUTH);
 		pack();
+		
+		//setResizable(false);
+		setMinimumSize(new Dimension(400,300));
+		setMaximumSize(new Dimension(500,400));
 	}
 
 	

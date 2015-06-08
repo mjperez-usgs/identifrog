@@ -189,7 +189,6 @@ public class WorkingAreaPanel extends JPanel {
 							public void actionPerformed(ActionEvent e) {
 								IdentiFrog.LOGGER.writeMessage("Opening Frog Editor via Right Click Menu: "+localFrog.toString());
 								FrogEditor editFrogWindow = new FrogEditor(WorkingAreaPanel.this.parentFrame, "Edit Frog", localFrog);
-								editFrogWindow.setButImage(new File(XMLFrogDatabase.getMainFolder()+XMLFrogDatabase.THUMB+File.separator+localFrog.getGenericImageName()));
 								editFrogWindow.pack();
 								editFrogWindow.setVisible(true);
 							}

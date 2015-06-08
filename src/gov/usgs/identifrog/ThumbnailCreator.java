@@ -26,22 +26,22 @@ import javax.imageio.ImageIO;
  * @author Steven P. Miller for IdentiFrog Team 2005
  */
 public class ThumbnailCreator {
-	private BufferedImage image;
+/*	private BufferedImage image;
 	private Rectangle dimensions;
 	private File thumbnailFolder;
 
-	/**
+	*//**
 	 * Default Constructor
-	 */
+	 *//*
 	public ThumbnailCreator() {
 		thumbnailFolder = new File(XMLFrogDatabase.getThumbnailFolder());
 	}
 
-	/**
+	*//**
 	 * Overloaded Constructor: Creates a thumbnail folder (if one doesn't already exist)
 	 * 
 	 * @param thumbnailFolder
-	 */
+	 *//*
 	public ThumbnailCreator(File thumbnailFolder) {
 		if (!thumbnailFolder.isDirectory()) {
 			thumbnailFolder.mkdir();
@@ -49,10 +49,10 @@ public class ThumbnailCreator {
 		this.thumbnailFolder = thumbnailFolder;
 	}
 
-	/**
+	*//**
 	 * @param file
 	 * @throws IOException
-	 */
+	 *//*
 	private void importFile(File file) throws IOException {
 		Image tempImage = ImageIO.read(file);
 		BufferedImage newImage = new BufferedImage(tempImage.getWidth(null), tempImage.getHeight(null), BufferedImage.TYPE_3BYTE_BGR);// TYPE_INT_RGB
@@ -63,7 +63,7 @@ public class ThumbnailCreator {
 		gc.dispose();
 	}
 
-	/**
+	*//**
 	 * createThumbnail() Creates a thumbnail of the input image
 	 * 
 	 * @param imageFile
@@ -72,7 +72,7 @@ public class ThumbnailCreator {
 	 * @param outputFile
 	 * @param forceOverwrite
 	 * @return
-	 */
+	 *//*
 	public File createThumbnail(File imageFile, int thumbMaxWidth, int thumbMaxHeight, File outputFile, boolean forceOverwrite) {
 		try {
 			importFile(imageFile);
@@ -84,13 +84,13 @@ public class ThumbnailCreator {
 		}
 	}
 
-	/**
+	*//**
 	 * @param imageFile
 	 * @param thumbMaxWidth
 	 * @param thumbMaxHeight
 	 * @param forceOverwrite
 	 * @return
-	 */
+	 *//*
 	public File createThumbnail(File imageFile, int thumbMaxWidth, int thumbMaxHeight, boolean forceOverwrite) {
 		try {
 			importFile(imageFile);
@@ -218,5 +218,5 @@ public class ThumbnailCreator {
 		op.filter(image, filteredImage);
 		image = filteredImage.getSubimage(0, 0, width, height);
 		// image = op.filter(image, null); bad
-	}
+	}*/
 }

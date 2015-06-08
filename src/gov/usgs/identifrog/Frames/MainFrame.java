@@ -67,11 +67,10 @@ import javax.swing.border.TitledBorder;
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
 	private DataHandler frogData = new DataHandler();
-	private Frog matchForg = new Frog();
+	private Frog matchFrog = new Frog();
 	private boolean changesMade = false;
 
 	private String workingFolder;
-	private File thumbnailFolder;
 	private File currentFile;
 
 	private Preferences root = Preferences.userRoot();
@@ -98,7 +97,7 @@ public class MainFrame extends JFrame {
 	private JToolBar barButtons = new JToolBar("", SwingConstants.HORIZONTAL);
 
 	private MarkExport markExport = new MarkExport();
-	private ThumbnailCreator thumbnailCreator;
+	//private ThumbnailCreator thumbnailCreator;
 	private SaveAsDialog saveAsDialog;
 	private ParametersDialog parametersDialog;
 	private SearchCriteriaDialog searchCriteriaDialog;
@@ -142,8 +141,7 @@ public class MainFrame extends JFrame {
 		enableEvents(AWTEvent.WINDOW_EVENT_MASK);
 		setIconImage(getToolkit().getImage(getClass().getResource("/resources/IconFrog.png")));
 		workingFolder = XMLFrogDatabase.getMainFolder();
-		thumbnailFolder = new File(XMLFrogDatabase.getThumbnailFolder());
-		thumbnailCreator = new ThumbnailCreator(thumbnailFolder);
+		//thumbnailCreator = new ThumbnailCreator(thumbnailFolder);
 		this.setTitle("IdentiFrog - " + XMLFrogDatabase.getFileNamePath());
 		try {
 			init();
@@ -459,25 +457,15 @@ public class MainFrame extends JFrame {
 					+ "To re-enter the image, first delete it from the database.");
 			return;
 		}
-		FrogEditor addFrogObject = new FrogEditor(MainFrame.this, "Frog Information", true, image);
-		addFrogObject.pack();
-		//File temporaryThumbnail = new File(System.getProperty("java.io.tmpdir"), "tempThumb.jpg");
-		//if (temporaryThumbnail.exists()) {
-		//	temporaryThumbnail.delete();
-		//}
-		//.addFrogObject.IdentiFrog.LOGGER.writeMessage(System.getProperty("java.io.tmpdir") + "tempThumb.jpg");
-		//File thumbnailImageFile = thumbnailCreator.createThumbnailforEntry(image, addFrogObject.getButImage().getWidth(), addFrogObject.getButImage()
-		//		.getWidth(), temporaryThumbnail, true);
-		//if (thumbnailImageFile != null) {
-			//addFrogObject.setButImage(thumbnailImageFile);
-			// add biometrics information window on the screen
-			//int move = (int) (getWidth() * 0.28);
-			//addFrogObject.setLocation((getX() + move), getY());
-			addFrogObject.setVisible(true);
-		//} else {
-		//	new ErrorDialog("Did not import image!");
-		//}
-		//temporaryThumbnail.deleteOnExit();
+		FrogEditor addFrogWindow = new FrogEditor(MainFrame.this, "Frog Information", image);
+		addFrogWindow.pack();
+		addFrogWindow.setLocationRelativeTo(this);
+		addFrogWindow.setVisible(true);
+		Frog newFrog = addFrogWindow.getFrog();
+		if (newFrog != null) {
+			XMLFrogDatabase.addFrog(newFrog);
+			XMLFrogDatabase.writeXMLFile();
+		}
 		updateCells();
 	}
 
@@ -765,9 +753,10 @@ public class MainFrame extends JFrame {
 		return visitid;
 	}
 
+	/*
 	public ThumbnailCreator getThumbnailCreator() {
 		return thumbnailCreator;
-	}
+	}*/
 
 	public void OpenImageViewer(int localFrogID, String title, File imageFile, boolean displayallimages) {
 		if (imageFile.exists()) {
@@ -839,12 +828,12 @@ public class MainFrame extends JFrame {
 		this.frogData = frogData;
 	}
 
-	public void setMatchForg(Frog matchForg) {
-		this.matchForg = matchForg;
+	public void setMatchForg(Frog matchFrog) {
+		this.matchFrog = matchFrog;
 	}
 
-	public Frog getMatchForg() {
-		return matchForg;
+	public Frog getMatchFrog() {
+		return matchFrog;
 	}
 }
 

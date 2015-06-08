@@ -155,9 +155,6 @@ public class XMLFrogDatabase {
 			observersElement.appendChild(user.createElement(doc));
 		}
 		
-		
-		
-		
 		users.appendChild(recordersElement);
 		users.appendChild(observersElement);
 		
@@ -240,6 +237,8 @@ public class XMLFrogDatabase {
 		}
 		
 		//Load frogs (depends on users)
+		IdentiFrog.LOGGER.writeMessage("Parsing XML for Frogs...");
+
 		Frog frog = null;
 		NodeList nList = doc.getElementsByTagName("frog");
 		for (int i = 0; i < nList.getLength(); i++) {
@@ -344,25 +343,30 @@ public class XMLFrogDatabase {
 
 				// Personel
 				IdentiFrog.LOGGER.writeMessage("Loading -userids(s)- for SiteSample #" + s + " on frog with ID " + frog.getID());
+				//User observer = new User();
+				//User recorder = new User();
+				Element observerElem = (Element) sampleElement.getElementsByTagName("observer").item(0);
+				sample.setObserver(XMLFrogDatabase.getObserverByID(Integer.parseInt(observerElem.getTextContent())));
 				
+				Element recorderElem = (Element) sampleElement.getElementsByTagName("recorder").item(0);
+				sample.setObserver(XMLFrogDatabase.getRecorderByID(Integer.parseInt(recorderElem.getTextContent())));
 				
-				User observer = new User();
-				User recorder = new User();
-				NodeList personelList = sampleElement.getElementsByTagName("personel");
+				/* db1.0 style...ish
 				for (int j = 0; j < personelList.getLength(); j++) {
 					Element personelElement = (Element) personelList.item(j);
 					NamedNodeMap personelAttributes = personelList.item(j).getAttributes();
 					if (personelAttributes.getNamedItem("type").getTextContent().equals("observer")) {
-						observer.setFirstName(personelElement.getElementsByTagName("firstname").item(0).getTextContent());
-						observer.setLastName(personelElement.getElementsByTagName("lastname").item(0).getTextContent());
+						//observer.setFirstName(personelElement.getElementsByTagName("firstname").item(0).getTextContent());
+						//observer.setLastName(personelElement.getElementsByTagName("lastname").item(0).getTextContent());
+						
 					} else if (personelList.item(j).getAttributes().getNamedItem("type").getTextContent().equals("recorder")) {
-						recorder.setFirstName(personelElement.getElementsByTagName("firstname").item(0).getTextContent());
-						recorder.setLastName(personelElement.getElementsByTagName("lastname").item(0).getTextContent());
+						//recorder.setFirstName(personelElement.getElementsByTagName("firstname").item(0).getTextContent());
+						//recorder.setLastName(personelElement.getElementsByTagName("lastname").item(0).getTextContent());
 					}
 				}
 				sample.setObserver(observer);
 				sample.setRecorder(recorder);
-
+*/
 				// SurveyID
 				IdentiFrog.LOGGER.writeMessage("Loading -surveyid- for SiteSample #" + s + " on frog with ID " + frog.getID());
 				sample.setSurveyID(sampleElement.getElementsByTagName("surveyid").item(0).getTextContent());
@@ -378,6 +382,11 @@ public class XMLFrogDatabase {
 		}
 	}
 	
+	/**
+	 * Returns the Recorder User object associated with the given ID
+	 * @param id User ID to lookup
+	 * @return Recorder from the DB if it's in the DB, null otherwise
+	 */
 	public static User getRecorderByID(int id){
 		if (!LOADED){
 			IdentiFrog.LOGGER.writeError("CANT GET RECORDER, DB NOT LOADED YET!");
@@ -391,6 +400,11 @@ public class XMLFrogDatabase {
 		return null;
 	}
 	
+	/**
+	 * Returns the Observer User object associated with the given ID
+	 * @param id User ID to lookup
+	 * @return Observer from the DB if it's in the DB, null otherwise
+	 */
 	public static User getObserverByID(int id){
 		if (!LOADED){
 			IdentiFrog.LOGGER.writeError("CANT GET OBSERVER, DB NOT LOADED YET!");
@@ -433,7 +447,7 @@ public class XMLFrogDatabase {
 	 * 
 	 * @return list of unique observers. Empty if DB is not loaded.
 	 */
-	public static ArrayList<String> getObserversString() {
+	/*public static ArrayList<String> getObserversString() {
 		HashSet<String> observers = new HashSet<String>();
 		if (XMLFrogDatabase.LOADED) {
 			for (Frog frog : frogs) {
@@ -445,7 +459,7 @@ public class XMLFrogDatabase {
 		ArrayList<String> uniqueObservers = new ArrayList<String>(observers);
 		Collections.sort(uniqueObservers);
 		return uniqueObservers;
-	}
+	}*/
 	
 	/**
 	 * Returns the list of active observer users as reflected from the current database
@@ -531,7 +545,7 @@ public class XMLFrogDatabase {
 	 * 
 	 * @return next free ID for a frog to use
 	 */
-	public static int getNextAvailableID() {
+	public static int getNextAvailableFrogID() {
 		if (!LOADED) {
 			IdentiFrog.LOGGER.writeError("Attempting to get next available ID before DB has been loaded!");
 		}
@@ -723,5 +737,58 @@ public class XMLFrogDatabase {
 
 	public static void setSiteName(String siteName) {
 		XMLFrogDatabase.SITE_NAME = siteName;
+	}
+
+	/**
+	 * Adds a frog to the database. Does not check if it already exists, so use caution when using this method. This does not commit to disk so you must do so using writeXMLFile().
+	 * @param newFrog Frog to add to the DB.
+	 */
+	public static void addFrog(Frog newFrog) {
+		frogs.add(newFrog);
+		
+	}
+
+	/**
+	 * Returns the highest in use ID + 1 of all observer users.
+	 * @return Highest ID + 1 of all observers
+	 */
+	public static int getNextAvailableObserverID() {
+		int highestID = 0;
+		for (User user : observers) {
+			if (user.getID() > highestID) {
+				highestID = user.getID();
+			}
+		}
+		return highestID + 1;
+	}
+	
+	/**
+	 * Returns the highest in use ID + 1 of all recorder users.
+	 * @return Highest ID + 1 of all recorders
+	 */
+	public static int getNextAvailableRecorderID() {
+		int highestID = 0;
+		for (User user : recorders) {
+			if (user.getID() > highestID) {
+				highestID = user.getID();
+			}
+		}
+		return highestID + 1;
+	}
+	
+	/**
+	 * Sets the list of recorders to the passed in value. Does not commit to disk.
+	 * @param recorders New recorders for DB.
+	 */
+	public static void setRecorders(ArrayList<User> recorders) {
+		XMLFrogDatabase.recorders = recorders;
+	}
+	
+	/**
+	 * Sets the list of observers to the passed in value. Does not commit to disk.
+	 * @param observers New observers for DB.
+	 */
+	public static void setObservers(ArrayList<User> observers) {
+		XMLFrogDatabase.observers = observers;
 	}
 }
