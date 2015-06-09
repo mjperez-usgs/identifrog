@@ -1,5 +1,8 @@
 package gov.usgs.identifrog.Frames;
 
+import gov.usgs.identifrog.IdentiFrog;
+import gov.usgs.identifrog.WorkingAreaPanel;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -15,9 +18,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
-
-import gov.usgs.identifrog.IdentiFrog;
-import gov.usgs.identifrog.WorkingAreaPanel;
 
 /**
  * <p>

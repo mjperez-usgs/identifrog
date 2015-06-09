@@ -1,10 +1,5 @@
 package gov.usgs.identifrog.DataObjects;
 
-import java.awt.Component;
-
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JList;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 

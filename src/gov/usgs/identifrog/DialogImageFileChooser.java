@@ -3,7 +3,6 @@ package gov.usgs.identifrog;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Rectangle;
-import java.awt.Window;
 import java.io.File;
 
 import javax.imageio.ImageIO;

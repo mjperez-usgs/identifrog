@@ -113,7 +113,7 @@ public class NewSiteDialog extends JDialog implements ActionListener {
 	// close the dialog on a button event
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == butOK) {
-			parent.createSite(labelSaveLocation.getText(),textSiteName.getText());
+			parent.createSite(labelSaveLocation.getText().trim(),textSiteName.getText().trim());
 			dispose();
 		} else 
 		if (e.getSource() == butChange) {

@@ -6,10 +6,20 @@ import gov.usgs.identifrog.logger.GSLogger;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.text.ParseException;
 import java.util.prefs.Preferences;
 
 import javax.swing.UIManager;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Element;
 
 /**
  * <p>
@@ -96,5 +106,26 @@ public class IdentiFrog {
 	 */
 	public static XMLFrogDatabase getDB(){
 		return DB;
+	}
+	
+	public static String elementToXMLStr(Element elem) {
+		String str = "error occured.";
+		try {
+		TransformerFactory transFactory = TransformerFactory.newInstance();
+		Transformer transformer;
+		transformer = transFactory.newTransformer();
+		
+		StringWriter buffer = new StringWriter();
+		transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+		transformer.transform(new DOMSource(elem),new StreamResult(buffer));
+		str = buffer.toString();
+		} catch (TransformerConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TransformerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return str;
 	}
 }

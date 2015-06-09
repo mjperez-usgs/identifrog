@@ -9,6 +9,7 @@ package gov.usgs.identifrog;
 
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+
 import javax.swing.ButtonGroup;
 import javax.swing.JComponent;
 import javax.swing.JLabel;

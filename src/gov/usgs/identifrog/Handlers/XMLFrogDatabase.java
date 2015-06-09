@@ -3,9 +3,9 @@ package gov.usgs.identifrog.Handlers;
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
-import gov.usgs.identifrog.DataObjects.User;
 import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.DataObjects.SiteSample;
+import gov.usgs.identifrog.DataObjects.User;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -29,6 +30,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -102,20 +104,26 @@ public class XMLFrogDatabase {
 		try {
 			transformer = transformerFactory.newTransformer();
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-			// transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount",
-			// "1");
 		} catch (TransformerConfigurationException e) {
 			IdentiFrog.LOGGER.writeException(e);
 			return false;
 		}
+		
+		StringWriter buffer = new StringWriter();
 		DOMSource source = new DOMSource(doc);
-		StreamResult result = new StreamResult(dbfile);
 		try {
-			transformer.transform(source, result);
+			transformer.transform(source,
+			      new StreamResult(buffer));
+			FileUtils.writeStringToFile(dbfile, buffer.toString());
+			IdentiFrog.LOGGER.writeMessage("Database commited to disk.");
 		} catch (TransformerException e) {
 			IdentiFrog.LOGGER.writeException(e);
 			return false;
+		} catch (IOException e) {
+			IdentiFrog.LOGGER.writeException(e);
+			return false;
 		}
+
 		return true;
 	}
 
@@ -125,6 +133,7 @@ public class XMLFrogDatabase {
 	 * @return true if successful, false otherwise.
 	 */
 	public static boolean writeXMLFile() {
+		IdentiFrog.LOGGER.writeMessage("Synchronizing memory-database to disk...");
 		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder docBuilder;
 		try {
@@ -140,11 +149,13 @@ public class XMLFrogDatabase {
 		root.appendChild(frogsElement);
 		doc.appendChild(root);
 		
+		IdentiFrog.LOGGER.writeMessage("Preparing frogs for writing");
 		for (Frog frog : frogs) {
 			frogsElement.appendChild(frog.createDBElement(doc));
 		}
 		
 		Element users = doc.createElement("users");
+		IdentiFrog.LOGGER.writeMessage("Preparing users for writing");
 		Element recordersElement = doc.createElement("recorders");
 		Element observersElement = doc.createElement("observers");
 
@@ -160,6 +171,11 @@ public class XMLFrogDatabase {
 		
 		root.appendChild(users);
 
+		System.out.println("Dumping frogs tostrg");
+		for (Frog frog : frogs) {
+			System.out.println(frog);
+		}
+		
 		// WRITE XML FILE
 		TransformerFactory transformerFactory = TransformerFactory.newInstance();
 		Transformer transformer = null;
@@ -255,7 +271,7 @@ public class XMLFrogDatabase {
 			// load sitesamples
 			Element siteSamples = (Element) frogElement.getElementsByTagName("sitesamples").item(0);
 			NodeList sList = siteSamples.getElementsByTagName("sitesample");
-			for (int s = 0; i < sList.getLength(); s++) {
+			for (int s = 0; s < sList.getLength(); s++) {
 				// load collection data
 				IdentiFrog.LOGGER.writeMessage("Parsing XML for SiteSample #" + s + " on frog with ID " + frog.getID());
 				Element sampleElement = (Element) sList.item(s);
@@ -296,7 +312,7 @@ public class XMLFrogDatabase {
 					SiteImage image = new SiteImage();
 					image.setImageFileName(imageElement.getElementsByTagName("filename").item(0).getTextContent());
 					image.setSignatureGenerated(imageElement.getElementsByTagName("signature").item(0).getTextContent().equals("true"));
-					image.setSourceImageHash(imageElement.getElementsByTagName("srchash").item(0).getTextContent());
+					image.setSourceImageHash(imageElement.getElementsByTagName("sourcehash").item(0).getTextContent());
 					siteImages.add(image);
 				}
 				sample.setSiteImages(siteImages);
@@ -785,10 +801,68 @@ public class XMLFrogDatabase {
 	}
 	
 	/**
+	 * Returns a list of unique locations, sorted by name.
+	 * @return list of locations frogs have been captured
+	 */
+	public static ArrayList<Location> uniqueLocations() {
+		HashSet<Location> locations = new HashSet<Location>();
+	    for (Frog frog : frogs) {
+	    	for (SiteSample sample : frog.getSiteSamples()){
+	    		locations.add(sample.getLocation());
+	    	}
+	    }
+	    ArrayList<Location> sortedLocations = new ArrayList<Location>(locations);
+	    Collections.sort(sortedLocations);
+	    return sortedLocations;
+	  }
+	
+	/**
 	 * Sets the list of observers to the passed in value. Does not commit to disk.
 	 * @param observers New observers for DB.
 	 */
 	public static void setObservers(ArrayList<User> observers) {
 		XMLFrogDatabase.observers = observers;
+	}
+	
+	public static Object[][] getFrogsArray(boolean allFrogs) {
+		Object[][] array = new Object[frogs.size()][];
+		for (int i = 0; i < frogs.size(); i++) {
+		      array[i] = frogs.get(i).toArray();
+		    }
+		return array;
+		
+		/*ArrayList<Frog> localFrogs = new ArrayList<Frog>();
+	    boolean allFrogsLocal = true;
+	    if (allFrogsLocal) {
+	      localFrogs = frogs;
+	    } else {
+	      localFrogs = getUniqueFrogs().getFrogs();
+	    }
+	    // NOTE: replace frogList with frogs
+	    Object[][] array = new Object[localFrogs.size()][];
+	    for (int i = 0; i < localFrogs.size(); i++) {
+	      array[i] = localFrogs.get(i).toArray();
+	    }
+	    return array;*/
+	  }
+	  /*
+	  public DataHandler getUniqueFrogs() {
+	    ArrayList<Frog> uniqueFrogs;
+	    ArrayList<Integer> frogIDs = new ArrayList<Integer>();
+	    for (int i = 0; i < frogs.size(); i++) {
+	      frogIDs.add(frogs.get(i).getID());
+	    }
+	    HashSet<Integer> uniqueFrogIDSet = new HashSet<Integer>(frogIDs);
+	    frogIDs.clear();
+	    frogIDs.addAll(uniqueFrogIDSet);
+	    uniqueFrogs = new ArrayList<Frog>();
+	    for (int i = 0; i < frogIDs.size(); i++) {
+	      uniqueFrogs.add(XMLFrogDatabase.searchFrogByID(frogIDs.get(i)));
+	    }
+	    return new DataHandler(uniqueFrogs);
+	  }*/
+
+	public static String getThumbPlaceholder() {
+		return "PLCHOLDR";
 	}
 }

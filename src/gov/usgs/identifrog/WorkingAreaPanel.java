@@ -4,7 +4,6 @@ import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.Frames.ErrorDialog;
 import gov.usgs.identifrog.Frames.FrogEditor;
 import gov.usgs.identifrog.Frames.MainFrame;
-import gov.usgs.identifrog.Handlers.DataHandler;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 import java.awt.BorderLayout;
@@ -14,7 +13,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.prefs.Preferences;
 
 import javax.swing.ImageIcon;
@@ -47,7 +45,6 @@ import javax.swing.table.TableColumn;
 @SuppressWarnings("serial")
 public class WorkingAreaPanel extends JPanel {
 	//private ArrayList<Frog> frogs = new ArrayList<Frog>();
-	private DataHandler frogsData = new DataHandler();
 	private static final int PREFERRED_WIDTH = 180;
 	private static final int PREFERED_HEIGHT = 80;
 	private static final int STANDARD_WIDTH = 75;
@@ -254,9 +251,9 @@ public class WorkingAreaPanel extends JPanel {
 		try {
 			if (matrixType == FROG) {
 				currentMatrixType = FROG;
-				frogsData = parentFrame.getFrogData();
+				//frogsData = parentFrame.getFrogData();
 				// replace with frogsArray(fh)
-				cells = frogsData.frogsArray(allImagesDisp);
+				cells = XMLFrogDatabase.getFrogsArray(allImagesDisp);
 				parentFrame.setButtonsOn(true);
 				badCells = emptyFrogCells;
 			/*} else if (matrixType == OBSERVER) {
@@ -284,7 +281,7 @@ public class WorkingAreaPanel extends JPanel {
 				// includeQueryImg, discriminatorSex, additDiscriminator);
 				Frog myFrog = XMLFrogDatabase.searchFrogByID(this.getSelectedFrog_Id());
 				// if (allImagesDisp) {
-				cells = topTenMatches.getMatches(frogsData, myFrog, sortType, ascending, includeQueryImg, discriminatorSex, additDiscriminator);
+				//cells = topTenMatches.getMatches(frogsData, myFrog, sortType, ascending, includeQueryImg, discriminatorSex, additDiscriminator);
 				if (cells == null) {
 					//no matches
 					return false;
@@ -296,7 +293,7 @@ public class WorkingAreaPanel extends JPanel {
 			} else {
 				currentMatrixType = FROG;
 			// replace with frogsArray(fh)
-				cells = frogsData.frogsArray(allImagesDisp);
+				cells = XMLFrogDatabase.getFrogsArray(allImagesDisp);
 				parentFrame.setButtonsOn(true);
 				badCells = emptyFrogCells;
 			}
@@ -545,7 +542,6 @@ public class WorkingAreaPanel extends JPanel {
 		 * Removing this method breaks empty frog cells and dorsal views
 		 */
 		public Class getColumnClass(int c) {
-			System.out.println("Renderer: "+getValueAt(0, c).getClass());
             return getValueAt(0, c).getClass();
 		}/*
 			Class cls;
@@ -795,9 +791,9 @@ public class WorkingAreaPanel extends JPanel {
 			IdentiFrog.LOGGER.writeMessage("\tSearch Frog ID = " + localFrogID);
 			
 			
-			Frog localFrog = XMLFrogDatabase.searchFrogByID(localFrogID);
-			String localImagename = XMLFrogDatabase.getDorsalFolder() + localFrog.getGenericImageName();
-			parentFrame.OpenImageViewer(localFrogID, "Frog ID: " + localFrog.getID() + " (" + localFrog.getGenericImageName() + ")", new File(localImagename), true);
+			//Frog localFrog = XMLFrogDatabase.searchFrogByID(localFrogID);
+			//String localImagename = XMLFrogDatabase.getDorsalFolder() + localFrog.getGenericImageName();
+			//parentFrame.OpenImageViewer(localFrogID, "Frog ID: " + localFrog.getID() + " (" + localFrog.getGenericImageName() + ")", new File(localImagename), true);
 		}
 		
 		if (e.isPopupTrigger() && currentMatrixType == FROG) {
@@ -909,14 +905,6 @@ public class WorkingAreaPanel extends JPanel {
 
 	public int getMaxPageRows() {
 		return maxPageRows;
-	}
-
-	public DataHandler getFrogsData() {
-		return frogsData;
-	}
-
-	public void setFrogsData(DataHandler frogsData) {
-		this.frogsData = frogsData;
 	}
 } // end WorkingAreaPanel Class
 

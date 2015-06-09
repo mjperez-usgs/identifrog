@@ -9,10 +9,8 @@ import gov.usgs.identifrog.MatchingDialog;
 import gov.usgs.identifrog.SaveAsDialog;
 import gov.usgs.identifrog.SearchCriteriaDialog;
 import gov.usgs.identifrog.Site;
-import gov.usgs.identifrog.ThumbnailCreator;
 import gov.usgs.identifrog.WorkingAreaPanel;
 import gov.usgs.identifrog.DataObjects.Frog;
-import gov.usgs.identifrog.Handlers.DataHandler;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 import gov.usgs.identifrog.Operations.XLSXTemplateGeneratorFrame;
 
@@ -66,7 +64,6 @@ import javax.swing.border.TitledBorder;
  */
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
-	private DataHandler frogData = new DataHandler();
 	private Frog matchFrog = new Frog();
 	private boolean changesMade = false;
 
@@ -175,12 +172,10 @@ public class MainFrame extends JFrame {
 		//ArrayList<Frog> frogs = new XMLFrogDatabase(XMLFrogDatabase.getFileNamePath())
 		//		.loadXMLFile();
 		updateRecentlyOpened(XMLFrogDatabase.getFileNamePath());
-		frogData.setFrogs(XMLFrogDatabase.getFrogs());
 
 		//workingAreaPanel.setFrogsData(frogData);
 		workingAreaPanel.refreshRows();
 
-		setFrogData(frogData);
 		// update cells
 		updateCells();
 
@@ -256,12 +251,9 @@ public class MainFrame extends JFrame {
 		// startup
 		//XMLFrogDatabase.setFile(new File(XMLFrogDatabase.getFileNamePath()));
 		XMLFrogDatabase.loadXMLFile();
-		ArrayList<Frog> frogs = XMLFrogDatabase.getFrogs();
-		frogData.setFrogs(frogs);
 
 		contentPanel = (JPanel) getContentPane();
 		workingAreaPanel = new WorkingAreaPanel(MainFrame.this);
-		setFrogData(workingAreaPanel.getFrogsData());
 
 		contentPanel.setLayout(borderLayout1);
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -506,24 +498,27 @@ public class MainFrame extends JFrame {
 	 * @throws Exception
 	 */
 	private void deleteFrog() throws Exception {
+		IdentiFrog.LOGGER.writeError("Deleting frog is not yet fully implemented!");
 		int localID = workingAreaPanel.getSelectedFrog_Id();
 		if (localID == -1) {
 			return;
 		}
-		if (ChoiceDialog.choiceMessage("Do you want to delete this row?") == 0) {
+		if (ChoiceDialog.choiceMessage("Deleting this frog will remove all images,\n"
+				+ "signatures, and sitesamples for this frog.\nDelete this frog?") == 0) {
 			Frog localFrog = XMLFrogDatabase.searchFrogByID(localID);
-			String localImageName = localFrog.getGenericImageName();
-			String localSignatureName = localFrog.getPathSignature();
+			//String localImageName = localFrog.getGenericImageName();
+			//String localSignatureName = localFrog.getPathSignature();
 			// check if exists then delete
+			/*
 			new File(XMLFrogDatabase.getImagesFolder() + localImageName).delete();
 			new File(XMLFrogDatabase.getDorsalFolder() + localImageName).delete();
 			new File(XMLFrogDatabase.getThumbnailFolder() + localImageName).delete();
 			new File(XMLFrogDatabase.getBinaryFolder() + localImageName).delete();
-			new File(XMLFrogDatabase.getSignaturesFolder() + localSignatureName).delete();
+			new File(XMLFrogDatabase.getSignaturesFolder() + localSignatureName).delete();*/
 			XMLFrogDatabase.removeFrog(localID);
 			// garbage collector
 			System.gc();
-			if (frogData.getFrogs().size() == 1) {
+			if (XMLFrogDatabase.getFrogs().size() == 1) {
 				workingAreaPanel.refreshRows();
 			}
 			// update cells
@@ -602,7 +597,7 @@ public class MainFrame extends JFrame {
 		if (filePath != null) {
 			try {
 				// markExport.saveToFile(filePath);
-				markExport.saveToMark(frogData.getFrogs(), filePath);
+				markExport.saveToMark(XMLFrogDatabase.getFrogs(), filePath);
 			} catch (Exception ex) {
 				new ErrorDialog("Cannot save the file.");
 				ex.printStackTrace();
@@ -634,6 +629,8 @@ public class MainFrame extends JFrame {
 
 	/* Match Button pressed */
 	protected void butFind_actionPerformed(ActionEvent e) {
+		IdentiFrog.LOGGER.writeMessage("Find/match is not implemented yet!");
+		/*
 		// simulation
 		// ConfusionMatrix confmatrix = new ConfusionMatrix();
 		// confmatrix.simulateIdentification();
@@ -654,7 +651,7 @@ public class MainFrame extends JFrame {
 		// +
 		// tfrog[0].intValue());
 		OpenMatchingDialog(dorsalImage, tfrog[0].intValue());
-
+		*/
 	}
 
 	protected void butEdit_actionPerformed(ActionEvent e) {
@@ -818,14 +815,6 @@ public class MainFrame extends JFrame {
 
 	public boolean getChangesMade() {
 		return changesMade;
-	}
-
-	public DataHandler getFrogData() {
-		return frogData;
-	}
-
-	public void setFrogData(DataHandler frogData) {
-		this.frogData = frogData;
 	}
 
 	public void setMatchForg(Frog matchFrog) {

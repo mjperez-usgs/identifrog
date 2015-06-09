@@ -34,6 +34,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -180,6 +181,11 @@ public class ImageManipFrame extends JFrame {
 
 	// graphical user interface initialization
 	private void init() throws Exception {
+		if (true) {
+			JOptionPane.showMessageDialog(null, "This feature is currently disabled.", "Feature disabled", JOptionPane.ERROR_MESSAGE);
+			return;
+		} 
+		
 		installDir = XMLFrogDatabase.getMainFolder();
 		setIconImage(icon);
 		setJMenuBar(jMenuBar1);
@@ -582,9 +588,10 @@ public class ImageManipFrame extends JFrame {
 	protected void butQuit_actionPerformed(ActionEvent e) {
 		// DBdeletefrog dbDeletefrog = new DBdeletefrog(DbId);
 		System.gc(); // Garbage Collector
-		ArrayList<Frog> localFrogs = parentFrame.getFrogData().getFrogs();
+		ArrayList<Frog> localFrogs = XMLFrogDatabase.getFrogs();
 		localFrogs.remove(localFrogs.size() - 1);
-		parentFrame.getFrogData().setFrogs(localFrogs);
+		//parentFrame.getFrogData().setFrogs(localFrogs);
+		IdentiFrog.LOGGER.writeError("Passed a setFrogs() in butQuit ImageManipFrame. Possible side effects with the quit method...");
 		parentFrame.updateCells();
 		// XMLHandler file = new XMLHandler(new File(FolderHandler.getFileNamePath()),
 		// parentFrame.getFrogData().getFrogs());
@@ -765,8 +772,8 @@ public class ImageManipFrame extends JFrame {
 				}
 				// ///////////////////////////////////////////////////////////////////////////////////
 				parentFrame.updateCells();
-				parentFrame.getFrogData().getFrogs().get(parentFrame.getFrogData().getFrogs().size() - 1).setPathImage(imageName1);
-				IdentiFrog.LOGGER.writeMessage(parentFrame.getFrogData().getFrogs().size());
+				//XMLFrogDatabase.getFrogs().get(XMLFrogDatabase.getFrogs().size() - 1).setPathImage(imageName1);
+				IdentiFrog.LOGGER.writeMessage(XMLFrogDatabase.getFrogs().size());
 				XMLFrogDatabase.writeXMLFile();
 				parentFrame.updateCells(0, false);
 				closeAction();

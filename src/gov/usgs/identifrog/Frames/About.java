@@ -2,6 +2,7 @@ package gov.usgs.identifrog.Frames;
 
 import java.awt.Frame;
 import java.awt.GridLayout;
+
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 

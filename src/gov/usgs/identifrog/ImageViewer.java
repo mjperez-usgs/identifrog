@@ -120,6 +120,11 @@ public class ImageViewer extends JDialog {
 	 * @throws Exception
 	 */
 	private void init() throws Exception {
+		if (true) {
+			JOptionPane.showMessageDialog(null, "This feature is currently disabled.", "Feature disabled", JOptionPane.ERROR_MESSAGE);
+			return;
+		} 
+		
 		imageLabel.setIcon(new ImageIcon(imageFile.getAbsolutePath()));
 
 		pnlImage.setMinimumSize(new Dimension(600, 256));
@@ -185,7 +190,7 @@ public class ImageViewer extends JDialog {
 		Frog frog = XMLFrogDatabase.searchFrogByID(searchFrogID);
 		searchFrogID = frog.getID();
 		int searchFrogFormerID = frog.getID();
-		ArrayList<Frog> localFrogs = parentFrame.getFrogData().getFrogs();
+		ArrayList<Frog> localFrogs = XMLFrogDatabase.getFrogs();
 		for (int i = 0; i < localFrogs.size(); i++) {
 			frog = localFrogs.get(i);
 			if (frog.getID() == searchFrogID) {

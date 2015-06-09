@@ -31,7 +31,6 @@ public class SiteSample {
 	private String discriminator;
 	private String comments;
 	private Location location;
-	private String pathImage;
 	private ArrayList<SiteImage> siteImages;
 
 	/**
@@ -211,19 +210,46 @@ public class SiteSample {
 		this.location = location;
 	}
 
-	public String getPathImage() {
-		return pathImage;
-	}
-
-	public void setPathImage(String pathImage) {
-		this.pathImage = pathImage;
-	}
-	
 	public int getFrogID() {
 		return frogID;
 	}
 
 	public void setFrogID(int i) {
 		this.frogID = i;
+	}
+	
+	public String toString() {
+		String str = "----SiteSample--\n";
+/*	private int frogID; //used only for looking up what this belongs to without keeping a reference
+	private String surveyID;
+	private String mass;
+	private String length;
+	private String dateCapture;
+	private String dateEntry;
+	private User observer;
+	private User recorder;
+	private String discriminator;
+	private String comments;
+	private Location location;
+	private String pathImage;
+	private ArrayList<SiteImage> siteImages;*/
+		str += "--Entry Date: "+dateEntry+"\n";
+		str += "--Capture Date: "+dateCapture+"\n";
+		str += "--Survey ID: "+surveyID+"\n";
+		str += "--Recorder: ("+recorder.getID()+")"+recorder.getName()+"\n";
+		str += "--Observer: ("+observer.getID()+")"+observer.getName()+"\n";
+		str += "--Mass: "+mass+"\n";
+		str += "--Length: "+mass+"\n";
+		str += "--Discriminator: "+discriminator+"\n";
+		str += "--Comments: "+comments+"\n";
+		str += "--Location: \n";
+		str += location;
+		str += "--SiteImages: \n";
+		
+		
+		for (SiteImage image : siteImages) {
+			str += image.toString();
+		}
+		return str;
 	}
 }

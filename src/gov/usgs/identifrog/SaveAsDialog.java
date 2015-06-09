@@ -3,6 +3,7 @@ package gov.usgs.identifrog;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Rectangle;
+
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;

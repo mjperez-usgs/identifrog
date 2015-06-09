@@ -1,7 +1,8 @@
 package gov.usgs.identifrog;
 
-import java.io.File;
 import gov.usgs.identifrog.Frames.ErrorDialog;
+
+import java.io.File;
 
 /**
  * <p>

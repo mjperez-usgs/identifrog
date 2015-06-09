@@ -1,9 +1,11 @@
 package gov.usgs.identifrog.DataObjects;
 
+import gov.usgs.identifrog.IdentiFrog;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-public class Location {
+public class Location implements Comparable<Location> {
 	private String name;
 	private String description;
 	private String coordinateType;
@@ -141,22 +143,22 @@ public class Location {
 				elementCoordinate.appendChild(elementZone);
 			}
 		}
+		
+		System.out.println("====Location====");
+		System.out.println(IdentiFrog.elementToXMLStr(elementCoordinate));
+		
 		element.appendChild(elementCoordinate);
 	}
 
-	public String printBuffer() {
-		String buffer = null;
-		buffer = "LOCATION" + "\n";
-		buffer = buffer + "\t" + "Name: " + name + "\n";
-		buffer = buffer + "\t" + "Description: " + description + "\n";
-		buffer = buffer + "\t" + "Type: " + coordinateType + "\n";
-		buffer = buffer + "\t" + "Longitude: " + longitude + "\n";
-		buffer = buffer + "\t" + "Latitude: " + latitude + "\n";
-		buffer = buffer + "\t" + "Datum: " + datum + "\n";
-		if (coordinateType != null && coordinateType.equals("UTM")) {
-			buffer = buffer + "\t" + "Zone: " + zone + "\n";
-		}
-		return buffer;
+	public String toString() {
+		String str = "\t" + "Name: " + name + "\n";
+		str += "\t" + "Description: " + description + "\n";
+		str += "\t" + "Type: " + coordinateType + "\n";
+		str += "\t" + "Longitude: " + longitude + "\n";
+		str += "\t" + "Latitude: " + latitude + "\n";
+		str += "\t" + "Datum: " + datum + "\n";
+		str += "\t" + "Zone: " + zone + "\n";
+		return str;
 	}
 
 	public Object[] toArray() {
@@ -234,5 +236,10 @@ public class Location {
 
 	public void setZone(String zone) {
 		this.zone = zone;
+	}
+
+	@Override
+	public int compareTo(Location otherLoc) {
+		return name.toLowerCase().compareTo(otherLoc.getName().toLowerCase());
 	}
 }

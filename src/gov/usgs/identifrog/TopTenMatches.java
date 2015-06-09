@@ -2,13 +2,13 @@ package gov.usgs.identifrog;
 
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.Frames.MainFrame;
-import gov.usgs.identifrog.Handlers.DataHandler;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import javax.activation.DataHandler;
 import javax.swing.JOptionPane;
 
 /**
@@ -36,6 +36,7 @@ public class TopTenMatches {
 	private MainFrame parentFrame;
 
 	public TopTenMatches(MainFrame frame) {
+		IdentiFrog.LOGGER.writeError("TopTenMatches is currently not implemented!");
 		parentFrame = frame;
 	}
 

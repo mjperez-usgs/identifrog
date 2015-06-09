@@ -8,9 +8,14 @@ import java.awt.image.BufferedImage;
 import java.awt.image.FilteredImageSource;
 import java.awt.image.ImageFilter;
 import java.awt.image.ImageProducer;
+import java.io.File;
+import java.io.IOException;
 
 import javax.swing.GrayFilter;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -48,6 +53,19 @@ public class SiteImage {
 		element.appendChild(imageHashElement);
 
 		return element;
+	}
+	
+	/**
+	 * Generates hash code for original source image. processed should not be set to true for this method to work correctly.
+	 */
+	public void generateHash(){
+		try {
+			sourceImageHash = DigestUtils.md5Hex(FileUtils.readFileToByteArray(new File(sourceFilePath)));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			IdentiFrog.LOGGER.writeExceptionWithMessage("Failed to create hash for image!", e);
+			sourceImageHash = "ERROR";
+		}
 	}
 	
 	public String getSourceImageHash() {
@@ -123,5 +141,19 @@ public class SiteImage {
 				+ processed + ", sourceImageHash=" + sourceImageHash + "]";
 	}
 	
+	/**
+	 * Returns the source image as stored in the DB Images/ directory. The format is as follows:
+	 * [original base filename]_[sourcehash].[sourceextension]
+	 * Only works if processed is set to false.
+	 * @return Unique filename, however it returns null if processed is already set to true as this method should not be used.
+	 */
+	public String createUniqueDBFilename(){
+		if (processed) {
+			IdentiFrog.LOGGER.writeError("Attemped to create unique filename for already processed image!");
+			return null;
+		}
+		return FilenameUtils.getBaseName(sourceFilePath)+"_"+getSourceImageHash()+"."+FilenameUtils.getExtension(sourceFilePath);
+
+	}
 	
 }
