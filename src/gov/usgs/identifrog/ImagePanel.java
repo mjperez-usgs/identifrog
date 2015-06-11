@@ -1,5 +1,6 @@
 package gov.usgs.identifrog;
 
+import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.Frames.ErrorDialog;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
@@ -42,6 +43,8 @@ import java.util.prefs.Preferences;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
+import org.apache.commons.io.FilenameUtils;
+
 /**
  * <p>
  * Title: ImagePanel.java
@@ -56,6 +59,7 @@ import javax.swing.JPanel;
  * @author Oksana V. Kelly 2008
  * @author Oksana V. Kelly used image rotation/alignment by Steven P. Miller from <b>IdentiFrog</b>
  *         <i>2005</i>
+ *         
  */
 
 @SuppressWarnings("serial")
@@ -229,6 +233,8 @@ public class ImagePanel extends JPanel {
 	public ArrayList<SpotFiller> spotFilledCoor = new ArrayList<SpotFiller>();
 	public int filledSpotNumber = 0;
 	
+	private SiteImage siteImage;
+	
 
 	/**
 	 * Constructor for with an image
@@ -238,11 +244,12 @@ public class ImagePanel extends JPanel {
 	 * @param filename
 	 *            name of the image to be manipulated
 	 */
-	public ImagePanel(ImageManipFrame frame, File inputfile) {
+	public ImagePanel(ImageManipFrame frame, SiteImage image) {
 		parentFrame = frame;
-		imageFile = inputfile;
+		siteImage = image;
+		imageFile = new File(image.getSourceFilePath());
 		
-		IdentiFrog.LOGGER.writeMessage("ImagePanel inputfile = " + inputfile.getName());
+		IdentiFrog.LOGGER.writeMessage("ImagePanel inputfile = " + imageFile.getName());
 
 		// initialize control points for two curves
 		firstCurvePoints[0] = new Point2D.Double();
@@ -380,27 +387,21 @@ public class ImagePanel extends JPanel {
 	}
 
 	/**
-	 * Exports, resamples, and renames an image file to a desired matrix size
-	 * 
-	 * @param dir
-	 *            String the file name where the downsampled image is to be exported
-	 * @return String the actual full path of the exported file
+	 * Resamples the dorsal view and saves it in the dorsal folder with the specified filename 
 	 */
-	public String exportDownsampledImage(String dir) {
-		String localFilename = getImageName();
+	public void exportDownsampledImage(String fileName) {
+		
 		// next lines create dor_ image ratioW x 256
 		double ratioH1 = dorImgHeight / image.getHeight();
 		resampleImage(ratioH1 * image.getWidth(), (int) dorImgHeight);
 
-		saveImage(image, dir, getImageName());
-		saveImage(image, XMLFrogDatabase.getDorsalFolder(), localFilename);
+		//saveImage(image, XMLFrogDatabase.getBinaryFolder(), localFilename);
+		saveImage(image, XMLFrogDatabase.getDorsalFolder(), fileName);
 
 		// next 2 lines create thumb nail ratioW x 64
-		double ratioH2 = thumbImgHeight / image.getHeight();
-		resampleImage(ratioH2 * image.getWidth(), thumbImgHeight);
-
-		saveImage(image, XMLFrogDatabase.getThumbnailFolder(), localFilename);
-		return localFilename;
+		//double ratioH2 = thumbImgHeight / image.getHeight();
+		//resampleImage(ratioH2 * image.getWidth(), thumbImgHeight);
+		//saveImage(image, XMLFrogDatabase.getThumbnailFolder(), fileName);
 	}
 
 	/**
@@ -414,7 +415,7 @@ public class ImagePanel extends JPanel {
 		try {
 			ImageIO.write(image, "png", newImageFile);
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			IdentiFrog.LOGGER.writeExceptionWithMessage("Export image failed.", ex);
 		}
 		return newImageFile;
 	}
@@ -688,9 +689,9 @@ public class ImagePanel extends JPanel {
 	// Creates a matrix based on a the raster of the 2D image, then reduces it
 	// by a factor
 	// of <reductionFactorRGB>
-	@SuppressWarnings("unused")
-	public String fillMatrix() {
-		String Path = parentFrame.getParentFrame().node.get("installDir", null);
+	/*public String fillMatrix() {
+		
+		String Path = XMLFrogDatabase.getMainFolder();
 		String fileName = imageFile.getName();
 		try {
 			FileOutputStream out = new FileOutputStream(Path, true);
@@ -707,10 +708,11 @@ public class ImagePanel extends JPanel {
 				}
 				writer.println(); // TESTING
 			}
+			writer.close();
 		} catch (Exception e) {
 		}
 		return Path + File.separator + "tempOutput.txt";
-	}
+	}*/
 
 	// Filtering Operations
 	private void Filter(BufferedImageOp op) {
@@ -1624,30 +1626,26 @@ public class ImagePanel extends JPanel {
 
 	/**
 	 * This method extracts the image name and then appends ".png" to the image name.
-	 * 
-	 * @author Hidayatullah Ahsan 2011
-	 * 
+	 * @author Michael Perez 2015
 	 * @return The <i>proper</i> image name.
 	 */
 	private String getImageName() {
-		String temp = imageFile.getName();
-		int endPlace = temp.indexOf(".");
-		String propername = temp.substring(0, endPlace) + ".png";
-		return propername;
+		String retStr = FilenameUtils.getBaseName(imageFile.getName());
+		return retStr + ".png";
 	}
 
 	/**
-	 * 
-	 * @param image
-	 * @param folder
-	 * @param imageName
+	 * Writes the Rendered image to the specified folder and filename.
+	 * @param image image to write
+	 * @param folder folder to write into
+	 * @param imageName filename to write to
 	 */
 	private void saveImage(RenderedImage image, String folder, String imageName) {
 		try {
 			ImageIO.write(image, "png", new File(folder + imageName));
 		} catch (IOException e) {
 			IdentiFrog.LOGGER.writeMessage("IOException in ImagePanel.saveImage()");
-			IdentiFrog.LOGGER.writeMessage(e.getMessage());
+			IdentiFrog.LOGGER.writeException(e);
 		}
 	}
 
@@ -1658,7 +1656,7 @@ public class ImagePanel extends JPanel {
 	 *            the location where all binary images will be stored
 	 * @return the buffered image
 	 */
-	public BufferedImage saveBinaryImage(String binaryFolder) {
+	public BufferedImage saveBinaryImage(String binaryFolder, String fileName) {
 		// resize to final_rect_width x final_rect_height
 		BufferedImage resizedToStandard = new BufferedImage(final_rect_width, final_rect_height, BufferedImage.TYPE_3BYTE_BGR);
 		Graphics2D g = resizedToStandard.createGraphics();
@@ -1674,7 +1672,7 @@ public class ImagePanel extends JPanel {
 		g1.drawImage(standardRectBinary, 0, 0, small_rect_width, small_rect_height, null);
 		g1.dispose();
 
-		saveImage(binaryImage, binaryFolder, getImageName());
+		saveImage(binaryImage, binaryFolder, fileName);
 
 		// return binaryImage;
 		return resizedToStandard;

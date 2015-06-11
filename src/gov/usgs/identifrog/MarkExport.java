@@ -1,6 +1,7 @@
 package gov.usgs.identifrog;
 
 import gov.usgs.identifrog.DataObjects.Frog;
+import gov.usgs.identifrog.DataObjects.SiteSample;
 
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
@@ -72,8 +73,10 @@ public class MarkExport {
 
 	private static ArrayList<String> getSurveyList(ArrayList<Frog> frogs) {
 		ArrayList<String> list = new ArrayList<String>();
-		for (int i = 0; i < frogs.size(); i++) {
-			list.add(frogs.get(i).getSurveyID());
+		for (Frog frog : frogs) {
+			for (SiteSample sample : frog.getSiteSamples()) {
+				list.add(sample.getSurveyID());
+			}
 		}
 		return list;
 	}

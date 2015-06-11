@@ -47,6 +47,7 @@ public class Frog {
 	}
 
 	public Frog() {
+		siteSamples = new ArrayList<SiteSample>();
 	}
 	
 	/**
@@ -86,7 +87,13 @@ public class Frog {
 		gender.appendChild(document.createTextNode(getGender()));
 		element.appendChild(gender);
 		
+		// CREATE DISCRIMINATOR ELEMENT
+		Element discriminator = document.createElement("discriminator");
+		discriminator.appendChild(document.createTextNode(getDiscriminator()));
+		element.appendChild(discriminator);
+		
 		Element sites = document.createElement("sitesamples");
+		System.out.println("BREAKPOINT");
 		for (SiteSample sample : siteSamples) {
 			sites.appendChild(sample.createElement(document));
 		}
@@ -99,6 +106,7 @@ public class Frog {
 		str += "ID: "+ID+"\n";
 		str += "Gender: "+gender+"\n";
 		str += "Species: "+species+"\n";
+		str += "Discriminator: "+discriminator+"\n";
 		str += "Site Samples: \n";
 		for (SiteSample sample : siteSamples) {
 			str += sample.toString();

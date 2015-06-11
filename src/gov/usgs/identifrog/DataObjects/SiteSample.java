@@ -28,7 +28,6 @@ public class SiteSample {
 	private String dateEntry;
 	private User observer;
 	private User recorder;
-	private String discriminator;
 	private String comments;
 	private Location location;
 	private ArrayList<SiteImage> siteImages;
@@ -81,10 +80,6 @@ public class SiteSample {
 		recorderElem.setTextContent(Integer.toString(recorder.getID()));
 		observerElem.setTextContent(Integer.toString(observer.getID()));
 		
-		// CREATE DISCRIMINATOR ELEMENT
-		Element discriminator = document.createElement("discriminator");
-		discriminator.appendChild(document.createTextNode(getDiscriminator()));
-
 		// CREATE COMMENTS ELEMENT
 		Element comments = document.createElement("comments");
 		comments.appendChild(document.createTextNode(getComments()));
@@ -99,7 +94,6 @@ public class SiteSample {
 		element.appendChild(surveyid);
 		element.appendChild(comments);
 		element.appendChild(recorderElem);
-		element.appendChild(discriminator);
 		element.appendChild(elementLocation.getElement());
 		element.appendChild(biometrics);
 		element.appendChild(date);
@@ -186,14 +180,6 @@ public class SiteSample {
 		this.recorder = recorder;
 	}
 
-	public String getDiscriminator() {
-		return discriminator;
-	}
-
-	public void setDiscriminator(String discriminator) {
-		this.discriminator = discriminator;
-	}
-
 	public String getComments() {
 		return comments;
 	}
@@ -240,7 +226,6 @@ public class SiteSample {
 		str += "--Observer: ("+observer.getID()+")"+observer.getName()+"\n";
 		str += "--Mass: "+mass+"\n";
 		str += "--Length: "+mass+"\n";
-		str += "--Discriminator: "+discriminator+"\n";
 		str += "--Comments: "+comments+"\n";
 		str += "--Location: \n";
 		str += location;

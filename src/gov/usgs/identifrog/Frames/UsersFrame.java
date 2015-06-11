@@ -154,15 +154,15 @@ public class UsersFrame extends JDialog implements ActionListener {
 				// TODO Auto-generated method stub
 				if (checkIsObserver.isSelected()) {
 					User user = new User();
-					user.setFirstName(fName.getText());
-					user.setLastName(lName.getText());
+					user.setFirstName(fName.getText().trim());
+					user.setLastName(lName.getText().trim());
 					user.setID(XMLFrogDatabase.getNextAvailableObserverID());
 					observerModel.addElement(user);
 				}
 				if (checkIsRecorder.isSelected()) {
 					User user = new User();
-					user.setFirstName(fName.getText());
-					user.setLastName(lName.getText());
+					user.setFirstName(fName.getText().trim());
+					user.setLastName(lName.getText().trim());
 					user.setID(XMLFrogDatabase.getNextAvailableRecorderID());
 					recorderModel.addElement(user);
 				}

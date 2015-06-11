@@ -46,17 +46,14 @@ public class FrogEditorImageRenderer extends JPanel implements ListCellRenderer<
         }
     	
     	ImageIcon icon = null;
-    	if (image.isProcessed()) {
-    		//load thumbnail file
-    		icon = new ImageIcon(XMLFrogDatabase.getImagesFolder()+image.getImageFileName());
-    	} else {
-    		if (image.isSignatureGenerated()) {
-    			icon = new ImageIcon(image.getSourceFileThumbnail());
-    		} else {
-    			//grey
-        		icon = new ImageIcon(image.getGreyScaleThumbnail());
-    		}
-    	}
+
+		if (image.isSignatureGenerated()) {
+			//signature images have been processed already
+			icon = new ImageIcon(image.getColorThumbnail());
+		} else {
+    		//grey
+    		icon = new ImageIcon(image.getGreyScaleThumbnail());
+		}
     	cellImage.setIcon(icon);
     	if (image.isProcessed()) {
     		cellLabel.setText("Signature Created");

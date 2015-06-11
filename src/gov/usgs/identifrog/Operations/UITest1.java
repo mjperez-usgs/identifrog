@@ -43,8 +43,6 @@ public class UITest1 extends JFrame {
 	 * Sets up the user interface.
 	 */
 	public void init(){
-		
-		
 		JPanel cardPanel = new JPanel(new BorderLayout());
 		JLabel image = new JLabel();
 		image.setIcon(new ImageIcon(createListThumbnail()));

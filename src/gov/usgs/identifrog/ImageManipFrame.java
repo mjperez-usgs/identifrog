@@ -1,8 +1,8 @@
 package gov.usgs.identifrog;
 
-import gov.usgs.identifrog.DataObjects.Frog;
+import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.Frames.ErrorDialog;
-import gov.usgs.identifrog.Frames.MainFrame;
+import gov.usgs.identifrog.Frames.FrogEditor;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 import java.awt.BorderLayout;
@@ -23,16 +23,14 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.prefs.Preferences;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JFrame;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -56,13 +54,13 @@ import javax.swing.event.ChangeListener;
  *         <i>2005</i>
  */
 @SuppressWarnings("serial")
-public class ImageManipFrame extends JFrame {
+public class ImageManipFrame extends JDialog {
 	private Preferences root = Preferences.userRoot();
 	@SuppressWarnings("unused")
 	private final Preferences node = root.node("edu/isu/aadis/defaults");
 	public String installDir;
 	private SliderListener listener = new SliderListener();
-	private BorderLayout borderLayout1 = new BorderLayout();
+	//private BorderLayout borderLayout1 = new BorderLayout();
 	private Image icon = Toolkit.getDefaultToolkit().getImage("/resources/IconFrog.png");
 	private ImagePanel imagePanel;
 	private FillSpot fillSpot;
@@ -90,8 +88,8 @@ public class ImageManipFrame extends JFrame {
 	private JButton butNext = new JButton();
 	// extract shape 1-14-09
 	private JButton butExtract = new JButton();
-	private BorderLayout borderLayout2 = new BorderLayout();
-	private JMenuBar jMenuBar1 = new JMenuBar();
+	//private BorderLayout borderLayout2 = new BorderLayout();
+	//private JMenuBar jMenuBar1 = new JMenuBar();
 	private JMenu menuFile = new JMenu();
 	private JMenu menuEdit = new JMenu();
 	private JMenuItem MenuItemUndo = new JMenuItem();
@@ -99,8 +97,8 @@ public class ImageManipFrame extends JFrame {
 	public int step = 0;
 	private boolean changeMade = false;
 	private JButton butEraser = new JButton();
-	private MainFrame parentFrame;
-	private File Image;
+	private FrogEditor parentFrame;
+	private SiteImage image;
 	// Threshold Slider from Identifrog to dust an image
 	private JSlider SliderThreshold = new JSlider();
 	// Sliders for Spot extraction: Canny edge detection and dilation
@@ -144,55 +142,42 @@ public class ImageManipFrame extends JFrame {
 	private JTextField TextFieldNoise_radius = new JTextField();
 	@SuppressWarnings("unused")
 	private boolean noise_radius_active = false;
-	@SuppressWarnings("unused")
 	private boolean searchDB; // this is currently unutilized
-	@SuppressWarnings("unused")
-	private int DbId = -1;
+//	private int DbId = -1;
 	JButton butDustFrame = new JButton();
 	FlowLayout flowLayout1 = new FlowLayout();
 	private Color sliderToolBoxColor = new Color(224, 223, 227);
 	public int imageInEllipse_width = 0;
 	public int imageInEllipse_heigth = 0;
 	
-
 	/**
-	 * Frame Constructor
-	 * 
+	 * Creates a new Digital Signature Window using the specified parent and SiteImage.
 	 * @param parent
-	 *            MainFrame the parent (or calling) Frame
 	 * @param imageFile
-	 *            File The .jpg or .png image that will be manipulated
-	 * @param frogId
-	 *            int The Database ID that uniquely identifies the frog
 	 */
-	public ImageManipFrame(MainFrame parent, File imageFile, int db_id) {
+	public ImageManipFrame(FrogEditor parent, SiteImage image) {
 		parentFrame = parent;
-		Image = imageFile;
-		DbId = db_id;
+		this.image = image;
+		//DbId = db_id;
 		parentFrame.setCursor(new Cursor(Cursor.WAIT_CURSOR));
 		try {
 			init();
 		} catch (Exception e) {
-			IdentiFrog.LOGGER.writeMessage("ImageManipFrame.ImageManipFrame() Exception");
-			IdentiFrog.LOGGER.writeException(e);
+			IdentiFrog.LOGGER.writeExceptionWithMessage("ImageManipFrame failed init()",e);
 		}
 		parentFrame.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 	}
 
 	// graphical user interface initialization
 	private void init() throws Exception {
-		if (true) {
-			JOptionPane.showMessageDialog(null, "This feature is currently disabled.", "Feature disabled", JOptionPane.ERROR_MESSAGE);
-			return;
-		} 
-		
+		setModal(true);
 		installDir = XMLFrogDatabase.getMainFolder();
 		setIconImage(icon);
-		setJMenuBar(jMenuBar1);
-		imagePanel = new ImagePanel(ImageManipFrame.this, Image);
+		//setJMenuBar(jMenuBar1);
+		imagePanel = new ImagePanel(ImageManipFrame.this, image);
 		digSignature = new DigSignature();
-		getContentPane().setLayout(borderLayout1);
-		panelStatus.setLayout(borderLayout2);
+		getContentPane().setLayout(new BorderLayout());
+		panelStatus.setLayout(new BorderLayout());
 		panelStatus.setFont(new java.awt.Font("MS Sans Serif", 0, 14)); // 11
 		panelStatus.setPreferredSize(new Dimension(44, 55)); // 35
 		butClearImage.setPreferredSize(new Dimension(90, 28));
@@ -200,23 +185,23 @@ public class ImageManipFrame extends JFrame {
 		butClearImage.addActionListener(new ImageManipFrame_butClearImage_actionAdapter(this));
 		butPencil.setPreferredSize(new Dimension(41, 41));
 		butPencil.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconPencil32.png")));
-		butPencil.setText("");// Pencil
+		//butPencil.setText("");// Pencil
 		butPencil.setToolTipText("Pencil");
 		butPencil.addActionListener(new ImageManipFrame_butPencil_actionAdapter(this));
 		butUndoPencil.setPreferredSize(new Dimension(41, 41));
 		butUndoPencil.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconUndo32.png")));
-		butUndoPencil.setText("");
+		//butUndoPencil.setText("");
 		butUndoPencil.addActionListener(new ImageManipFrame_butUndoPencil_actionAdapter(this));
 		butUndoPencil.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 		butUndoPencil.setToolTipText("Erase Pencil");
 		butFillSpot.setPreferredSize(new Dimension(41, 41));
 		butFillSpot.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconFill32.png")));
-		butFillSpot.setText("");
+		//butFillSpot.setText("");
 		butFillSpot.setToolTipText("Spot Filler");
 		butFillSpot.addActionListener(new ImageManipFrame_butFillSpot_actionAdapter(this));
 		butUndoFillSpot.setPreferredSize(new Dimension(41, 41));
 		butUndoFillSpot.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconUndo32.png")));
-		butUndoFillSpot.setText("");
+		//butUndoFillSpot.setText("");
 		butUndoFillSpot.setToolTipText("Clear All");
 		butUndoFillSpot.addActionListener(new ImageManipFrame_butUndoFillSpot_actionAdapter(this));
 		TextAreaStep.setFont(new java.awt.Font("SansSerif", Font.BOLD, 14));
@@ -249,7 +234,7 @@ public class ImageManipFrame extends JFrame {
 		butStartOver.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconRestart32.png")));
 		butStartOver.setText("Restart");
 		butStartOver.addActionListener(new ImageManipFrame_butStartOver_actionAdapter(this));
-		butQuit.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconCancel32.png")));
+		butQuit.setIcon(new ImageIcon(ImageManipFrame.class.getResource("/resources/IconCancel32.png")));
 		butQuit.setText("Quit");
 		butQuit.addActionListener(new ImageManipFrame_butQuit_actionAdapter(this));
 		butBack.setEnabled(false);
@@ -277,7 +262,7 @@ public class ImageManipFrame extends JFrame {
 		MenuItemExit.setText("Exit");
 		butEraser.setText("Eraser");
 		butEraser.setPreferredSize(new Dimension(107, 33));
-		butEraser.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconBlank32.png")));
+		butEraser.setIcon(new ImageIcon(ImageManipFrame.class.getResource("/resources/IconBlank32.png")));
 		butEraser.addActionListener(new ImageManipFrame_butEraser_actionAdapter(this));
 		SliderThreshold.setOrientation(JSlider.VERTICAL);
 		SliderThreshold.setMajorTickSpacing(1000);
@@ -587,12 +572,13 @@ public class ImageManipFrame extends JFrame {
 	// Quit button pressed
 	protected void butQuit_actionPerformed(ActionEvent e) {
 		// DBdeletefrog dbDeletefrog = new DBdeletefrog(DbId);
-		System.gc(); // Garbage Collector
-		ArrayList<Frog> localFrogs = XMLFrogDatabase.getFrogs();
-		localFrogs.remove(localFrogs.size() - 1);
+		//System.gc(); // Garbage Collector
+		//ArrayList<Frog> localFrogs = XMLFrogDatabase.getFrogs();
+		//localFrogs.remove(localFrogs.size() - 1);
 		//parentFrame.getFrogData().setFrogs(localFrogs);
-		IdentiFrog.LOGGER.writeError("Passed a setFrogs() in butQuit ImageManipFrame. Possible side effects with the quit method...");
-		parentFrame.updateCells();
+		IdentiFrog.LOGGER.writeError("Quitting the Signature Generation tool");
+		this.image = null;
+		//parentFrame.updateCells();
 		// XMLHandler file = new XMLHandler(new File(FolderHandler.getFileNamePath()),
 		// parentFrame.getFrogData().getFrogs());
 		// file.WriteXMLFile();
@@ -700,7 +686,9 @@ public class ImageManipFrame extends JFrame {
 		MenuItemUndo.setEnabled(undoOn);
 	}
 
-	// Clean up feature
+	/**
+	 * Deletes all temp files, removes all interface elements and then cleans up memory.
+	 */
 	private void closeAction() {
 		imagePanel.deleteTempFiles();
 		imagePanel.removeAll();
@@ -740,44 +728,37 @@ public class ImageManipFrame extends JFrame {
 				imagePanel.setTwoEyeClicks(false);
 				imagePanel.setRidgeRect(false);
 				butStartOver.setEnabled(true);
+				butNext.setText("Save");
 				// imagePanel.setNoise_slider_Active(false);
-				IdentiFrog.LOGGER.writeMessage("case 1 before next " + step);
 				increaseStep();
-				IdentiFrog.LOGGER.writeMessage("case 1 after next " + step);
 				imagePanel.newOperationStep();
 				imagePanel.repaint();
 				break;
 			case 2:// when final Next button pressed
 				// binaryImage 256x128 is used to create signature
-				parentFrame.setChangesMade(true);
-				String imageName1 = imagePanel.exportDownsampledImage(XMLFrogDatabase.getBinaryFolder());
-				BufferedImage binaryImage = imagePanel.saveBinaryImage(XMLFrogDatabase.getBinaryFolder());
+				//parentFrame.setChangesMade(true);
+				image.generateHash();
+				String fileName = image.isProcessed() ? image.getImageFileName() : image.createUniqueDBFilename();
+				imagePanel.exportDownsampledImage(fileName);
+				BufferedImage binaryImage = imagePanel.saveBinaryImage(XMLFrogDatabase.getBinaryFolder(),fileName);
 
-				String sigFileLocarion = XMLFrogDatabase.getSignaturesFolder() + imageName1;
-				String binaryImageLocation = XMLFrogDatabase.getBinaryFolder() + imageName1;
-				IdentiFrog.LOGGER.writeMessage("imageName1 " + imageName1);
-				IdentiFrog.LOGGER.writeMessage("sigFileLocation " + sigFileLocarion);
-				IdentiFrog.LOGGER.writeMessage("binaryImageLocation " + binaryImageLocation);
-
-				if (binaryImageLocation != null) {
-					if (binaryImage != null) {
-						digSignature.makeSignature(binaryImage, sigFileLocarion);
-						DigSigThread digSigThread = new DigSigThread(new File(sigFileLocarion));
-						digSigThread.start();
-					} else {
-						new ErrorDialog("Could not obtain binary image");
-					}
+				String sigFileLocation = XMLFrogDatabase.getSignaturesFolder() + fileName;
+				if (binaryImage != null) {
+					digSignature.makeSignature(binaryImage, sigFileLocation);
+					DigSigThread digSigThread = new DigSigThread(new File(sigFileLocation));
+					digSigThread.start();
 				} else {
-					new ErrorDialog("Could not create digital signature");
+					IdentiFrog.LOGGER.writeError("Could not obtain binary image, variable was null (in case 2)");
+					new ErrorDialog("Could not obtain binary image");
 				}
 				// ///////////////////////////////////////////////////////////////////////////////////
-				parentFrame.updateCells();
+				//parentFrame.updateCells();
 				//XMLFrogDatabase.getFrogs().get(XMLFrogDatabase.getFrogs().size() - 1).setPathImage(imageName1);
-				IdentiFrog.LOGGER.writeMessage(XMLFrogDatabase.getFrogs().size());
-				XMLFrogDatabase.writeXMLFile();
-				parentFrame.updateCells(0, false);
+				////IdentiFrog.LOGGER.writeMessage(XMLFrogDatabase.getFrogs().size());
+				//XMLFrogDatabase.writeXMLFile();
+				image.processImageIntoDB();
+				image.setSignatureGenerated(true);
 				closeAction();
-
 				break;
 		}
 	}
@@ -817,12 +798,13 @@ public class ImageManipFrame extends JFrame {
 				imagePanel.setFillSpotOn(false);
 				imagePanel.setUndoPencilOn(false);
 				imagePanel.setUndoFillSpotOn(false);
-				IdentiFrog.LOGGER.writeMessage("case 1 before back " + step);
+				butNext.setText("Next");
+				//IdentiFrog.LOGGER.writeMessage("case 1 before back " + step);
 				decreaseStep();
-				IdentiFrog.LOGGER.writeMessage("case 1 afer back " + step);
+				//IdentiFrog.LOGGER.writeMessage("case 1 afer back " + step);
 				break;
 			case 2: // from binary fingerprint creation back to clicking on the frog's eyes
-				IdentiFrog.LOGGER.writeMessage("back case 2");
+				//IdentiFrog.LOGGER.writeMessage("back case 2");
 				ExamplePanelContainer.setVisible(true);
 				inPanelToolsInstructions.setVisible(false);
 				ExampleVent.setVisible(false);
@@ -852,10 +834,11 @@ public class ImageManipFrame extends JFrame {
 				imagePanel.spotFilledCoor.clear();
 				butBack.setEnabled(true);
 				butNext.setEnabled(false);
+				butNext.setText("Next");
 				butStartOver.setEnabled(true);
-				IdentiFrog.LOGGER.writeMessage("case 2 before back " + step);
+				//IdentiFrog.LOGGER.writeMessage("case 2 before back " + step);
 				decreaseStep();
-				IdentiFrog.LOGGER.writeMessage("case 2 afer back " + step);
+				//IdentiFrog.LOGGER.writeMessage("case 2 afer back " + step);
 				imagePanel.backOperationStep();
 				imagePanel.deleteTempFiles();
 				imagePanel.repaint();
@@ -886,7 +869,7 @@ public class ImageManipFrame extends JFrame {
 	public void increaseStep() {
 		changeMade = false;
 		step++;
-		IdentiFrog.LOGGER.writeMessage("incr step " + step);
+		//IdentiFrog.LOGGER.writeMessage("incr step " + step);
 	}
 
 	// Decraments to the previous step
@@ -1016,6 +999,7 @@ public class ImageManipFrame extends JFrame {
 				imagePanel.repaint();
 			} catch (InterruptedException ignore) {
 			} catch (ExecutionException ex) {
+				IdentiFrog.LOGGER.writeException(ex);
 				System.err.println("Error encountered while performing calculation.");
 			}
 		}
@@ -1070,6 +1054,7 @@ public class ImageManipFrame extends JFrame {
 				imagePanel.setThreshold_edges(c);
 			}
 		} catch (Exception ex) {
+			IdentiFrog.LOGGER.writeException(ex);
 			TextFieldThreshold_edges.setText("" + c);
 			new ErrorDialog("Invalid Entry, Must be an integer between 1 - 300");
 		}
@@ -1102,6 +1087,7 @@ public class ImageManipFrame extends JFrame {
 				imagePanel.setNoise_radius(w);
 			}
 		} catch (Exception ex) {
+			IdentiFrog.LOGGER.writeException(ex);
 			TextFieldNoise_radius.setText("" + w);
 			new ErrorDialog("Invalid Entry, Must be an integer between 0 - 100");
 		}
@@ -1127,11 +1113,11 @@ public class ImageManipFrame extends JFrame {
 		return butEraser.getText();
 	}
 
-	public File getImage() {
-		return Image;
+	public SiteImage getImage() {
+		return image;
 	}
 
-	public MainFrame getParentFrame() {
+	public FrogEditor getParentFrame() {
 		return parentFrame;
 	}
 

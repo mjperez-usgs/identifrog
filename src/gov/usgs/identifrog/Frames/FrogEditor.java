@@ -4,6 +4,7 @@ import gov.usgs.identifrog.ChoiceDialog;
 import gov.usgs.identifrog.DialogImageFileChooser;
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.ImageManipFrame;
+import gov.usgs.identifrog.WorkingAreaPanel;
 import gov.usgs.identifrog.DataObjects.DateLabelFormatter;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
@@ -26,6 +27,7 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -55,12 +57,15 @@ import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -128,7 +133,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	protected int maxobsdbid = 0;
 	protected int maxlocdbid = 0;
 	protected int maxentrypersondbid = 0;
-	protected File image;
 	protected ImageManipFrame iFrame;
 	private String nextAvailFrogId;
 	private String thumbnailFilename;
@@ -153,7 +157,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	public FrogEditor(MainFrame frame, String title, File image) {
 		super((Frame) frame, title, true); //make modal (true)
 		IdentiFrog.LOGGER.writeMessage("Opening FrogEditor's NEW FROG frog editor");
-		this.image = image;
 		parentFrame = frame;
 
 		try {
@@ -162,7 +165,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			simage.setProcessed(false);
 			simage.setSourceFilePath(image.getAbsolutePath());
 			//generate thumbnail in memory
-			simage = createListThumbnail(simage);
+			simage.createListThumbnail();
 			images.add(simage);
 			init();
 			frogID = XMLFrogDatabase.getNextAvailableFrogID();
@@ -255,6 +258,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JList<SiteImage> imageList = new JList<SiteImage>();
 	DefaultListModel<SiteImage> listModel = new DefaultListModel<SiteImage>();
 	JButton butFillPreviousFrogInfo = new JButton();
+	JButton butEditDiscriminators = new JButton();
 	JButton butDebugPopulate = new JButton();
 	JLabel labEntryPersonTitle = new JLabel();
 	JLabel labObserverTitle = new JLabel();
@@ -361,7 +365,40 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		imageList.addListSelectionListener(this);
 		imageList.setFont(new Font("Arial", Font.BOLD, 35));
 		imageList.setCellRenderer(new FrogEditorImageRenderer());
-
+		imageList.addMouseListener(new java.awt.event.MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (SwingUtilities.isRightMouseButton(e)) {
+			           //-- select a row
+			           int idx = imageList.locationToIndex(e.getPoint());
+			           SiteImage img = imageList.getModel().getElementAt(idx);
+			           imageList.setSelectedIndex(idx);
+			            //codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
+			            JPopupMenu popup = new JPopupMenu();
+						JMenuItem popupGenerateSignature;
+						popupGenerateSignature = new JMenuItem();
+						if (img.isSignatureGenerated()) {
+							popupGenerateSignature.setEnabled(false);
+							popupGenerateSignature.setText("Signature already generated");
+						} else {
+							popupGenerateSignature.setEnabled(true);
+							popupGenerateSignature.setText("Create signature");
+						}
+						popupGenerateSignature.addActionListener(new ActionListener() {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								IdentiFrog.LOGGER.writeMessage("User generating signature for siteimage "+img);
+								SiteImage newImg = openDigSigFrame(img);
+								IdentiFrog.LOGGER.writeMessage("Continuing execution of FrogEditor. Signature Generator has closed.");
+								newImg.createListThumbnail();
+								listModel.set(idx,newImg); //update the SiteImage object.
+							}
+						});
+						
+						popup.add(popupGenerateSignature);
+			            popup.show(e.getComponent(), e.getX(), e.getY());
+			       }
+			    }
+		});
 		//Data
 		nextAvailFrogId = Integer.toString(XMLFrogDatabase.getNextAvailableFrogID());
 		ArrayList<User> observers = XMLFrogDatabase.getObservers();
@@ -448,18 +485,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				butFillPreviousFrogInfo_actionPerformed(e);
 			}
 		});
-		//Debugging button
-		butDebugPopulate.setText("Debug: Autopopulate");
-		butDebugPopulate.setVisible(false);
-		butDebugPopulate.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconDebug32.png")));
-		butDebugPopulate.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				butDebugAutopopulate_actionPerformed(e);
-			}
-		});
-		if (IdentiFrog.DEBUGGING_BUILD) {
-			butDebugPopulate.setVisible(true);
-		}
 
 		//Manage Users
 		ImageIcon imageUser = new ImageIcon(FrogEditor.class.getResource("/resources/IconUser32.png"));
@@ -473,6 +498,29 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				openUsersWindow();
 			}
 		});
+		
+		//Manage Discriminators
+		butEditDiscriminators.setText("Edit Discriminators");
+		butEditDiscriminators.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconDiscriminator32.png")));
+		butEditDiscriminators.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				openDiscriminatorsWindow();
+			}
+		});
+
+		
+		//Debugging button
+		butDebugPopulate.setText("Debug: Autopopulate");
+		butDebugPopulate.setVisible(false);
+		butDebugPopulate.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconDebug32.png")));
+		butDebugPopulate.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				butDebugAutopopulate_actionPerformed(e);
+			}
+		});
+		if (IdentiFrog.DEBUGGING_BUILD) {
+			butDebugPopulate.setVisible(true);
+		}
 
 		Insets leftSpaceInsets = new Insets(0, 10, 0, 0);
 		Insets noInsets = new Insets(0, 0, 0, 0);
@@ -696,6 +744,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		panelTopButtons.add(butFillPreviousFrogInfo);
 		panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
 		panelTopButtons.add(usersButton);
+		panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
+		panelTopButtons.add(butEditDiscriminators);
 		if (IdentiFrog.DEBUGGING_BUILD) {
 			panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
 			panelTopButtons.add(butDebugPopulate);
@@ -795,6 +845,34 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		setMinimumSize(new Dimension(650, 640));
 		setPreferredSize(new Dimension(650, 640));
 		pack();
+	}
+
+	/**
+	 * Opens the Discriminators Management window and stalls execution of this thread until completed
+	 */
+	protected void openDiscriminatorsWindow() {
+		// Keep user selection so when refresh we can set the proper one
+		//TODO - get list of selected discriminators
+		
+		DiscriminatorFrame dFrame = new DiscriminatorFrame(this);
+		dFrame.setVisible(true);
+		
+		//Reload
+		/*observerListModel.removeAllElements();
+		for (User user : XMLFrogDatabase.getObservers()) {
+			observerListModel.addElement(user);
+		}
+		for (User user : XMLFrogDatabase.getRecorders()) {
+			recorderListModel.addElement(user);
+		}
+		
+		//Restore existing selection if it exists
+		if (observerListModel.getIndexOf(obsUser) >= 0){
+			comboObserver.setSelectedIndex(observerListModel.getIndexOf(obsUser));
+		}
+		if (recorderListModel.getIndexOf(recUser) >= 0){
+			comboRecorder.setSelectedIndex(recorderListModel.getIndexOf(recUser));
+		}*/
 	}
 
 	/**
@@ -1060,16 +1138,10 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		if (validateData()) {
 			Date eDate = (Date) entryDatePicker.getModel().getValue();
 			entrydate = df.format(eDate);
-			/*
-			 * entryLastName = (String) comboEntryLastName.getSelectedItem();
-			 * entryFirstName = (String) comboEntryFirstName.getSelectedItem();
-			 * obsLastName = (String) comboObserverLastName.getSelectedItem();
-			 * obsFirstName = (String) comboObserverFirstName.getSelectedItem();
-			 */
-			//frogID = textFrog_ID.getText().trim();
 			species = textSpecies.getText().trim();
 			gender = (String) sexComboBox.getSelectedItem();
 			// Additional Discriminator
+			String discriminator = (checkAdditionalDescriptor.isSelected()) ? "true": "false";
 			//int m = monthComboBox.getSelectedIndex() + 1;
 			capturedate = df.format(captureDatePicker.getModel().getValue());
 
@@ -1109,7 +1181,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			User selectedRec = (User) comboRecorder.getSelectedItem();
 			firstSample.setRecorder(XMLFrogDatabase.getRecorderByID(selectedRec.getID())); //we use IDs instead of assigning values because 
 			firstSample.setObserver(XMLFrogDatabase.getObserverByID(selectedObs.getID())); //these may be out of sync with the XML database (say a user fools with the file in the background)
-			firstSample.setDiscriminator((checkAdditionalDescriptor.isSelected()) ? "true": "false");
 			firstSample.setComments(comments);
 			firstSample.setLocation(lc);
 			
@@ -1124,82 +1195,19 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					if (img.getSourceImageHash() == null) {
 						img.generateHash();
 					}
-					//copy image to Images/ if it doesn't already exist
-					String imgFolder = XMLFrogDatabase.getImagesFolder();
-					String uniqueFname = img.createUniqueDBFilename();
-					File uniqueFile = new File(imgFolder+uniqueFname);
-					if (!uniqueFile.exists()){
-						try {
-							FileUtils.copyFile(new File(img.getSourceFilePath()), uniqueFile);
-						} catch (IOException e1) {
-							IdentiFrog.LOGGER.writeExceptionWithMessage("Failed to copy new image to images/: "+uniqueFile.toString(), e1);
-						}
-					}
-					img.setImageFileName(uniqueFname);
+					img.processImageIntoDB();
+					
 				}
 				images.add(img);
 			}
 			firstSample.setSiteImages(images);
 
 			Frog f = new Frog(frogID, species, gender, firstSample);
-			if (frog != null) {
-				this.frog = f;
-				//it's in edit mode
-			} else {
-				//it's in add mode
-				IdentiFrog.LOGGER.writeMessage("FrogEditor is closing in new-frog mode, assigning frog to return method...");
-				//frogData.getFrogs().add(f);
-				//parentFrame.setFrogData(frogData);
-				this.frog = f;
-				//setLastValues();
-				/*
-				node.put("lastEntryLastName", f.getRecorder().getLastName());
-				//node.put("lastFormerID", f.getFormerID());
-				node.put("lastEntryFirstName", f.getRecorder().getFirstName());
-				node.put("lastObserverLastName", f.getObserver().getLastName());
-				node.put("lastObserverFirstName", f.getObserver().getFirstName());
-				node.put("lastFrog_ID", Integer.toString(f.getID()));
-				node.put("lastSurveyID", f.getSurveyID());
-				node.put("lastSpecies", f.getSpecies());
-				node.put("lastSex", f.getGender());
-				String dateCapture = f.getDateCapture();
-				node.put("lastCapday", (String) dateCapture.subSequence(dateCapture.lastIndexOf('-'), dateCapture.length()));
-				node.put("lastCapmonth", (String) dateCapture.subSequence(dateCapture.indexOf('-'), dateCapture.lastIndexOf('-')));
-				node.put("lastCapyear", (String) dateCapture.subSequence(0, dateCapture.indexOf('-')));
-				node.put("lastMass", f.getMass());
-				node.put("lastLength", f.getLength());
-				node.put("lastFrogComments", f.getComments());
-				node.put("lastLocationName", f.getLocation().getName());
-				if (f.getLocation().getDescription() != null) {
-					node.put("lastLocationDesc", f.getLocation().getDescription());
-				} else {
-					node.put("lastLocationDesc", "");
-				}
-				node.put("lastDiscriminator", f.getDiscriminator());
-				if (f.getLocation().getCoordinateType() != null) {
-					node.put("lastX", f.getLocation().getLongitude());
-					node.put("lastY", f.getLocation().getLatitude());
-					node.put("lastDatum", f.getLocation().getDatum());
-					if (f.getLocation().getCoordinateType().equals("Lat/Long")) {
-						node.put("lastLatLong", "true");
-						node.put("lastUTM", "false");
-						node.put("lastZone", "");
-					} else if (f.getLocation().getCoordinateType().equals("UTM")) {
-						node.put("lastLatLong", "false");
-						node.put("lastUTM", "true");
-						node.put("lastZone", f.getLocation().getZone());
-					}
-				} else {
-					node.put("lastX", "");
-					node.put("lastY", "");
-					node.put("lastDatum", "");
-					node.put("lastLatLong", "false");
-					node.put("lastUTM", "false");
-					node.put("lastZone", "");
-				}*/
-			}
+			f.setDiscriminator(discriminator);
+			IdentiFrog.LOGGER.writeMessage("FrogEditor is closing, assigning new/modified frog to return method...");
+			this.frog = f;
 			// close dialog
-			new UITest1(frog).setVisible(true);
+			//new UITest1(frog).setVisible(true);
 			dispose();
 			//openDigSigFrame(maxfrogdbid);
 		}
@@ -1214,9 +1222,9 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	 * 
 	 * @param frogdbid
 	 */
-	private void openDigSigFrame(int frogdbid) {
+	private SiteImage openDigSigFrame(SiteImage image) {
 		IdentiFrog.LOGGER.writeMessage("Opening signature generation tool... This shouldn't work yet...");
-		iFrame = new ImageManipFrame(parentFrame, image, frogdbid);
+		iFrame = new ImageManipFrame(this, image);
 		iFrame.setTitle("Signature Creation");
 		iFrame.pack();
 		// Signature Creation Window
@@ -1227,6 +1235,12 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		iFrame.setSize(fwt, fht);
 		iFrame.setLocation(0, 0);
 		iFrame.setVisible(true);
+		SiteImage modifiedImg = iFrame.getImage();
+		if (modifiedImg != null) {
+			//if its not modified, we just return the same image object
+			image = modifiedImg;
+		}
+		return image;
 	}
 
 	void butClearAll_actionPerformed(ActionEvent e) {
@@ -1331,38 +1345,10 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			image.setSourceFilePath(imageChooser.getName());
 			image.setProcessed(false);
 			//TODO - check for duplicates
-
-			return createListThumbnail(image);
-		}
-		return null;
-	}
-
-	/**
-	 * Creates a thumbnail for viewing in the left hand side of the FrogEditor
-	 * window. Will load greyscale if necessary.
-	 * 
-	 * @param image
-	 *            SiteImage to create thumbnail for
-	 * @return Modified image with laoded thumbnails
-	 */
-	public SiteImage createListThumbnail(SiteImage image) {
-		IdentiFrog.LOGGER.writeMessage("Generating list thumbnail for " + image);
-		BufferedImage src;
-		try {
-			if (image.isProcessed()) {
-				src = ImageIO.read(new File(XMLFrogDatabase.getThumbnailFolder() + image.getImageFileName()));
-			} else {
-				src = ImageIO.read(new File(image.getSourceFilePath()));
-			}
-			BufferedImage thumbnail = Scalr.resize(src, Scalr.Method.SPEED, Scalr.Mode.FIT_TO_WIDTH, 100, 75, Scalr.OP_ANTIALIAS);
-			image.setSourceFileThumbnail(thumbnail);
-			if (!image.isSignatureGenerated()) {
-				image.generateGreyscaleImage();
-			}
+			image.createListThumbnail();
 			return image;
-		} catch (IOException e) {
-			IdentiFrog.LOGGER.writeExceptionWithMessage("Unable to generate thumbnail for image (in memory): " + image.toString(), e);
 		}
 		return null;
 	}
+
 }

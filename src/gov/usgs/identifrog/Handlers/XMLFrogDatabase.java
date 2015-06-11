@@ -1,6 +1,7 @@
 package gov.usgs.identifrog.Handlers;
 
 import gov.usgs.identifrog.IdentiFrog;
+import gov.usgs.identifrog.DataObjects.Discriminator;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
 import gov.usgs.identifrog.DataObjects.SiteImage;
@@ -46,10 +47,13 @@ import org.xml.sax.SAXException;
  *
  */
 public class XMLFrogDatabase {
-	private static boolean LOADED = false;
+	private static boolean USERS_LOADED = false;
+	private static boolean FULLY_LOADED = false;
 	private static File dbfile;
 	private static ArrayList<Frog> frogs = new ArrayList<Frog>();
 	private static ArrayList<User> recorders, observers;
+	private static ArrayList<Discriminator> discriminators;
+	private static boolean DISCRIMINATORS_LOADED = false;
 
 	/*
 	 * public XMLFrogDatabase() { XMLFrogDatabase.frogs = new ArrayList<Frog>();
@@ -154,6 +158,7 @@ public class XMLFrogDatabase {
 			frogsElement.appendChild(frog.createDBElement(doc));
 		}
 		
+		
 		Element users = doc.createElement("users");
 		IdentiFrog.LOGGER.writeMessage("Preparing users for writing");
 		Element recordersElement = doc.createElement("recorders");
@@ -170,11 +175,20 @@ public class XMLFrogDatabase {
 		users.appendChild(observersElement);
 		
 		root.appendChild(users);
+		
+		//Discriminators
+		IdentiFrog.LOGGER.writeMessage("Preparing discriminators for writing");
+		Element discrimsElement = doc.createElement("discriminators");
 
-		System.out.println("Dumping frogs tostrg");
+		for (Discriminator discriminator : discriminators) {
+			discrimsElement.appendChild(discriminator.createElement(doc));
+		}
+		root.appendChild(discrimsElement);
+		
+/*		System.out.println("Dumping frogs tostrg");
 		for (Frog frog : frogs) {
 			System.out.println(frog);
-		}
+		}*/
 		
 		// WRITE XML FILE
 		TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -204,10 +218,12 @@ public class XMLFrogDatabase {
 	 */
 	public static void loadXMLFile() {
 		IdentiFrog.LOGGER.writeMessage("Loading XML DB: " + dbfile.toString() + " Size: " + dbfile.length() + " bytes");
-		
+		USERS_LOADED = false;
+		DISCRIMINATORS_LOADED = false;
 		frogs = new ArrayList<Frog>();
 		recorders = new ArrayList<User>();
 		observers = new ArrayList<User>();
+		discriminators = new ArrayList<Discriminator>();
 		try {
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder docBuilder = null;
@@ -252,6 +268,23 @@ public class XMLFrogDatabase {
 
 		}
 		
+		USERS_LOADED = true;
+		
+		//LOAD DISCRIMINATORS
+		IdentiFrog.LOGGER.writeMessage("Parsing XML for Discriminators...");
+
+		Element discriminatorsElement = (Element) doc.getElementsByTagName("discriminators").item(0);
+		NodeList dList = discriminatorsElement.getElementsByTagName("discriminator");
+		for (int i = 0; i < dList.getLength(); i++) {
+			Element discriminatorElem = (Element) dList.item(i);
+			Discriminator discriminator = new Discriminator();
+			discriminator.setID(Integer.parseInt(discriminatorElem.getAttribute("id")));
+			discriminator.setText(discriminatorElem.getTextContent());
+			discriminators.add(discriminator);
+			IdentiFrog.LOGGER.writeMessage("Loaded discriminator: "+discriminator.debugToString());
+		}
+		DISCRIMINATORS_LOADED  = true;
+		
 		//Load frogs (depends on users)
 		IdentiFrog.LOGGER.writeMessage("Parsing XML for Frogs...");
 
@@ -264,10 +297,11 @@ public class XMLFrogDatabase {
 			NamedNodeMap frogAttributes = nList.item(i).getAttributes();
 
 			// Load frog object data
+			IdentiFrog.LOGGER.writeMessage("--Loading frog data--");
 			frog.setID(Integer.parseInt(frogAttributes.getNamedItem("id").getTextContent()));
 			frog.setGender(frogElement.getElementsByTagName("gender").item(0).getTextContent());
 			frog.setSpecies(frogElement.getElementsByTagName("species").item(0).getTextContent());
-
+			frog.setDiscriminator(frogElement.getElementsByTagName("discriminator").item(0).getTextContent());
 			// load sitesamples
 			Element siteSamples = (Element) frogElement.getElementsByTagName("sitesamples").item(0);
 			NodeList sList = siteSamples.getElementsByTagName("sitesample");
@@ -296,10 +330,6 @@ public class XMLFrogDatabase {
 				// Comments
 				IdentiFrog.LOGGER.writeMessage("Loading -comments- for SiteSample #" + s + " on frog with ID " + frog.getID());
 				sample.setComments(sampleElement.getElementsByTagName("comments").item(0).getTextContent());
-
-				// Discriminator
-				IdentiFrog.LOGGER.writeMessage("Loading -discriminator- for SiteSample #" + s + " on frog with ID " + frog.getID());
-				sample.setDiscriminator(sampleElement.getElementsByTagName("discriminator").item(0).getTextContent());
 
 				// Images
 				IdentiFrog.LOGGER.writeMessage("Loading -images- for SiteSample #" + s + " on frog with ID " + frog.getID());
@@ -365,7 +395,7 @@ public class XMLFrogDatabase {
 				sample.setObserver(XMLFrogDatabase.getObserverByID(Integer.parseInt(observerElem.getTextContent())));
 				
 				Element recorderElem = (Element) sampleElement.getElementsByTagName("recorder").item(0);
-				sample.setObserver(XMLFrogDatabase.getRecorderByID(Integer.parseInt(recorderElem.getTextContent())));
+				sample.setRecorder(XMLFrogDatabase.getRecorderByID(Integer.parseInt(recorderElem.getTextContent())));
 				
 				/* db1.0 style...ish
 				for (int j = 0; j < personelList.getLength(); j++) {
@@ -386,12 +416,13 @@ public class XMLFrogDatabase {
 				// SurveyID
 				IdentiFrog.LOGGER.writeMessage("Loading -surveyid- for SiteSample #" + s + " on frog with ID " + frog.getID());
 				sample.setSurveyID(sampleElement.getElementsByTagName("surveyid").item(0).getTextContent());
+				frog.addSiteSample(sample);
 			}
 
 			frogs.add(frog);
 		}
 		IdentiFrog.LOGGER.writeMessage("Loaded XML DB, loaded data for " + frogs.size() + " frogs.");
-		XMLFrogDatabase.LOADED = true;
+		XMLFrogDatabase.FULLY_LOADED = true;
 		} catch (Exception e) {
 			IdentiFrog.LOGGER.writeExceptionWithMessage("Exception occured while loading the XML DB file.", e);
 			JOptionPane.showMessageDialog(null, "An error occured while attempting to load the XML database.\nCheck the session log once you close IdentiFrog.", "Error loading DB", JOptionPane.ERROR_MESSAGE);
@@ -404,8 +435,8 @@ public class XMLFrogDatabase {
 	 * @return Recorder from the DB if it's in the DB, null otherwise
 	 */
 	public static User getRecorderByID(int id){
-		if (!LOADED){
-			IdentiFrog.LOGGER.writeError("CANT GET RECORDER, DB NOT LOADED YET!");
+		if (!USERS_LOADED){
+			IdentiFrog.LOGGER.writeError("Attempting to get recorder from DB when users haven't been loaded!");
 			return new User();
 		}
 		for (User user : recorders){
@@ -422,8 +453,8 @@ public class XMLFrogDatabase {
 	 * @return Observer from the DB if it's in the DB, null otherwise
 	 */
 	public static User getObserverByID(int id){
-		if (!LOADED){
-			IdentiFrog.LOGGER.writeError("CANT GET OBSERVER, DB NOT LOADED YET!");
+		if (!USERS_LOADED){
+			IdentiFrog.LOGGER.writeError("Attempting to get observer from DB when users haven't been loaded!");
 			return new User();
 		}
 		for (User user : observers){
@@ -446,7 +477,7 @@ public class XMLFrogDatabase {
 	 */
 	public static void setFile(File file) {
 		if (!file.getAbsolutePath().toLowerCase().endsWith(IdentiFrog.DB_FILENAME.toLowerCase())) {
-			IdentiFrog.LOGGER.writeError("SETFILE IN XML DB DID NOT USE A DATAFILE.XML FILE");
+			IdentiFrog.LOGGER.writeError("Setting database file to something not named database.xml!");
 		}
 
 		XMLFrogDatabase.dbfile = file;
@@ -457,25 +488,6 @@ public class XMLFrogDatabase {
 			PROJECT_FOLDER = PROJECT_FOLDER.substring(0, PROJECT_FOLDER.length() - IdentiFrog.DB_FILENAME.length() - 1);
 		}
 	}
-
-	/**
-	 * Returns a unique, alphabetized (by first name) list of observers.
-	 * 
-	 * @return list of unique observers. Empty if DB is not loaded.
-	 */
-	/*public static ArrayList<String> getObserversString() {
-		HashSet<String> observers = new HashSet<String>();
-		if (XMLFrogDatabase.LOADED) {
-			for (Frog frog : frogs) {
-				for (SiteSample sample : frog.getSiteSamples()) {
-					observers.add(sample.getObserver2());
-				}
-			}
-		}
-		ArrayList<String> uniqueObservers = new ArrayList<String>(observers);
-		Collections.sort(uniqueObservers);
-		return uniqueObservers;
-	}*/
 	
 	/**
 	 * Returns the list of active observer users as reflected from the current database
@@ -484,14 +496,12 @@ public class XMLFrogDatabase {
 	 */
 	public static ArrayList<User> getObservers() {
 		//ArrayList<User> observers = new ArrayList<User>();
-		if (XMLFrogDatabase.LOADED) {
+		if (XMLFrogDatabase.USERS_LOADED) {
 			Collections.sort(observers);
 			return observers;
 		} else {
 			return new ArrayList<User>();
 		}
-		//ArrayList<String> uniqueObservers = new ArrayList<String>(observers);
-		//Collections.sort(uniqueObservers);
 	}
 
 	/**
@@ -501,14 +511,12 @@ public class XMLFrogDatabase {
 	 */
 	public static ArrayList<User> getRecorders() {
 		//ArrayList<User> observers = new ArrayList<User>();
-		if (XMLFrogDatabase.LOADED) {
+		if (XMLFrogDatabase.USERS_LOADED) {
 			Collections.sort(recorders);
 			return recorders;
 		} else {
 			return new ArrayList<User>();
 		}
-		//ArrayList<String> uniqueObservers = new ArrayList<String>(observers);
-		//Collections.sort(uniqueObservers);
 	}
 
 	/**
@@ -518,7 +526,7 @@ public class XMLFrogDatabase {
 	 *         not yet loaded. Prints an error if the DB was not loaded.
 	 */
 	public static ArrayList<Frog> getFrogs() {
-		if (!LOADED) {
+		if (!FULLY_LOADED) {
 			IdentiFrog.LOGGER.writeError("Accessing getFrogs() before the DB was loaded!");
 			return new ArrayList<Frog>();
 		}
@@ -543,10 +551,6 @@ public class XMLFrogDatabase {
 
 	public static void removeFrog(int ID) {
 		frogs.remove(searchFrogByID(ID));
-		/*
-		 * int index = searchFrogByID(ID); if (index == -1) { return; }
-		 * frogs.remove(index);
-		 */
 	}
 
 	/*
@@ -562,7 +566,7 @@ public class XMLFrogDatabase {
 	 * @return next free ID for a frog to use
 	 */
 	public static int getNextAvailableFrogID() {
-		if (!LOADED) {
+		if (!FULLY_LOADED) {
 			IdentiFrog.LOGGER.writeError("Attempting to get next available ID before DB has been loaded!");
 		}
 		int nextAvailable = 0;
@@ -714,26 +718,50 @@ public class XMLFrogDatabase {
 
 	// { "Images", "Signatures", "Binary", "Dorsal", "Thumbnail" };
 
+	/**
+	 * Gets the project directory, with a \ on the end.
+	 * @return Project directory
+	 */
 	public static String getMainFolder() {
 		return PROJECT_FOLDER + File.separator;
 	}
 
+	/**
+	 * Gets the images/ folders of the project, with a \ on the end.
+	 * @return Images directory
+	 */
 	public static String getImagesFolder() {
 		return getMainFolder() + IMAGES + File.separator;
 	}
 
+	/**
+	 * Gets the signatures/ folders of the project, with a \ on the end.
+	 * @return Signatures directory
+	 */
 	public static String getSignaturesFolder() {
 		return getMainFolder() + SIGNATURES + File.separator;
 	}
 
+	/**
+	 * Gets the binary/ folders of the project, with a \ on the end.
+	 * @return Binary directory
+	 */
 	public static String getBinaryFolder() {
 		return getMainFolder() + BINARY + File.separator;
 	}
 
+	/**
+	 * Gets the dorsal/ folders of the project, with a \ on the end.
+	 * @return Dorsal directory
+	 */
 	public static String getDorsalFolder() {
 		return getMainFolder() + DORSAL + File.separator;
 	}
 
+	/**
+	 * Gets the thumbnail/ folders of the project, with a \ on the end.
+	 * @return Thumbnail directory
+	 */
 	public static String getThumbnailFolder() {
 		return getMainFolder() + THUMB + File.separator;
 	}
@@ -830,39 +858,28 @@ public class XMLFrogDatabase {
 		      array[i] = frogs.get(i).toArray();
 		    }
 		return array;
-		
-		/*ArrayList<Frog> localFrogs = new ArrayList<Frog>();
-	    boolean allFrogsLocal = true;
-	    if (allFrogsLocal) {
-	      localFrogs = frogs;
-	    } else {
-	      localFrogs = getUniqueFrogs().getFrogs();
-	    }
-	    // NOTE: replace frogList with frogs
-	    Object[][] array = new Object[localFrogs.size()][];
-	    for (int i = 0; i < localFrogs.size(); i++) {
-	      array[i] = localFrogs.get(i).toArray();
-	    }
-	    return array;*/
-	  }
-	  /*
-	  public DataHandler getUniqueFrogs() {
-	    ArrayList<Frog> uniqueFrogs;
-	    ArrayList<Integer> frogIDs = new ArrayList<Integer>();
-	    for (int i = 0; i < frogs.size(); i++) {
-	      frogIDs.add(frogs.get(i).getID());
-	    }
-	    HashSet<Integer> uniqueFrogIDSet = new HashSet<Integer>(frogIDs);
-	    frogIDs.clear();
-	    frogIDs.addAll(uniqueFrogIDSet);
-	    uniqueFrogs = new ArrayList<Frog>();
-	    for (int i = 0; i < frogIDs.size(); i++) {
-	      uniqueFrogs.add(XMLFrogDatabase.searchFrogByID(frogIDs.get(i)));
-	    }
-	    return new DataHandler(uniqueFrogs);
-	  }*/
+	}
 
 	public static String getThumbPlaceholder() {
 		return "PLCHOLDR";
 	}
+
+	public static int getNextAvailableDiscriminatorID() {
+		int highestID = 0;
+		for (Discriminator discriminator : discriminators) {
+			if (discriminator.getID() > highestID) {
+				highestID = discriminator.getID();
+			}
+		}
+		return highestID + 1;
+	}
+
+	public static ArrayList<Discriminator> getDiscriminators() {
+		return discriminators;
+	}
+
+	public static void setDiscriminators(ArrayList<Discriminator> discriminators) {
+		XMLFrogDatabase.discriminators = discriminators;
+	}
+	
 }

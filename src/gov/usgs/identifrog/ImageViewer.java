@@ -185,7 +185,8 @@ public class ImageViewer extends JDialog {
 
 	// //////// ACTIONS //////////
 	void btnShowAllImages_actionPerformed(ActionEvent e) {
-		boolean additImg = false;
+		IdentiFrog.LOGGER.writeError("Show all images button is disabled.");
+		/*boolean additImg = false;
 		int searchFrogID = parentFrame.getWorkingAreaPanel().getSelectedFrog_Id();
 		Frog frog = XMLFrogDatabase.searchFrogByID(searchFrogID);
 		searchFrogID = frog.getID();
@@ -200,7 +201,7 @@ public class ImageViewer extends JDialog {
 		}
 		if (!additImg) {
 			JOptionPane.showMessageDialog(null, "There are no additional images for this individual.");
-		}
+		}*/
 	}
 
 	void btnMatch_actionPerformed(ActionEvent e) {

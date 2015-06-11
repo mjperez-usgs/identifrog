@@ -167,7 +167,7 @@ public class WorkingAreaPanel extends JPanel {
 				   		Frog localFrog = XMLFrogDatabase.searchFrogByID(localID);
 			           
 			           
-			           //codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
+			            //codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
 			            JPopupMenu popup = new JPopupMenu();
 						JMenuItem popupAddImage, popupEditInfo, popupDeleteFrog, popupSearch;
 						popupAddImage = new JMenuItem("Add image to this frog");
