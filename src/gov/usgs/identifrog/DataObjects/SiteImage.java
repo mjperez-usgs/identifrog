@@ -84,6 +84,11 @@ public class SiteImage {
 	public void setImageFileName(String imageName) {
 		this.imageFileName = imageName;
 	}
+	
+	/**
+	 * Returns if this image has an associated signature already generated.
+	 * @return True if image has been generated, false otherwise.
+	 */
 	public boolean isSignatureGenerated() {
 		return signatureGenerated;
 	}

@@ -31,7 +31,7 @@ import javax.swing.JTextField;
 @SuppressWarnings("serial")
 public class SearchCriteriaDialog extends JDialog {
 	MainFrame parentFrame;
-	WorkingAreaPanel workingAreaPanel;
+	MainFrogBrowserPanel workingAreaPanel;
 	JPanel PanelContainer = new JPanel();
 	BorderLayout borderLayout1 = new BorderLayout();
 	JPanel PanelTabs = new JPanel();

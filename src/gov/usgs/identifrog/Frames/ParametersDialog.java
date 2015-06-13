@@ -1,7 +1,7 @@
 package gov.usgs.identifrog.Frames;
 
 import gov.usgs.identifrog.IdentiFrog;
-import gov.usgs.identifrog.WorkingAreaPanel;
+import gov.usgs.identifrog.MainFrogBrowserPanel;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -32,7 +32,7 @@ import javax.swing.JTextField;
 @SuppressWarnings("serial")
 public class ParametersDialog extends JDialog {
 	MainFrame parentFrame;
-	WorkingAreaPanel workingAreaPanel;
+	MainFrogBrowserPanel workingAreaPanel;
 	JPanel PanelContainer = new JPanel();
 	BorderLayout borderLayout1 = new BorderLayout();
 	JPanel PanelTabs = new JPanel();

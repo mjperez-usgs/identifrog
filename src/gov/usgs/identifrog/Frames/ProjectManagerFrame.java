@@ -312,9 +312,13 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 		
 		// create an instance of the MainFrame
 		MainFrame frame = new MainFrame();
-		
+		frame.setPreferredSize(new Dimension(600,450));
+		frame.pack();
+
 		// center the window
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		//prevent oversizing
+		
 		Dimension frameSize = frame.getSize();
 		if (frameSize.height > screenSize.height) {
 			frameSize.height = screenSize.height;
@@ -322,9 +326,13 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 		if (frameSize.width > screenSize.width) {
 			frameSize.width = screenSize.width;
 		}
-		frame.setLocation(0, 0);
+		
+		
+		frame.setLocationRelativeTo(null);
+		//frame.setLocation(0, 0);
 		dispose();
 		if (mf != null) {
+			//dispose of old project
 			mf.dispose();
 		}
 		frame.setVisible(true);

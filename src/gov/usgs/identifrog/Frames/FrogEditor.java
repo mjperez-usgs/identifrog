@@ -4,7 +4,7 @@ import gov.usgs.identifrog.ChoiceDialog;
 import gov.usgs.identifrog.DialogImageFileChooser;
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.ImageManipFrame;
-import gov.usgs.identifrog.WorkingAreaPanel;
+import gov.usgs.identifrog.MainFrogBrowserPanel;
 import gov.usgs.identifrog.DataObjects.DateLabelFormatter;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;

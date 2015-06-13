@@ -8,7 +8,7 @@ import java.util.Date;
  * @author mjperez
  *
  */
-public class Site implements Serializable {
+public class Site implements Serializable, Comparable<Site> {
 
 	@Override
 	public int hashCode() {
@@ -76,5 +76,16 @@ public class Site implements Serializable {
 	public String toString() {
 		return "Site [siteName=" + siteName + ", datafilePath=" + datafilePath
 				+ ", lastModified=" + dateFormat.format(lastModified) + "]";
+	}
+	@Override
+	public int compareTo(Site otherSite) {
+		//Returns with latest dates (being the nearest one to today) as the first element when sorting
+		if (getLastModified().after(otherSite.getLastModified())) {
+			return -1;
+		}
+		if (getLastModified().equals(otherSite.getLastModified())) {
+			return 0;
+		}
+		return 1;
 	}	
 }

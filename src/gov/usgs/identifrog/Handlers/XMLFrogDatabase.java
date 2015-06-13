@@ -578,6 +578,13 @@ public class XMLFrogDatabase {
 		return nextAvailable + 1;
 	}
 
+	/**
+	 * Creates a copy of the current database and it's folders and places the copy at the newSitePath.
+	 * The folder passed is the project folder. (Inside of it is a datafile.xml file)
+	 * The XML database is then set to this new datafile.xml so be sure to call loadXMLFile() on it directly afterwards.
+	 * @param newSitePath Folder to copy contents of DB to 
+	 * @throws IOException
+	 */
 	public static void createCopy(File newSitePath) throws IOException {
 		copyFolder(new File(getMainFolder()), newSitePath);
 		setFile(new File(newSitePath + File.separator + IdentiFrog.DB_FILENAME));

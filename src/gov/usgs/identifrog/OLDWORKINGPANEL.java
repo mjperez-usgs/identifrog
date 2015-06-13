@@ -43,7 +43,7 @@ import javax.swing.table.TableColumn;
  * @author Steven P. Miller for IdentiFrog Team 2005
  */
 @SuppressWarnings("serial")
-public class WorkingAreaPanel extends JPanel {
+public class OLDWORKINGPANEL extends JPanel {
 	//private ArrayList<Frog> frogs = new ArrayList<Frog>();
 	private static final int PREFERRED_WIDTH = 180;
 	private static final int PREFERED_HEIGHT = 80;
@@ -104,12 +104,12 @@ public class WorkingAreaPanel extends JPanel {
 	//
 	
 	
-	private JButton btnPrevious = new JButton("Previous Page", new ImageIcon(WorkingAreaPanel.class.getResource("IconButtonPrevious32.png")));
-	private JButton btnNext = new JButton("Next Page", new ImageIcon(WorkingAreaPanel.class.getResource("IconButtonNext32.png")));
+	private JButton btnPrevious = new JButton("Previous Page", new ImageIcon(OLDWORKINGPANEL.class.getResource("IconButtonPrevious32.png")));
+	private JButton btnNext = new JButton("Next Page", new ImageIcon(OLDWORKINGPANEL.class.getResource("IconButtonNext32.png")));
 	private JCheckBox chkAllImages = new JCheckBox("All Images", true);
 
 	
-	public WorkingAreaPanel(MainFrame frame) {
+	public OLDWORKINGPANEL(MainFrame frame) {
 		parentFrame = frame;
 		try {
 			init();
@@ -185,7 +185,7 @@ public class WorkingAreaPanel extends JPanel {
 							@Override
 							public void actionPerformed(ActionEvent e) {
 								IdentiFrog.LOGGER.writeMessage("Opening Frog Editor via Right Click Menu: "+localFrog.toString());
-								FrogEditor editFrogWindow = new FrogEditor(WorkingAreaPanel.this.parentFrame, "Edit Frog", localFrog);
+								FrogEditor editFrogWindow = new FrogEditor(OLDWORKINGPANEL.this.parentFrame, "Edit Frog", localFrog);
 								editFrogWindow.pack();
 								editFrogWindow.setVisible(true);
 							}
@@ -208,10 +208,10 @@ public class WorkingAreaPanel extends JPanel {
 		    public void valueChanged(ListSelectionEvent event) {
 		        if (dbTable.getSelectedRow() > -1) {
 		            //enable buttons
-		        	WorkingAreaPanel.this.parentFrame.setButtonState(true);
+		        	OLDWORKINGPANEL.this.parentFrame.setButtonState(true);
 		        } else {
 		        	//disable buttons
-		        	WorkingAreaPanel.this.parentFrame.setButtonState(false);
+		        	OLDWORKINGPANEL.this.parentFrame.setButtonState(false);
 		        }
 		    }
 		});
@@ -909,9 +909,9 @@ public class WorkingAreaPanel extends JPanel {
 } // end WorkingAreaPanel Class
 
 class WorkingAreaPanel_butBack_actionAdapter implements java.awt.event.ActionListener {
-	WorkingAreaPanel adaptee;
+	OLDWORKINGPANEL adaptee;
 
-	WorkingAreaPanel_butBack_actionAdapter(WorkingAreaPanel adaptee) {
+	WorkingAreaPanel_butBack_actionAdapter(OLDWORKINGPANEL adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -921,9 +921,9 @@ class WorkingAreaPanel_butBack_actionAdapter implements java.awt.event.ActionLis
 }
 
 class WorkingAreaPanel_butNext_actionAdapter implements java.awt.event.ActionListener {
-	WorkingAreaPanel adaptee;
+	OLDWORKINGPANEL adaptee;
 
-	WorkingAreaPanel_butNext_actionAdapter(WorkingAreaPanel adaptee) {
+	WorkingAreaPanel_butNext_actionAdapter(OLDWORKINGPANEL adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -933,9 +933,9 @@ class WorkingAreaPanel_butNext_actionAdapter implements java.awt.event.ActionLis
 }
 
 class WorkingAreaPanel_CheckBoxAllImages_actionAdapter implements java.awt.event.ActionListener {
-	WorkingAreaPanel adaptee;
+	OLDWORKINGPANEL adaptee;
 
-	WorkingAreaPanel_CheckBoxAllImages_actionAdapter(WorkingAreaPanel adaptee) {
+	WorkingAreaPanel_CheckBoxAllImages_actionAdapter(OLDWORKINGPANEL adaptee) {
 		this.adaptee = adaptee;
 	}
 
