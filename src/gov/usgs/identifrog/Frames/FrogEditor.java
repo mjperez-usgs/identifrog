@@ -369,8 +369,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			public void mouseClicked(MouseEvent e) {
 				if (SwingUtilities.isRightMouseButton(e)) {
 			           //-- select a row
-			           int idx = imageList.locationToIndex(e.getPoint());
-			           SiteImage img = imageList.getModel().getElementAt(idx);
+			           final int idx = imageList.locationToIndex(e.getPoint());
+			           final SiteImage img = imageList.getModel().getElementAt(idx);
 			           imageList.setSelectedIndex(idx);
 			            //codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
 			            JPopupMenu popup = new JPopupMenu();

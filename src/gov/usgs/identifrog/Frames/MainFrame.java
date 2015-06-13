@@ -462,6 +462,7 @@ public class MainFrame extends JFrame {
 		if (newFrog != null) {
 			XMLFrogDatabase.addFrog(newFrog);
 			XMLFrogDatabase.writeXMLFile();
+			frogModel.addElement(newFrog);
 		}
 	}
 

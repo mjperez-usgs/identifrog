@@ -95,10 +95,12 @@ public class XMLFrogDatabase {
 		Element usersElem = doc.createElement("users");
 		Element recorderElement = doc.createElement("recorders");
 		Element observersElement = doc.createElement("observers");
+		Element discrimintorsElement = doc.createElement("discriminators");
 		root.appendChild(frogsElem);
 		usersElem.appendChild(recorderElement);
 		usersElem.appendChild(observersElement);
 		root.appendChild(usersElem);
+		root.appendChild(discrimintorsElement);
 		doc.appendChild(root);
 
 		// WRITE XML FILE
@@ -118,6 +120,7 @@ public class XMLFrogDatabase {
 		try {
 			transformer.transform(source,
 			      new StreamResult(buffer));
+			dbfile.delete(); //remove old
 			FileUtils.writeStringToFile(dbfile, buffer.toString());
 			IdentiFrog.LOGGER.writeMessage("Database commited to disk.");
 		} catch (TransformerException e) {

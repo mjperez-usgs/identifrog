@@ -42,6 +42,7 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 	public FrogBrowserCellRenderer() {
 		super();
 		panel = new JPanel(new GridBagLayout());
+		
 		border = new TitledBorder(new EtchedBorder(), "Frog");
 		panel.setBorder(border);
 		imageLabel = new JLabel();
@@ -72,6 +73,11 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 		//Component comp = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 		//System.out.println(comp.getClass());
 		if (value instanceof Frog) {
+			panel.setForeground(isSelected ? list.getSelectionForeground() : list.getForeground());
+			panel.setBackground(isSelected ? list.getSelectionBackground() : list.getBackground());
+			//border.setTitleColor(isSelected ?  : list.getForeground());
+			
+			
 			Frog frog = (Frog) value;
 			loadImage(frog);
 			imageLabel.setIcon(idImageMap.get(frog.getID()));

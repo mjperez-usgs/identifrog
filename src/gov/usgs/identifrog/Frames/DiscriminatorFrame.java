@@ -72,7 +72,7 @@ public class DiscriminatorFrame extends JDialog {
 			setModalityType(ModalityType.APPLICATION_MODAL);
 		}
 		
-		DefaultListModel<Discriminator> discriminatorModel = new DefaultListModel<Discriminator>();
+		final DefaultListModel<Discriminator> discriminatorModel = new DefaultListModel<Discriminator>();
 
 		ArrayList<Discriminator> discriminators = XMLFrogDatabase.getDiscriminators();
 		for (Discriminator Discriminator : discriminators) {
@@ -116,7 +116,7 @@ public class DiscriminatorFrame extends JDialog {
 		GridBagConstraints c = new GridBagConstraints();
 
 		JButton saveDiscriminator = new JButton("Save Discriminator");
-		JTextField discriminatorTextField = new JTextField();
+		final JTextField discriminatorTextField = new JTextField();
 		
 		saveDiscriminator.addActionListener(new ActionListener() {
 			

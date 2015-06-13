@@ -96,11 +96,9 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 		buttonPanel.add(createSite);
 		buttonPanel.add(Box.createHorizontalGlue());
 		
-		
-		
 		JPanel verticalPanel = new JPanel();
-		verticalPanel.add(Box.createVerticalGlue());
 		verticalPanel.setLayout(new BoxLayout(verticalPanel,BoxLayout.PAGE_AXIS));
+		verticalPanel.add(Box.createVerticalGlue());
 		verticalPanel.add(buttonPanel);
 		verticalPanel.add(Box.createVerticalGlue());
 		
@@ -157,7 +155,7 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 	    }
 	}
 
-	private JButton createRecentSiteButton(Site site) {
+	private JButton createRecentSiteButton(final Site site) {
 		String text = "<html><center>"+site.getSiteName()+"<br>"+Site.dateFormat.format(site.getLastModified())+"</center></html>";
 		JButton siteButton = new JButton(text);
 		siteButton.addActionListener(new ActionListener() {
@@ -194,8 +192,6 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 	        	} else {
 	        		new ErrorDialog("The selected XML file is not an IdentiFrog site file.");
 	        	}
-	        } else {
-	        	dispose();
 	        }
 		}
 	}
@@ -205,38 +201,9 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 		XMLFrogDatabase.setFile(new File(location+File.separator+siteName+File.separator+IdentiFrog.DB_FILENAME));
 		if (!XMLFrogDatabase.siteFoldersExist()) {
 			XMLFrogDatabase.createFolders();
-			XMLFrogDatabase.createXMLFile();
 		}
-		File f = new File(XMLFrogDatabase.getFileNamePath());
-		if (f.exists() && f.length() == 0) {
-			XMLFrogDatabase.createXMLFile();
-		}
+		XMLFrogDatabase.createXMLFile();
 		loadSite(XMLFrogDatabase.getFileNamePath());
-		/*
-		// create an instance of the MainFrame
-		MainFrame frame = new MainFrame(fh);
-		// validate frames that have preset sizes
-		// pack frames that have useful preferred size info, e.g. from their layout
-		
-		/*if (packFrame) {
-			frame.pack();
-		} else {
-			frame.validate();
-		}
-		// center the window
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		Dimension frameSize = frame.getSize();
-		if (frameSize.height > screenSize.height) {
-			frameSize.height = screenSize.height;
-		}
-		if (frameSize.width > screenSize.width) {
-			frameSize.width = screenSize.width;
-		}
-		frame.setLocation(0, 0);
-		// close Splash Screen
-		//splash.dispose();
-		dispose();
-		frame.setVisible(true);*/
 	}
 	
 	public void loadSite(String dataFilePath){

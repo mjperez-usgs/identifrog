@@ -70,8 +70,8 @@ public class UsersFrame extends JDialog implements ActionListener {
 			setModalityType(ModalityType.APPLICATION_MODAL);
 		}
 		
-		DefaultListModel<User> observerModel = new DefaultListModel<User>();
-		DefaultListModel<User> recorderModel = new DefaultListModel<User>();
+		final DefaultListModel<User> observerModel = new DefaultListModel<User>();
+		final DefaultListModel<User> recorderModel = new DefaultListModel<User>();
 
 		ArrayList<User> observers = XMLFrogDatabase.getObservers();
 		ArrayList<User> recorders = XMLFrogDatabase.getRecorders();
@@ -143,9 +143,10 @@ public class UsersFrame extends JDialog implements ActionListener {
 		GridBagConstraints c = new GridBagConstraints();
 
 		JButton saveUser = new JButton("Save User");
-		JCheckBox checkIsObserver = new JCheckBox("Observer"), checkIsRecorder = new JCheckBox("Recorder");
-		JTextField fName = new JTextField();
-		JTextField lName = new JTextField();
+		final JCheckBox checkIsObserver = new JCheckBox("Observer");
+		final JCheckBox checkIsRecorder = new JCheckBox("Recorder");
+		final JTextField fName = new JTextField();
+		final JTextField lName = new JTextField();
 		
 		saveUser.addActionListener(new ActionListener() {
 			
