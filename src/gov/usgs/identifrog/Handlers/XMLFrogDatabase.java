@@ -311,7 +311,9 @@ public class XMLFrogDatabase {
 			for (int d = 0; d < discList.getLength(); d++) {
 				Element discElement = (Element) discList.item(d);
 				int discID = Integer.parseInt(discElement.getTextContent());
-				frog.addDiscriminator(getDiscrmininatorByID(discID));
+				Discriminator discriminator = getDiscrmininatorByID(discID);
+				discriminator.setInUse(true);
+				frog.addDiscriminator(discriminator);
 			}
 			IdentiFrog.LOGGER.writeMessage("Associated "+ discList.getLength()+" discriminators with Frog ID "+frog.getID());
 
