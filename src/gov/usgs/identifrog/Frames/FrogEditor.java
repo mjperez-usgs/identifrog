@@ -1,18 +1,16 @@
 package gov.usgs.identifrog.Frames;
 
-import gov.usgs.identifrog.ChoiceDialog;
 import gov.usgs.identifrog.DialogImageFileChooser;
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.ImageManipFrame;
-import gov.usgs.identifrog.MainFrogBrowserPanel;
 import gov.usgs.identifrog.DataObjects.DateLabelFormatter;
+import gov.usgs.identifrog.DataObjects.Discriminator;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
 import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.DataObjects.SiteSample;
 import gov.usgs.identifrog.DataObjects.User;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
-import gov.usgs.identifrog.Operations.UITest1;
 import gov.usgs.identifrog.cellrenderers.FrogEditorImageRenderer;
 import gov.usgs.identifrog.cellrenderers.UserListCellRenderer;
 
@@ -29,9 +27,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -42,7 +38,6 @@ import java.util.Date;
 import java.util.Properties;
 import java.util.prefs.Preferences;
 
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -70,8 +65,6 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import org.apache.commons.io.FileUtils;
-import org.imgscalr.Scalr;
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
@@ -105,7 +98,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	int frogDbId, entpersDbId, obsDbId, caplocDbId, zone, frogidNum;
 
 	String surveyID;
-	private boolean isNewImage = true;
 	protected int frogID;
 	protected String species;
 	protected String pathSignature;
@@ -140,6 +132,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 	//private boolean MEMORY_COPY = true; //Discard the base frog if this is true when closing
 	private ArrayList<SiteImage> images;
+	private ArrayList<Discriminator> discriminators;
 
 	/**
 	 * This is the standard add-frog window that comes up when a "New Frog" is
@@ -161,6 +154,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 		try {
 			images = new ArrayList<SiteImage>();
+			discriminators = new ArrayList<Discriminator>(); //empty to start
 			SiteImage simage = new SiteImage();
 			simage.setProcessed(false);
 			simage.setSourceFilePath(image.getAbsolutePath());
@@ -198,6 +192,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		parentFrame = frame;
 		this.frog = frog;
 		images = frog.getAllSiteImages();
+		discriminators = frog.getDiscriminators();
 		for (SiteImage img : images) {
 			//load thumbnails
 			img.createListThumbnail();
@@ -249,6 +244,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	DefaultListModel<SiteImage> listModel = new DefaultListModel<SiteImage>();
 	JButton butFillPreviousFrogInfo = new JButton();
 	JButton butEditDiscriminators = new JButton();
+	JButton butEditTemplates = new JButton();
 	JButton butDebugPopulate = new JButton();
 	JLabel labEntryPersonTitle = new JLabel();
 	JLabel labObserverTitle = new JLabel();
@@ -285,7 +281,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JComboBox<?> sexComboBox = new JComboBox<Object>(sexStrings);
 	JRadioButton additDiscrNo = new JRadioButton("No", false);
 	JRadioButton additDiscrYes = new JRadioButton("Yes", false);
-	JCheckBox checkAdditionalDescriptor = new JCheckBox("Additional Discriminator");
+	//JCheckBox checkAdditionalDescriptor = new JCheckBox("Additional Discriminator");
+	JButton butDiscriminators = new JButton("Discriminators");
 	DecimalFormat decimalFormat = new DecimalFormat("#.00");
 	JFormattedTextField textMass = new JFormattedTextField(decimalFormat);
 	JLabel labFrogComments = new JLabel();
@@ -320,10 +317,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JLabel labMassUnit = new JLabel();
 	JLabel labLengthUnit = new JLabel();
 	JButton butClearAll = new JButton();
-	String[] ObsLastNameList = { "" };
-	String[] ObsFirstNameList = { "" };
-	String[] EntryLastNameList = { "" };
-	String[] EntryFirstNameList = { "" };
 	String[] LocNameList = { "" };
 	ArrayList<LocInfo> locList = new ArrayList<LocInfo>();
 	DefaultComboBoxModel<User> recorderListModel, observerListModel;
@@ -334,17 +327,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JComboBox<?> comboLocationName = new JComboBox<Object>(LocNameList);
 
 	private void init() throws Exception {
-		//load objects that can't be done at compile time.
-		ArrayList<String> years = new ArrayList<String>();
-		int curYear = Calendar.getInstance().get(Calendar.YEAR);
-		int parsingYear = 2005; //you can enter frogs from this date and after till the current year.
-		while (parsingYear <= curYear) {
-			years.add(Integer.toString(parsingYear));
-			parsingYear++;
-		}
-		//year = years.toArray(new String[years.size()]);
-		//yearComboBox = new JComboBox<Object>(year);
-
+		setModal(true);
+		
 		//start init
 		//Images
 		for (SiteImage simage : images) {
@@ -477,7 +461,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		});
 
 		//Manage Users
-		ImageIcon imageUser = new ImageIcon(FrogEditor.class.getResource("/resources/IconUser32.png"));
+		ImageIcon imageUser = new ImageIcon(FrogEditor.class.getResource("/resources/IconUsers32.png"));
 		usersButton = new JButton("Manage Users", imageUser);
 		//Icon from: http://www.softicons.com/business-icons/dragon-soft-icons-by-artua.com/user-icon
 		//License: Free for non-commercial use, commercial use not allowed
@@ -518,6 +502,21 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 		//FROG INFO
 		// PANEL FROG INFO
+		butDiscriminators.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				DiscriminatorPickerDialog d = new DiscriminatorPickerDialog(FrogEditor.this, discriminators);
+				d.setVisible(true);
+				//this thread will stall until the dialog is closed
+				ArrayList<Discriminator> chosenDiscrims =  d.getChosenDiscriminators();
+				if (chosenDiscrims != null) {
+					//user said save/ok
+					discriminators = chosenDiscrims;
+					updateDiscriminatorTooltip();
+				}
+			}
+		});
 		c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
@@ -550,7 +549,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 		c.gridx = 3;
 		c.gridy = 1;
-		panelFrogInfo.add(checkAdditionalDescriptor, c);
+		panelFrogInfo.add(butDiscriminators, c);
 
 		panelFrogInfo.setMinimumSize(new Dimension(100, 60));
 		panelFrogInfo.setMaximumSize(new Dimension(10000, 60));
@@ -611,18 +610,26 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		c.insets = leftSpaceInsets;
 		c.gridx = 1;
 		panelDataEntry.add(observerLabel, c);
+		c.gridx = 2;
+		panelDataEntry.add(labSurveyID, c);
+		
 
 		//4th row
 		c.insets = noInsets;
 		c.gridx = 0;
+		c.weightx = 2;
 		c.gridy = 3;
 		//panelDataEntry.add(entryDatePicker,c);
 		//c.gridx = 1;
 		panelDataEntry.add(comboRecorder, c);
 		c.insets = leftSpaceInsets;
 		c.gridx = 1;
-		c.weightx = 1;
 		panelDataEntry.add(comboObserver, c);
+		c.gridx = 2;
+		c.weightx = 0.5;
+		textSurveyID.setMinimumSize(textSurveyID.getPreferredSize());
+		panelDataEntry.add(textSurveyID, c);
+		
 		panelDataEntry.setMaximumSize(new Dimension(10000, 120));
 
 		Butgroup.add(LatLongButton);
@@ -637,7 +644,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		labLength.setText("Length, mm");
 		textLength.setColumns(5);
 		labSurveyID.setText("Survey ID");
-		textSurveyID.setColumns(50);
+		textSurveyID.setColumns(30);
+		
 		labFrogComments.setText("Comments");
 		textFrogComments.setColumns(210);
 
@@ -651,8 +659,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		c.insets = leftSpaceInsets;
 		c.gridx = 1;
 		panelBiometrics.add(labLength, c);
-		c.gridx = 2;
-		panelBiometrics.add(labSurveyID, c);
+		
 		//row2
 		c.insets = noInsets;
 		c.gridx = 0;
@@ -661,8 +668,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		c.insets = leftSpaceInsets;
 		c.gridx = 1;
 		panelBiometrics.add(textLength, c);
-		c.gridx = 2;
-		panelBiometrics.add(textSurveyID, c);
 
 		c.insets = noInsets;
 		c.gridy = 2;
@@ -734,8 +739,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		panelTopButtons.add(butFillPreviousFrogInfo);
 		panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
 		panelTopButtons.add(usersButton);
-		panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
-		panelTopButtons.add(butEditDiscriminators);
+		//panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
+		//panelTopButtons.add(butEditDiscriminators);
 		if (IdentiFrog.DEBUGGING_BUILD) {
 			panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
 			panelTopButtons.add(butDebugPopulate);
@@ -743,8 +748,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		panelTopButtons.add(Box.createHorizontalGlue());
 
 		panelSiteSurvey.add(panelDataEntry);
-		panelSiteSurvey.add(panelBiometrics);
 		panelSiteSurvey.add(panelLocation);
+		panelSiteSurvey.add(panelBiometrics);
 
 		//PANEL LOCATION INFO
 		c = new GridBagConstraints();
@@ -834,6 +839,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		add(splitPane);
 		setMinimumSize(new Dimension(650, 640));
 		setPreferredSize(new Dimension(650, 640));
+		
+		updateDiscriminatorTooltip();
 		pack();
 	}
 
@@ -841,28 +848,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	 * Opens the Discriminators Management window and stalls execution of this thread until completed
 	 */
 	protected void openDiscriminatorsWindow() {
-		// Keep user selection so when refresh we can set the proper one
-		//TODO - get list of selected discriminators
-		
 		DiscriminatorFrame dFrame = new DiscriminatorFrame(this);
 		dFrame.setVisible(true);
-		
-		//Reload
-		/*observerListModel.removeAllElements();
-		for (User user : XMLFrogDatabase.getObservers()) {
-			observerListModel.addElement(user);
-		}
-		for (User user : XMLFrogDatabase.getRecorders()) {
-			recorderListModel.addElement(user);
-		}
-		
-		//Restore existing selection if it exists
-		if (observerListModel.getIndexOf(obsUser) >= 0){
-			comboObserver.setSelectedIndex(observerListModel.getIndexOf(obsUser));
-		}
-		if (recorderListModel.getIndexOf(recUser) >= 0){
-			comboRecorder.setSelectedIndex(recorderListModel.getIndexOf(recUser));
-		}*/
 	}
 
 	/**
@@ -1131,7 +1118,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			species = textSpecies.getText().trim();
 			gender = (String) sexComboBox.getSelectedItem();
 			// Additional Discriminator
-			String discriminator = (checkAdditionalDescriptor.isSelected()) ? "true": "false";
+			//String discriminator = (checkAdditionalDescriptor.isSelected()) ? "true": "false";
 			//int m = monthComboBox.getSelectedIndex() + 1;
 			capturedate = df.format(captureDatePicker.getModel().getValue());
 
@@ -1193,7 +1180,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			firstSample.setSiteImages(images);
 
 			Frog f = new Frog(frogID, species, gender, firstSample);
-			f.setDiscriminator(discriminator);
+			f.setDiscriminators(discriminators);
 			IdentiFrog.LOGGER.writeMessage("FrogEditor is closing, assigning new/modified frog to return method...");
 			this.frog = f;
 			// close dialog
@@ -1213,7 +1200,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	 * @param frogdbid
 	 */
 	private SiteImage openDigSigFrame(SiteImage image) {
-		IdentiFrog.LOGGER.writeMessage("Opening signature generation tool... This shouldn't work yet...");
 		iFrame = new ImageManipFrame(this, image);
 		iFrame.setTitle("Signature Creation");
 		iFrame.pack();
@@ -1234,19 +1220,9 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	}
 
 	void butClearAll_actionPerformed(ActionEvent e) {
-		if (ChoiceDialog.choiceMessage("This will clear all entered information on this screen.\n" + "Do you want to continue?") == 0) {
-			/*
-			 * comboEntryLastName.setSelectedIndex(0);
-			 * comboEntryFirstName.setSelectedIndex(0);
-			 * comboObserverLastName.setSelectedIndex(0);
-			 * comboObserverFirstName.setSelectedIndex(0);
-			 */
-			textFrog_ID.setText("");
+		if (JOptionPane.showConfirmDialog(this, "This will clear all entered information on this screen.", "Clear Information", JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
 			textSpecies.setText("");
 			sexComboBox.setSelectedItem(-1);
-			//dayComboBox.setSelectedItem(null);
-			//monthComboBox.setSelectedItem(null);
-			//yearComboBox.setSelectedItem(null);
 			captureDatePicker.getModel().setSelected(false);
 			sexComboBox.setSelectedItem(null);
 			textMass.setText("");
@@ -1258,7 +1234,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			textX.setText("");
 			textY.setText("");
 			Butgroup.clearSelection(); // set radio LatLongButton, UTMButton to false
-			checkAdditionalDescriptor.setSelected(false);
 			textDatum.setText("");
 			textZone.setText("");
 		}
@@ -1283,7 +1258,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		textX.setText("115.8111");
 		textY.setText("37.2350");
 		Butgroup.setSelected(LatLongButton.getModel(), true); // set radio LatLongButton, UTMButton to false
-		checkAdditionalDescriptor.setSelected(false);
 		textDatum.setText("1");
 		textZone.setText("1");
 	}
@@ -1339,6 +1313,23 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			return image;
 		}
 		return null;
+	}
+	
+	private void updateDiscriminatorTooltip(){
+		if (discriminators.size() <= 0) {
+			butDiscriminators.setToolTipText("This frog has no discriminators assigned to it.");
+			return;
+		}
+		
+		String str = "<html>This frog has the following discriminators assigned to it:";
+		for (Discriminator disc : discriminators){
+			str += "<br> - "+disc.getText();
+		}
+		
+		str += "</html>";
+		butDiscriminators.setToolTipText(str);
+		return;
+		
 	}
 
 }

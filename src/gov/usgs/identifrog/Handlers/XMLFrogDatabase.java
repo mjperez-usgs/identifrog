@@ -156,14 +156,14 @@ public class XMLFrogDatabase {
 		root.appendChild(frogsElement);
 		doc.appendChild(root);
 		
-		IdentiFrog.LOGGER.writeMessage("Preparing frogs for writing");
+		IdentiFrog.LOGGER.writeMessage("Writing frogs to DB");
 		for (Frog frog : frogs) {
 			frogsElement.appendChild(frog.createDBElement(doc));
 		}
 		
 		
 		Element users = doc.createElement("users");
-		IdentiFrog.LOGGER.writeMessage("Preparing users for writing");
+		IdentiFrog.LOGGER.writeMessage("Writing users to DB");
 		Element recordersElement = doc.createElement("recorders");
 		Element observersElement = doc.createElement("observers");
 
@@ -180,7 +180,7 @@ public class XMLFrogDatabase {
 		root.appendChild(users);
 		
 		//Discriminators
-		IdentiFrog.LOGGER.writeMessage("Preparing discriminators for writing");
+		IdentiFrog.LOGGER.writeMessage("Writing discriminators to DB");
 		Element discrimsElement = doc.createElement("discriminators");
 
 		for (Discriminator discriminator : discriminators) {
@@ -304,7 +304,18 @@ public class XMLFrogDatabase {
 			frog.setID(Integer.parseInt(frogAttributes.getNamedItem("id").getTextContent()));
 			frog.setGender(frogElement.getElementsByTagName("gender").item(0).getTextContent());
 			frog.setSpecies(frogElement.getElementsByTagName("species").item(0).getTextContent());
-			frog.setDiscriminator(frogElement.getElementsByTagName("discriminator").item(0).getTextContent());
+			
+			//load discriminators
+			NodeList discList = ((Element)frogElement.getElementsByTagName("localdiscriminators").item(0)).getElementsByTagName("discriminator");
+			IdentiFrog.LOGGER.writeMessage("Parsing XML for Discriminators associated with Frog ID "+ frog.getID());
+			for (int d = 0; d < discList.getLength(); d++) {
+				Element discElement = (Element) discList.item(d);
+				int discID = Integer.parseInt(discElement.getTextContent());
+				frog.addDiscriminator(getDiscrmininatorByID(discID));
+			}
+			IdentiFrog.LOGGER.writeMessage("Associated "+ discList.getLength()+" discriminators with Frog ID "+frog.getID());
+
+			
 			// load sitesamples
 			Element siteSamples = (Element) frogElement.getElementsByTagName("sitesamples").item(0);
 			NodeList sList = siteSamples.getElementsByTagName("sitesample");
@@ -401,28 +412,11 @@ public class XMLFrogDatabase {
 				Element recorderElem = (Element) sampleElement.getElementsByTagName("recorder").item(0);
 				sample.setRecorder(XMLFrogDatabase.getRecorderByID(Integer.parseInt(recorderElem.getTextContent())));
 				
-				/* db1.0 style...ish
-				for (int j = 0; j < personelList.getLength(); j++) {
-					Element personelElement = (Element) personelList.item(j);
-					NamedNodeMap personelAttributes = personelList.item(j).getAttributes();
-					if (personelAttributes.getNamedItem("type").getTextContent().equals("observer")) {
-						//observer.setFirstName(personelElement.getElementsByTagName("firstname").item(0).getTextContent());
-						//observer.setLastName(personelElement.getElementsByTagName("lastname").item(0).getTextContent());
-						
-					} else if (personelList.item(j).getAttributes().getNamedItem("type").getTextContent().equals("recorder")) {
-						//recorder.setFirstName(personelElement.getElementsByTagName("firstname").item(0).getTextContent());
-						//recorder.setLastName(personelElement.getElementsByTagName("lastname").item(0).getTextContent());
-					}
-				}
-				sample.setObserver(observer);
-				sample.setRecorder(recorder);
-*/
 				// SurveyID
 				IdentiFrog.LOGGER.writeMessage("Loading -surveyid- for SiteSample #" + s + " on frog with ID " + frog.getID());
 				sample.setSurveyID(sampleElement.getElementsByTagName("surveyid").item(0).getTextContent());
 				frog.addSiteSample(sample);
 			}
-
 			frogs.add(frog);
 		}
 		IdentiFrog.LOGGER.writeMessage("Loaded XML DB, loaded data for " + frogs.size() + " frogs.");
@@ -433,6 +427,20 @@ public class XMLFrogDatabase {
 		}
 	}
 	
+	/**
+	 * Searches the database for the descriminator with the specified ID. Returns null if one is not found.
+	 * @param discID Discriminator ID to find
+	 * @return Discriminator in DB, null otherwise
+	 */
+	public static Discriminator getDiscrmininatorByID(int discID) {
+		for (Discriminator d : discriminators){
+			if (d.getID() == discID) {
+				return d;
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Returns the Recorder User object associated with the given ID
 	 * @param id User ID to lookup
@@ -861,14 +869,6 @@ public class XMLFrogDatabase {
 	 */
 	public static void setObservers(ArrayList<User> observers) {
 		XMLFrogDatabase.observers = observers;
-	}
-	
-	public static Object[][] getFrogsArray(boolean allFrogs) {
-		Object[][] array = new Object[frogs.size()][];
-		for (int i = 0; i < frogs.size(); i++) {
-		      array[i] = frogs.get(i).toArray();
-		    }
-		return array;
 	}
 
 	public static String getThumbPlaceholder() {

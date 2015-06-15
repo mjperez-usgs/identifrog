@@ -15,6 +15,7 @@ public class Frog {
 	private String species;
 	private String gender;
 	private String discriminator;
+	private ArrayList<Discriminator> discriminators;
 	/*private Document document;
 	private Element element;*/
 	
@@ -29,29 +30,13 @@ public class Frog {
 		this.siteSamples = siteSamples;
 	}
 
-	private enum ListItem {
-		DORSALVIEW(1), ID(2), GENDER(3), SPECIES(4), DATECAPTURE(5), LOCATIONNAME(6), SURVEYID(7), MASS(8), LENGTH(9), DISCRIMINATOR(10), OBSERVER(11), FORMERID(12), DATEENTRY(13), RECORDER(14);
-		private int value;
-
-		private ListItem(int value) {
-			this.value = value;
-		}
-
-		public int getValue() {
-			return value;
-		}
-
-		public static int getSize() {
-			return 14 + 1;
-		}
-	}
-
 	public Frog() {
 		siteSamples = new ArrayList<SiteSample>();
+		discriminators = new ArrayList<Discriminator>();
 	}
 	
 	/**
-	 * Creates a new frog and assigns it a single 
+	 * Creates a new frog and assigns it a single sitesample
 	 * @param ID
 	 * @param species
 	 * @param gender
@@ -63,6 +48,7 @@ public class Frog {
 		this.gender = gender;
 		siteSamples = new ArrayList<SiteSample>();
 		siteSamples.add(sample);
+		discriminators = new ArrayList<Discriminator>();
 	}
 	
 	public void addSiteSample(SiteSample sample) {
@@ -88,9 +74,14 @@ public class Frog {
 		element.appendChild(gender);
 		
 		// CREATE DISCRIMINATOR ELEMENT
-		Element discriminator = document.createElement("discriminator");
-		discriminator.appendChild(document.createTextNode(getDiscriminator()));
-		element.appendChild(discriminator);
+		Element discriminatorsElem = document.createElement("localdiscriminators");
+		for (Discriminator discriminator : discriminators){
+			Element discrimElem = document.createElement("discriminator");
+			discrimElem.appendChild(document.createTextNode(Integer.toString(discriminator.getID())));
+			discriminatorsElem.appendChild(discrimElem);
+		}
+		
+		element.appendChild(discriminatorsElem);
 		
 		Element sites = document.createElement("sitesamples");
 		System.out.println("BREAKPOINT");
@@ -112,24 +103,6 @@ public class Frog {
 			str += sample.toString();
 		}
 		return str;
-	}
-
-	public Object[] toArray() {
-		Object fo[] = new Object[ListItem.getSize()];
-		fo[ListItem.ID.getValue()] = "FROG" + ID;
-		fo[ListItem.SURVEYID.getValue()] = "PLACEHLDR";
-		fo[ListItem.GENDER.getValue()] = gender;
-		fo[ListItem.SPECIES.getValue()] = species;
-		fo[ListItem.MASS.getValue()] = "PLACEHLDR";
-		fo[ListItem.LENGTH.getValue()] = "PLACEHLDR";
-		fo[ListItem.DATECAPTURE.getValue()] = "PLACEHLDR";
-		fo[ListItem.DATEENTRY.getValue()] = "PLACEHLDR";
-		fo[ListItem.OBSERVER.getValue()] = "PLACEHLDR";
-		fo[ListItem.RECORDER.getValue()] = "PLACEHLDR";
-		fo[ListItem.DISCRIMINATOR.getValue()] = discriminator;
-		fo[ListItem.LOCATIONNAME.getValue()] = "PLACEHLDR";
-		fo[ListItem.DORSALVIEW.getValue()] = XMLFrogDatabase.getThumbPlaceholder();
-		return fo;
 	}
 
 	public int getID() {
@@ -218,4 +191,18 @@ public class Frog {
 		}
 		return true;
 	}
+	
+	public void addDiscriminator(Discriminator discriminator) {
+		discriminators.add(discriminator);
+	}
+
+	public ArrayList<Discriminator> getDiscriminators() {
+		return discriminators;
+	}
+
+	public void setDiscriminators(ArrayList<Discriminator> discriminators) {
+		this.discriminators = discriminators;
+	}
+	
+	
 }

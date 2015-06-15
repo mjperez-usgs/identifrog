@@ -39,19 +39,16 @@ public class UsersFrame extends JDialog implements ActionListener {
 	JList<User> recorderList, observerList;
 	public UsersFrame(){
 		setupFrame();
-		//setVisible(true);
 	}
 	
 	public UsersFrame(JFrame callingFrame){
 		this.callingFrame = callingFrame;
 		setupFrame();
-		//setVisible(true);
 	}
 	
 	public UsersFrame(JDialog callingDialog){
 		this.callingDialog = callingDialog;
 		setupFrame();
-		//setVisible(true);
 	}
 
 	private void setupFrame() {
@@ -232,6 +229,12 @@ public class UsersFrame extends JDialog implements ActionListener {
 		//setResizable(false);
 		setMinimumSize(new Dimension(400,300));
 		setMaximumSize(new Dimension(500,400));
+		if (callingDialog != null) {
+			setLocationRelativeTo(callingDialog);
+		}
+		if (callingFrame != null) {
+			setLocationRelativeTo(callingFrame);
+		}
 	}
 
 	

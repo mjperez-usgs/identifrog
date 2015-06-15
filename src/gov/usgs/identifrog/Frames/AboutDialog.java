@@ -39,7 +39,7 @@ public class AboutDialog extends JDialog implements ActionListener {
 	JPanel insetsPanel2 = new JPanel();
 	JPanel insetsPanel3 = new JPanel();
 	JButton bOK = new JButton();
-	JLabel imageLabel = new JLabel(new ImageIcon(MainFrame.class.getResource("SplashScreen.png")));
+	JLabel imageLabel = new JLabel();
 	JLabel label1 = new JLabel("IdentiFrog is a frog identification system with an");
 	JLabel label2 = new JLabel("Application to the Northern Leopard Frog");
 	JLabel label3 = new JLabel("(Lithobates pipiens)");

@@ -1,20 +1,20 @@
 package gov.usgs.identifrog.Frames;
 
-import gov.usgs.identifrog.ChoiceDialog;
 import gov.usgs.identifrog.DialogImageFileChooser;
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.ImageViewer;
 import gov.usgs.identifrog.MainFrogBrowserPanel;
 import gov.usgs.identifrog.MarkExport;
 import gov.usgs.identifrog.MatchingDialog;
-import gov.usgs.identifrog.OLDWORKINGPANEL;
 import gov.usgs.identifrog.SaveAsDialog;
 import gov.usgs.identifrog.SearchCriteriaDialog;
 import gov.usgs.identifrog.Site;
 import gov.usgs.identifrog.DataObjects.Frog;
+import gov.usgs.identifrog.DataObjects.SiteImage;
+import gov.usgs.identifrog.DataObjects.SiteSample;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
-import gov.usgs.identifrog.Operations.XLSXTemplateGeneratorFrame;
 import gov.usgs.identifrog.cellrenderers.FrogBrowserCellRenderer;
+import gov.usgs.identifrog.ui.StatusBar;
 
 import java.awt.AWTEvent;
 import java.awt.Desktop;
@@ -90,11 +90,19 @@ public class MainFrame extends JFrame {
 	private ImageIcon imageDelete = new ImageIcon(MainFrame.class.getResource("/resources/IconDelete32.png"));
 	private ImageIcon imageHelp = new ImageIcon(MainFrame.class.getResource("/resources/IconHelp32.png"));
 
-	private ImageIcon imageFind = new ImageIcon(MainFrame.class.getResource("/resources/IconFind32.png"));
+	private ImageIcon imageSaveAs16 = new ImageIcon(MainFrame.class.getResource("/resources/IconFloppy16.png"));
+
+	
+	private ImageIcon imageFind = new ImageIcon(MainFrame.class.getResource("/resources/IconSearch32.png"));
 	private ImageIcon imageEdit = new ImageIcon(MainFrame.class.getResource("/resources/IconEdit32.png"));
-	private ImageIcon imageUsers = new ImageIcon(MainFrame.class.getResource("/resources/IconUser32.png"));
+	private ImageIcon imageUsers = new ImageIcon(MainFrame.class.getResource("/resources/IconUsers32.png"));
 	private ImageIcon imageDiscriminators = new ImageIcon(MainFrame.class.getResource("/resources/IconDiscriminator32.png"));
 	private ImageIcon imageTemplates = new ImageIcon(MainFrame.class.getResource("/resources/IconBookmark32.png"));
+	
+	private ImageIcon imageImage16 = new ImageIcon(MainFrame.class.getResource("/resources/IconImage16.png"));
+	private ImageIcon imageDelete16 = new ImageIcon(MainFrame.class.getResource("/resources/IconDelete16.png"));
+	private ImageIcon imageEdit16 = new ImageIcon(MainFrame.class.getResource("/resources/IconEdit16.png"));
+
 
 
 	private JButton bFind = new JButton("", imageFind);
@@ -110,6 +118,7 @@ public class MainFrame extends JFrame {
 	private JButton btnPrevious = new JButton("Previous Page", new ImageIcon(MainFrogBrowserPanel.class.getResource("IconButtonPrevious32.png")));
 	//
 	private JToolBar barButtons = new JToolBar("", SwingConstants.HORIZONTAL);
+	private StatusBar statusBar = new StatusBar();
 	private MarkExport markExport = new MarkExport();
 	//private ThumbnailCreator thumbnailCreator;
 	private SaveAsDialog saveAsDialog;
@@ -130,15 +139,16 @@ public class MainFrame extends JFrame {
 	private JMenu menuHelp = new JMenu("Help");
 	private JMenuItem menuItemHelpAbout = new JMenuItem("About");
 	private JMenu menuProject = new JMenu("Project");
-	private JMenuItem MenuItemSearch = new JMenuItem("Search for a Match", new ImageIcon(MainFrame.class.getResource("/resources/IconFind16.png")));
+	private JMenuItem MenuItemSearch = new JMenuItem("Search for a Match", new ImageIcon(MainFrame.class.getResource("/resources/IconSearch16.png")));
 	private JMenuItem menuItemProjectManager = new JMenuItem("Project Manager");
 	// private JMenuItem menuItemOpenSite = new JMenuItem("Open Existing Site");
-	private JMenuItem menuItemSaveSiteAs = new JMenuItem("Save Site As");
-	private JMenuItem MenuItemEdit = new JMenuItem("Edit Frog", new ImageIcon(MainFrame.class.getResource("/resources/IconEdit16.png")));
-	private JMenuItem MenuItemDelete = new JMenuItem("Delete Frog", new ImageIcon(MainFrame.class.getResource("/resources/IconDelete16.png")));
+	private JMenuItem menuItemSaveSiteAs = new JMenuItem("Save Site As", imageSaveAs16);
+	private JMenuItem MenuItemEdit = new JMenuItem("Edit Frog", imageEdit16);
+	private JMenuItem MenuItemDelete = new JMenuItem("Delete Frog", imageDelete16);
 	private JMenuItem MenuItemHelp = new JMenuItem("User Manual", new ImageIcon(MainFrame.class.getResource("/resources/IconHelp16.png")));
+	private JMenuItem MenuItemUsers = new JMenuItem("Users", new ImageIcon(MainFrame.class.getResource("/resources/IconUsers16.png")));
+	private JMenuItem MenuItemTemplates = new JMenuItem("Data Templates", new ImageIcon(MainFrame.class.getResource("/resources/IconBookmark16.png")));
 	private JMenuItem MenuItemDiscriminators = new JMenuItem("Discriminators", new ImageIcon(MainFrame.class.getResource("/resources/IconDiscriminator16.png")));
-	private JMenuItem MenuItemUsers = new JMenuItem("Observers & Recorders", new ImageIcon(MainFrame.class.getResource("/resources/IconUser16.png")));
 	private JCheckBoxMenuItem CheckBoxMenuItemShowThumbs = new JCheckBoxMenuItem("Show Thumbnails", true);
 	private JMenuItem MenuItemParams = new JMenuItem("Rows per Page");
 	private JMenuItem MenuItemSearchCriteria = new JMenuItem("Search Criteria");
@@ -163,6 +173,8 @@ public class MainFrame extends JFrame {
 		this.setTitle("IdentiFrog - " + XMLFrogDatabase.getFileNamePath());
 		try {
 			init();
+			statusBar.setRightStatus(XMLFrogDatabase.getFrogs().size()+" Frogs");
+			statusBar.setMessage("Loaded project");
 		} catch (Exception e) {
 			IdentiFrog.LOGGER.writeMessage("MainFrame.MainFrame() Exception");
 			IdentiFrog.LOGGER.writeException(e);
@@ -286,8 +298,36 @@ public class MainFrame extends JFrame {
 		menuItemHelpAbout.addActionListener(new MainFrame_menuItemHelpAbout_ActionAdapter(this));
 		MenuItemNew.setAccelerator(javax.swing.KeyStroke.getKeyStroke('N', InputEvent.CTRL_MASK, false));
 		MenuItemNew.addActionListener(new MainFrame_MenuItemNew_actionAdapter(this));
+		
+		MenuItemUsers.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new UsersFrame(MainFrame.this).setVisible(true);
+			}
+		});
+		
+		MenuItemTemplates.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("Templates not defined yet");
+			}
+		});
+		
+		MenuItemDiscriminators.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new DiscriminatorFrame(MainFrame.this).setVisible(true);
+			}
+		});
+		
 		MenuItemMarkExport.addActionListener(new MainFrame_MenuItemMarkExport_actionAdapter(this));
-		menuItemCreateXLSX.addActionListener(new MainFrame_menuItemCreateXLSX_actionAdapter(this));
+		menuItemCreateXLSX.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new XLSXTemplateGeneratorFrame(MainFrame.this);
+			}
+		});
 		// find button verify input when focus target
 		bFind.setVerifyInputWhenFocusTarget(true);
 		// buttons tool tip text
@@ -301,10 +341,66 @@ public class MainFrame extends JFrame {
 		bTemplates.setToolTipText("Manage Templates");
 
 		// action listeners for the buttons
-		bFind.addActionListener(new MainFrame_butFind_actionAdapter(this));
-		bEdit.addActionListener(new MainFrame_butEdit_actionAdapter(this));
-		bDelete.addActionListener(new MainFrame_butDelete_actionAdapter(this));
-		bNew.addActionListener(new MainFrame_butOpen_actionAdapter(this));
+		bFind.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					butFind_actionPerformed(null);
+				} catch (Exception ex) {
+					IdentiFrog.LOGGER.writeException(ex);
+				}
+			}
+		});
+		
+		bEdit.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					editFrog(frogList.getSelectedValue());
+				} catch (Exception ex) {
+					IdentiFrog.LOGGER.writeException(ex);
+				}
+			}
+		});
+		bDelete.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					deleteFrog(frogList.getSelectedValue());
+				} catch (Exception ex) {
+					IdentiFrog.LOGGER.writeException(ex);
+				}
+			}
+		});
+		bNew.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				MenuItemNew_actionPerformed(null);
+			}
+		});
+		
+		bUsers.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new UsersFrame(MainFrame.this).setVisible(true);
+			}
+		});
+		
+		bDiscriminators.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new DiscriminatorFrame(MainFrame.this).setVisible(true);
+			}
+		});
+		
+		
 		bHelp.addActionListener(new MainFrame_butHelp_actionAdapter(this));
 		//
 		MenuItemSearch.setAccelerator(javax.swing.KeyStroke.getKeyStroke('S', InputEvent.CTRL_MASK, false));
@@ -314,10 +410,38 @@ public class MainFrame extends JFrame {
 		MenuItemSearchCriteria.setAccelerator(javax.swing.KeyStroke.getKeyStroke('S', InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
 		MenuItemDelete.setAccelerator(javax.swing.KeyStroke.getKeyStroke('D', InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
 		//
-		MenuItemSearch.addActionListener(new MainFrame_MenuItemSearch_actionAdapter(this));
-		MenuItemEdit.addActionListener(new MainFrame_MenuItemEdit_actionAdapter(this));
-		MenuItemDelete.addActionListener(new MainFrame_MenuItemDelete_actionAdapter(this));
-		MenuItemHelp.addActionListener(new MainFrame_MenuItemHelp_actionAdapter(this));
+		MenuItemSearch.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				butFind_actionPerformed(null);
+			}
+		});
+		MenuItemEdit.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				editFrog(frogList.getSelectedValue());
+			}
+		});
+		MenuItemDelete.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				deleteFrog(frogList.getSelectedValue());
+			}
+		});
+		MenuItemHelp.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				runManual();
+			}
+		});
 		CheckBoxMenuItemShowThumbs.addActionListener(new MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter(this));
 		MenuItemParams.addActionListener(new MainFrame_MenuItemParams_actionAdapter(this));
 		MenuItemSearchCriteria.addActionListener(new MainFrame_MenuItemSearchCriteria_actionAdapter(this));
@@ -396,6 +520,7 @@ public class MainFrame extends JFrame {
 		menuProject.add(MenuItemDelete);
 		menuProject.addSeparator();
 		menuProject.add(MenuItemUsers);
+		menuProject.add(MenuItemTemplates);
 		menuProject.add(MenuItemDiscriminators);
 		menuProject.addSeparator();
 		menuProject.add(CheckBoxMenuItemShowThumbs);
@@ -406,7 +531,7 @@ public class MainFrame extends JFrame {
 
 		// icon states
 		bFind.setEnabled(false); // default to false cause nothing is selected
-									//by default
+									//by default+
 		bEdit.setEnabled(false);
 		bDelete.setEnabled(false);
 		MenuItemDelete.setEnabled(false);
@@ -463,40 +588,21 @@ public class MainFrame extends JFrame {
 	                frogList.setSelectedIndex(frogList.locationToIndex(e.getPoint()));
 	            }
 	            if (e.isPopupTrigger()) {
-	            	final Frog f = frogModel.get(frogList.locationToIndex(e.getPoint()));
-	            	
-	            	//codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
-		            JPopupMenu popup = new JPopupMenu();
-					JMenuItem popupAddImage, popupEditInfo, popupDeleteFrog, popupSearch;
-					popupAddImage = new JMenuItem("Add image to this frog");
-					popupAddImage.addActionListener(new ActionListener() {
-						
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							// TODO Auto-generated method stub
-							IdentiFrog.LOGGER.writeMessage("MainFrame: Right click > Add image to this frog on ID: "+f.getID());
-						}
-					});
-					popupEditInfo = new JMenuItem("Edit frog information");
-					popupEditInfo.addActionListener(new ActionListener() {
-						
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							IdentiFrog.LOGGER.writeMessage("Opening Frog Editor via Right Click Menu: "+f.toString());
-							FrogEditor editFrogWindow = new FrogEditor(MainFrame.this, "Edit Frog", f);
-							editFrogWindow.pack();
-							editFrogWindow.setVisible(true);
-						}
-					});
-					popupDeleteFrog = new JMenuItem("Search for matching frog");
-					popupSearch = new JMenuItem("Delete this frog");
-					popup.add(popupAddImage);
-					popup.add(popupEditInfo);
-					popup.add(popupDeleteFrog);
-					popup.add(popupSearch);
-		            popup.show(e.getComponent(), e.getX(), e.getY());
+	            	createFrogPopup(e);
 	            }
 	        }
+	        
+	        public void mouseReleased(MouseEvent e)
+	        {
+	            if ( SwingUtilities.isRightMouseButton(e) )
+	            {
+	                frogList.setSelectedIndex(frogList.locationToIndex(e.getPoint()));
+	            }
+	            if (e.isPopupTrigger()) {
+	            	createFrogPopup(e);
+	            }
+	        }
+	        
 	     });
 		
 		for (Frog frog : XMLFrogDatabase.getFrogs()) {
@@ -516,6 +622,53 @@ public class MainFrame extends JFrame {
 		cons.weighty = 1;
 		cons.fill = GridBagConstraints.BOTH;
 		add(frogListPane,cons);
+		cons.gridy = 2;
+		cons.weighty = 0;
+		cons.fill = GridBagConstraints.HORIZONTAL;
+		add(statusBar, cons);
+	}
+	
+	private void createFrogPopup(MouseEvent e){
+    	System.out.println("IS POPUP TRIG");
+    	final Frog f = frogModel.get(frogList.locationToIndex(e.getPoint()));
+    	
+    	//codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
+        JPopupMenu popup = new JPopupMenu();
+		JMenuItem popupAddImage, popupEditInfo, popupDeleteFrog, popupSearch;
+		popupAddImage = new JMenuItem("Add image to this frog", imageImage16);
+		popupAddImage.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				IdentiFrog.LOGGER.writeMessage("MainFrame: Right click > Add image to this frog on ID: "+f.getID());
+			}
+		});
+		popupEditInfo = new JMenuItem("Edit frog information",imageEdit16);
+		popupEditInfo.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				IdentiFrog.LOGGER.writeMessage("Opening Frog Editor via Right Click Menu: "+f.toString());
+				FrogEditor editFrogWindow = new FrogEditor(MainFrame.this, "Edit Frog", f);
+				editFrogWindow.pack();
+				editFrogWindow.setVisible(true);
+			}
+		});
+		popupDeleteFrog = new JMenuItem("Delete Frog",imageDelete16);
+		popupDeleteFrog.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				deleteFrog(f);
+			}
+		});
+		popupSearch = new JMenuItem("Merge Frog...?");
+		popup.add(popupAddImage);
+		popup.add(popupEditInfo);
+		popup.add(popupDeleteFrog);
+		popup.add(popupSearch);
+        popup.show(e.getComponent(), e.getX(), e.getY());
 	}
 
 	// File | Exit action performed
@@ -556,47 +709,36 @@ public class MainFrame extends JFrame {
 	 * 
 	 * @throws Exception
 	 */
-	private void editFrog() throws Exception {
-		/*int localID = workingAreaPanel.getSelectedFrog_Id();
-		if (localID == -1) {
-			return;
-		}
-		*/
-		System.out.println("EDIT HAS HARDCODED ID OF 1 REMEMBER TO CHANGE ME");
-		Frog localFrog = XMLFrogDatabase.searchFrogByID(1); //TODO CHANGE THIS
-		FrogEditor editFrogFrame = new FrogEditor(this, "Edit Frog", localFrog);
-
-		/*
-		 * EditFrog editFrogFrame = new EditFrog(MainFrame.this,
-		 * "Edit Frog Information", true, localFrog);
-		 */
+	private void editFrog(Frog f) {
+		FrogEditor editFrogFrame = new FrogEditor(this, "Edit Frog", f);
 		editFrogFrame.pack();
-		// garbage collector
-		//System.gc();
-		// TODO center edit frog frame
-		// editFrogFrame.setLocation(getX(), getY());
 		editFrogFrame.setVisible(true);
-		localFrog = editFrogFrame.getFrog();
-		// frogData.replaceFrog(localID, localFrog);
-		// update cells
-		// write xml file
+		IdentiFrog.LOGGER.writeError("Did not capture returned frog - might not be edited in DB");
+		//localFrog = editFrogFrame.getFrog();
 		XMLFrogDatabase.writeXMLFile();
 	}
 
 	/**
-	 * Delete frog from the selected row
-	 * 
-	 * @throws Exception
+	 * Delete frog from the database
 	 */
-	private void deleteFrog() throws Exception {
+	private void deleteFrog(Frog f) {
 		IdentiFrog.LOGGER.writeError("Deleting frog is not yet fully implemented!");
-		int localID = -1;
-		if (localID == -1) {
-			return;
+		int numImages = f.getAllSiteImages().size();
+		int numSignatures = 0;
+		for (SiteSample sample : f.getSiteSamples()) {
+			for (SiteImage img : sample.getSiteImages()) {
+				if (img.isSignatureGenerated()){
+					numSignatures++;
+				}
+			}
 		}
-		if (ChoiceDialog.choiceMessage("Deleting this frog will remove all images,\n"
-				+ "signatures, and sitesamples for this frog.\nDelete this frog?") == 0) {
-			Frog localFrog = XMLFrogDatabase.searchFrogByID(localID);
+		if (JOptionPane.showConfirmDialog(null, "Deleting this frog will remove "+numImages+" "+((numImages == 1) ? "image" : "images") + " and "+numSignatures+" "+((numSignatures == 1) ? "signature" : "signatures")+ ".\n"
+				+"Delete this frog?", "Delete Frog", JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
+			
+			
+			frogModel.removeElement(f);
+			XMLFrogDatabase.removeFrog(f.getID());
+			XMLFrogDatabase.writeXMLFile();
 			//String localImageName = localFrog.getGenericImageName();
 			//String localSignatureName = localFrog.getPathSignature();
 			// check if exists then delete
@@ -606,11 +748,6 @@ public class MainFrame extends JFrame {
 			new File(XMLFrogDatabase.getThumbnailFolder() + localImageName).delete();
 			new File(XMLFrogDatabase.getBinaryFolder() + localImageName).delete();
 			new File(XMLFrogDatabase.getSignaturesFolder() + localSignatureName).delete();*/
-			XMLFrogDatabase.removeFrog(localID);
-			// garbage collector
-			System.gc();
-			// write xml file
-			XMLFrogDatabase.writeXMLFile();
 		}
 	}
 
@@ -697,22 +834,6 @@ public class MainFrame extends JFrame {
 
 	}
 
-	protected void MenuItemEdit_actionPerformed(ActionEvent e) {
-		butEdit_actionPerformed(e);
-	}
-
-	protected void MenuItemSearch_actionPerformed(ActionEvent e) {
-		butFind_actionPerformed(e);
-	}
-
-	protected void MenuItemDelete_actionPerformed(ActionEvent e) {
-		butDelete_actionPerformed(e);
-	}
-
-	protected void butOpen_actionPerformed(ActionEvent e) {
-		MenuItemNew_actionPerformed(e);
-	}
-
 	/* Match Button pressed */
 	protected void butFind_actionPerformed(ActionEvent e) {
 		IdentiFrog.LOGGER.writeMessage("Find/match is not implemented yet!");
@@ -740,29 +861,12 @@ public class MainFrame extends JFrame {
 		*/
 	}
 
-	protected void butEdit_actionPerformed(ActionEvent e) {
-		try {
-			editFrog();
-		} catch (Exception ex) {
-			IdentiFrog.LOGGER.writeMessage("MainFrame.butEdit_actionPerfomed() Exception");
-			IdentiFrog.LOGGER.writeMessage(ex.getMessage());
-		}
-	}
-
-	protected void butDelete_actionPerformed(ActionEvent e) {
-		try {
-			deleteFrog();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}
-
 	protected void MenuItemHelp_actionPerformed(ActionEvent e) {
 		runManual();
 	}
 
 	private void runManual() {
-		String url = "http://code.google.com/p/identifrog/";
+		String url = "http://github.com/mjperez-usgs/IdentiFrog/";
 		if (Desktop.isDesktopSupported()) {
 			try {
 				Desktop.getDesktop().browse(new URI(url));
@@ -944,113 +1048,7 @@ class MainFrame_MenuItemMarkExport_actionAdapter implements java.awt.event.Actio
 	}
 }
 
-class MainFrame_menuItemCreateXLSX_actionAdapter implements java.awt.event.ActionListener {
-	MainFrame adaptee;
 
-	MainFrame_menuItemCreateXLSX_actionAdapter(MainFrame adaptee) {
-		this.adaptee = adaptee;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		adaptee.menuItemCreateBatchXLSX_actionPerformed(e);
-	}
-}
-
-class MainFrame_butOpen_actionAdapter implements java.awt.event.ActionListener {
-	MainFrame adaptee;
-
-	MainFrame_butOpen_actionAdapter(MainFrame adaptee) {
-		this.adaptee = adaptee;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		adaptee.butOpen_actionPerformed(e);
-	}
-}
-
-class MainFrame_butFind_actionAdapter implements java.awt.event.ActionListener {
-	MainFrame adaptee;
-
-	MainFrame_butFind_actionAdapter(MainFrame adaptee) {
-		this.adaptee = adaptee;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		adaptee.butFind_actionPerformed(e);
-	}
-}
-
-class MainFrame_butEdit_actionAdapter implements java.awt.event.ActionListener {
-	MainFrame adaptee;
-
-	MainFrame_butEdit_actionAdapter(MainFrame adaptee) {
-		this.adaptee = adaptee;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		adaptee.butEdit_actionPerformed(e);
-	}
-}
-
-class MainFrame_butDelete_actionAdapter implements java.awt.event.ActionListener {
-	MainFrame adaptee;
-
-	MainFrame_butDelete_actionAdapter(MainFrame adaptee) {
-		this.adaptee = adaptee;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		adaptee.butDelete_actionPerformed(e);
-	}
-}
-
-class MainFrame_MenuItemEdit_actionAdapter implements java.awt.event.ActionListener {
-	MainFrame adaptee;
-
-	MainFrame_MenuItemEdit_actionAdapter(MainFrame adaptee) {
-		this.adaptee = adaptee;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		adaptee.MenuItemEdit_actionPerformed(e);
-	}
-}
-
-class MainFrame_MenuItemSearch_actionAdapter implements java.awt.event.ActionListener {
-	MainFrame adaptee;
-
-	MainFrame_MenuItemSearch_actionAdapter(MainFrame adaptee) {
-		this.adaptee = adaptee;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		adaptee.MenuItemSearch_actionPerformed(e);
-	}
-}
-
-class MainFrame_MenuItemDelete_actionAdapter implements java.awt.event.ActionListener {
-	MainFrame adaptee;
-
-	MainFrame_MenuItemDelete_actionAdapter(MainFrame adaptee) {
-		this.adaptee = adaptee;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		adaptee.MenuItemDelete_actionPerformed(e);
-	}
-}
-
-class MainFrame_MenuItemHelp_actionAdapter implements java.awt.event.ActionListener {
-	MainFrame adaptee;
-
-	MainFrame_MenuItemHelp_actionAdapter(MainFrame adaptee) {
-		this.adaptee = adaptee;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		adaptee.MenuItemHelp_actionPerformed(e);
-	}
-}
 
 class MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter implements java.awt.event.ActionListener {
 	MainFrame adaptee;

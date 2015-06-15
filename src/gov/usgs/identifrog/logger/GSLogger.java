@@ -11,28 +11,35 @@ import java.util.Calendar;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 /** Adapted from source code used in ME3CMM 3.0 (DebugLogger.java)
+ * GSLogger is a logging class that writes messages to Standard Out and a file, as well as errors and exceptions to standard error and a file with datestamps.
+ * It should be used in place of System.out.println();.
  * @author Michael J. Perez 2015
  *
  */
 public class GSLogger {
-	File logFile;
-	String logFileName = "IdentiFrogSession.log";
-	FileWriter fw;
-	Calendar cal = Calendar.getInstance();
-	SimpleDateFormat sdf;
+	private File logFile;
+	private String logFileName = "IdentiFrogSession.log";
+	private FileWriter fw;
+	private Calendar cal = Calendar.getInstance();
+	private SimpleDateFormat sdf;
+	private int currentPendingMessages = 0;
+	private final int maxPendingMessage = 10;
 	
+	/**
+	 * Initializes a new GSLogger object using the object's predefined logFileName. Writes an exception if unable to open a file.
+	 */
 	public GSLogger(){
 		sdf = new SimpleDateFormat("MM/dd/YYYY HH:mm:ss");
 		try {
 			fw = new FileWriter(logFileName);
 		} catch (IOException e) {
 			System.out.println("Unable to write log to file! Will write to console only.");
-			IdentiFrog.LOGGER.writeException(e);
+			e.printStackTrace();
 		}
 	}
 	
 	/**
-	 * Called if you want to use the debug logger.
+	 * Call if you want to use the debug logger.
 	 */
 	public void initialize(){
 		logFile = new File(logFileName);
@@ -71,6 +78,10 @@ public class GSLogger {
 		}
 	}
 	
+	/**
+	 * Writes a string into the log file.
+	 * @param message Message to write into the log file
+	 */
 	public void writeMessage(String message){
 		if (IdentiFrog.LOGGING){
 			try {
@@ -80,14 +91,19 @@ public class GSLogger {
 				fw.write(": ");
 				fw.write(message);
 				fw.write(System.getProperty("line.separator"));
+				incrementPendingMessages();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				System.err.println("Cannot write to log file due to IOException:");
-				IdentiFrog.LOGGER.writeException(e);
+				e.printStackTrace();
 			}
 		}
 	}
 
+	/**
+	 * Writes the stack trace of the passed exception into the log file.
+	 * @param e Exception to print stack trace of
+	 */
 	public void writeException(Exception e) {
 		if (IdentiFrog.LOGGING){
 			try {
@@ -96,7 +112,7 @@ public class GSLogger {
 				fw.write(sdf.format(cal.getTime()));
 				fw.write(ExceptionUtils.getStackTrace(e));
 				fw.write(System.getProperty("line.separator"));
-				fw.flush();
+				incrementPendingMessages();
 			} catch (IOException ex) {
 				// TODO Auto-generated catch block
 				System.err.println("Cannot write to log file due to IOException:");
@@ -105,16 +121,29 @@ public class GSLogger {
 		}
 	}
 
+	/**
+	 * Writes an exception with a preceeding message to describe what the exception is occuring from.
+	 * @param message Message to display
+	 * @param e exception to print stack trace of
+	 */
 	public void writeExceptionWithMessage(String message, Exception e) {
 		writeMessage(message);
 		writeException(e);
 	}
 
+	/**
+	 * Writes an integer to the console and log file.
+	 * @param intVal int value to write
+	 */
 	public void writeMessage(int intVal) {
 		writeMessage(Integer.toString(intVal));
 		
 	}
 
+	/**
+	 * Writes a message to Standard Error and writes a special  ERROR: tag in the log file.
+	 * @param message
+	 */
 	public void writeError(String message) {
 		if (IdentiFrog.LOGGING){
 			try {
@@ -124,11 +153,26 @@ public class GSLogger {
 				fw.write(" ERROR: ");
 				fw.write(message);
 				fw.write(System.getProperty("line.separator"));
+				incrementPendingMessages();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				System.err.println("Cannot write to log file due to IOException:");
 				IdentiFrog.LOGGER.writeException(e);
 			}
+		}
+	}
+	
+	private void incrementPendingMessages(){
+		currentPendingMessages++;
+		if (currentPendingMessages > maxPendingMessage) {
+			System.err.println("Flushing messages");
+			try {
+				fw.flush();
+			} catch (IOException e) {
+				System.err.println("Failed to flush messages of logger");
+				e.printStackTrace();
+			}
+			currentPendingMessages = 0;
 		}
 	}
 }
