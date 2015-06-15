@@ -55,7 +55,7 @@ public class FrogEditorImageRenderer extends JPanel implements ListCellRenderer<
     		icon = new ImageIcon(image.getGreyScaleThumbnail());
 		}
     	cellImage.setIcon(icon);
-    	if (image.isProcessed()) {
+    	if (image.isSignatureGenerated()) {
     		cellLabel.setText("Signature Created");
     	} else {
     		cellLabel.setText("Pending Signature");

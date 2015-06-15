@@ -198,26 +198,16 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		parentFrame = frame;
 		this.frog = frog;
 		images = frog.getAllSiteImages();
+		for (SiteImage img : images) {
+			//load thumbnails
+			img.createListThumbnail();
+		}
 		try {
 			init();
 			//load frog... TODO
 			textFrog_ID.setText(Integer.toString(frog.getID()));
 			textSpecies.setText(frog.getSpecies());
 			sexComboBox.setSelectedItem(frog.getGender());
-			//descriminator todo
-			
-			/*
-			Calendar entryCal = Calendar.getInstance();
-			entryDatePicker.getModel().setDate(entryCal.get(Calendar.YEAR), entryCal.get(Calendar.MONTH), entryCal.get(Calendar.DAY_OF_MONTH));
-			entryDatePicker.getModel().setSelected(true);
-			
-			//load datepicker data
-			Calendar captureCal = Calendar.getInstance();
-			IdentiFrog.LOGGER.writeMessage(captureCal.get(Calendar.YEAR) + "-" + captureCal.get(Calendar.MONTH) + "-"
-					+ captureCal.get(Calendar.DAY_OF_MONTH));
-			captureDatePicker.getModel()
-					.setDate(captureCal.get(Calendar.YEAR), captureCal.get(Calendar.MONTH), captureCal.get(Calendar.DAY_OF_MONTH));
-			captureDatePicker.getModel().setSelected(true);*/
 		} catch (Exception e) {
 			IdentiFrog.LOGGER.writeExceptionWithMessage("Exception while starting add frog.", e);
 		}
@@ -479,7 +469,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		//top buttons==============
 		butFillPreviousFrogInfo.setText("Fill From Template");
 		butFillPreviousFrogInfo.setVisible(true);
-		butFillPreviousFrogInfo.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconRefresh32.png")));
+		butFillPreviousFrogInfo.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconBookmark32.png")));
 		butFillPreviousFrogInfo.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				butFillPreviousFrogInfo_actionPerformed(e);

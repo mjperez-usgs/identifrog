@@ -7,6 +7,7 @@ import gov.usgs.identifrog.ImageViewer;
 import gov.usgs.identifrog.MainFrogBrowserPanel;
 import gov.usgs.identifrog.MarkExport;
 import gov.usgs.identifrog.MatchingDialog;
+import gov.usgs.identifrog.OLDWORKINGPANEL;
 import gov.usgs.identifrog.SaveAsDialog;
 import gov.usgs.identifrog.SearchCriteriaDialog;
 import gov.usgs.identifrog.Site;
@@ -26,6 +27,8 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,10 +56,14 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 /**
  * <p>
@@ -87,6 +94,7 @@ public class MainFrame extends JFrame {
 	private ImageIcon imageEdit = new ImageIcon(MainFrame.class.getResource("/resources/IconEdit32.png"));
 	private ImageIcon imageUsers = new ImageIcon(MainFrame.class.getResource("/resources/IconUser32.png"));
 	private ImageIcon imageDiscriminators = new ImageIcon(MainFrame.class.getResource("/resources/IconDiscriminator32.png"));
+	private ImageIcon imageTemplates = new ImageIcon(MainFrame.class.getResource("/resources/IconBookmark32.png"));
 
 
 	private JButton bFind = new JButton("", imageFind);
@@ -94,6 +102,7 @@ public class MainFrame extends JFrame {
 	private JButton bDelete = new JButton("", imageDelete);
 	private JButton bNew = new JButton("", imageNew);
 	private JButton bUsers = new JButton("", imageUsers);
+	private JButton bTemplates = new JButton("", imageTemplates);
 	private JButton bDiscriminators = new JButton("", imageDiscriminators);
 	private JButton bHelp = new JButton("", imageHelp);
 	//
@@ -289,6 +298,8 @@ public class MainFrame extends JFrame {
 		bHelp.setToolTipText("Help");
 		bDiscriminators.setToolTipText("Manage Discriminators List");
 		bUsers.setToolTipText("Manage Observers and Recorders List");
+		bTemplates.setToolTipText("Manage Templates");
+
 		// action listeners for the buttons
 		bFind.addActionListener(new MainFrame_butFind_actionAdapter(this));
 		bEdit.addActionListener(new MainFrame_butEdit_actionAdapter(this));
@@ -356,6 +367,7 @@ public class MainFrame extends JFrame {
 		barButtons.add(bDelete, null);
 		barButtons.add(Box.createHorizontalGlue());
 		barButtons.add(bUsers);
+		barButtons.add(bTemplates);
 		barButtons.add(bDiscriminators);
 		//barButtons.add(new JToolBar.Separator(new Dimension(0, 8)), null);
 		// barButtons.add(btnPrevious);
@@ -413,6 +425,79 @@ public class MainFrame extends JFrame {
 		//frogList.setFixedCellHeight(160);
 		//frogList.setFixedCellWidth(150);
 		frogList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+		
+		frogList.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				if (e.getValueIsAdjusting()) {
+					if (frogList.getSelectedIndex() != -1) {
+						// icon states
+						bFind.setEnabled(true);
+						bEdit.setEnabled(true);
+						bDelete.setEnabled(true);
+						MenuItemDelete.setEnabled(true);
+						MenuItemEdit.setEnabled(true);
+						MenuItemSearch.setEnabled(true);
+						
+					} else {
+						//empty selection
+						// icon states
+						bFind.setEnabled(false);
+						bEdit.setEnabled(false);
+						bDelete.setEnabled(false);
+						MenuItemDelete.setEnabled(false);
+						MenuItemEdit.setEnabled(false);
+						MenuItemSearch.setEnabled(false);
+					}
+				}
+			}
+		});
+		
+		//match right click selection
+		frogList.addMouseListener( new MouseAdapter()
+	     {
+	        public void mousePressed(MouseEvent e)
+	        {
+	            if ( SwingUtilities.isRightMouseButton(e) )
+	            {
+	                frogList.setSelectedIndex(frogList.locationToIndex(e.getPoint()));
+	            }
+	            if (e.isPopupTrigger()) {
+	            	final Frog f = frogModel.get(frogList.locationToIndex(e.getPoint()));
+	            	
+	            	//codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
+		            JPopupMenu popup = new JPopupMenu();
+					JMenuItem popupAddImage, popupEditInfo, popupDeleteFrog, popupSearch;
+					popupAddImage = new JMenuItem("Add image to this frog");
+					popupAddImage.addActionListener(new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							// TODO Auto-generated method stub
+							IdentiFrog.LOGGER.writeMessage("MainFrame: Right click > Add image to this frog on ID: "+f.getID());
+						}
+					});
+					popupEditInfo = new JMenuItem("Edit frog information");
+					popupEditInfo.addActionListener(new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							IdentiFrog.LOGGER.writeMessage("Opening Frog Editor via Right Click Menu: "+f.toString());
+							FrogEditor editFrogWindow = new FrogEditor(MainFrame.this, "Edit Frog", f);
+							editFrogWindow.pack();
+							editFrogWindow.setVisible(true);
+						}
+					});
+					popupDeleteFrog = new JMenuItem("Search for matching frog");
+					popupSearch = new JMenuItem("Delete this frog");
+					popup.add(popupAddImage);
+					popup.add(popupEditInfo);
+					popup.add(popupDeleteFrog);
+					popup.add(popupSearch);
+		            popup.show(e.getComponent(), e.getX(), e.getY());
+	            }
+	        }
+	     });
 		
 		for (Frog frog : XMLFrogDatabase.getFrogs()) {
 			frogModel.addElement(frog);

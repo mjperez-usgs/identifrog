@@ -44,6 +44,8 @@ public class IdentiFrog {
 	public static XMLFrogDatabase DB;
 	// construct the application
 	public IdentiFrog() throws FileNotFoundException, ParseException, IOException {
+		  System.setProperty("apple.laf.useScreenMenuBar", "true");
+
 		LOGGER = new GSLogger();
 	  // if the application is already open, then verify that the user wants to open another instance of the application
 		boolean alreadyOpen = node.getBoolean("alreadyOpen", false);

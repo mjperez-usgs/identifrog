@@ -346,6 +346,7 @@ public class XMLFrogDatabase {
 					image.setImageFileName(imageElement.getElementsByTagName("filename").item(0).getTextContent());
 					image.setSignatureGenerated(imageElement.getElementsByTagName("signature").item(0).getTextContent().equals("true"));
 					image.setSourceImageHash(imageElement.getElementsByTagName("sourcehash").item(0).getTextContent());
+					image.setProcessed(true);
 					siteImages.add(image);
 				}
 				sample.setSiteImages(siteImages);
