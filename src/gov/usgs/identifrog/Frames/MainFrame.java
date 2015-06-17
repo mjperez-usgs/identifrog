@@ -1,6 +1,6 @@
 package gov.usgs.identifrog.Frames;
 
-import gov.usgs.identifrog.DialogImageFileChooser;
+import gov.usgs.identifrog.DialogFileChooser;
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.ImageViewer;
 import gov.usgs.identifrog.MainFrogBrowserPanel;
@@ -131,7 +131,7 @@ public class MainFrame extends JFrame {
 
 	private JMenuBar mainMenu = new JMenuBar();
 	private JMenu menuFile = new JMenu("File");
-	private JMenuItem menuItemCreateXLSX = new JMenuItem("Create Batch Template", new ImageIcon(
+	private JMenuItem menuItemCreateXLSX = new JMenuItem("Batch Processing", new ImageIcon(
 			MainFrame.class.getResource("/resources/IconXLS16.png")));
 	private JMenuItem MenuItemNew = new JMenuItem("New Frog Image", new ImageIcon(MainFrame.class.getResource("/resources/IconNew16.png")));
 	private JMenuItem MenuItemMarkExport = new JMenuItem("Export to MARK");
@@ -803,8 +803,8 @@ public class MainFrame extends JFrame {
 	 */
 
 	protected void MenuItemNew_actionPerformed(ActionEvent e) {
-		DialogImageFileChooser imageChooser = new DialogImageFileChooser(MainFrame.this, "Choose Frog Photograph...", false,
-				System.getProperty("user.home"));
+		DialogFileChooser imageChooser = new DialogFileChooser(MainFrame.this, "Choose Frog Photograph...",
+				System.getProperty("user.home"),DialogFileChooser.getImageFilter());
 		String filename = imageChooser.getName();
 		if (filename != null) {
 			currentFile = new File(filename);

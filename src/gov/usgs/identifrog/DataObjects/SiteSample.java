@@ -113,7 +113,7 @@ public class SiteSample {
 	 * Creates a new, blank SiteSample with no data.
 	 */
 	public SiteSample() {
-		
+		siteImages = new ArrayList<SiteImage>();
 	}
 	
 	public ArrayList<SiteImage> getSiteImages() {
@@ -236,5 +236,13 @@ public class SiteSample {
 			str += image.toString();
 		}
 		return str;
+	}
+
+	/**
+	 * Adds a site image to this samples list of site images.
+	 * @param img Image to add to this sample
+	 */
+	public void addSiteImage(SiteImage img) {
+		siteImages.add(img);
 	}
 }

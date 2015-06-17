@@ -125,6 +125,9 @@ public class SiteImage {
 	}
 
 	public BufferedImage getColorThumbnail() {
+		if (sourceFileThumbnail == null) {
+			createListThumbnail();
+		}
 		return sourceFileThumbnail;
 	}
 
@@ -197,6 +200,7 @@ public class SiteImage {
 					IdentiFrog.LOGGER.writeExceptionWithMessage("Failed to copy new image to images/: " + uniqueFile.toString(), e);
 				}
 			}
+			
 			//store thumbnail
 			File outputfile = new File(XMLFrogDatabase.getThumbnailFolder()+getImageFileName());
 			try {

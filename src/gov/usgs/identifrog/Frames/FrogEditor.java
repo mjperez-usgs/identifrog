@@ -1,6 +1,6 @@
 package gov.usgs.identifrog.Frames;
 
-import gov.usgs.identifrog.DialogImageFileChooser;
+import gov.usgs.identifrog.DialogFileChooser;
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.ImageManipFrame;
 import gov.usgs.identifrog.DataObjects.DateLabelFormatter;
@@ -33,7 +33,6 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
 import java.util.prefs.Preferences;
@@ -46,7 +45,6 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
@@ -328,6 +326,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 	private void init() throws Exception {
 		setModal(true);
+		setIconImage(getToolkit().getImage(getClass().getResource("/resources/IconFrog.png")));
 		
 		//start init
 		//Images
@@ -611,13 +610,14 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		c.gridx = 1;
 		panelDataEntry.add(observerLabel, c);
 		c.gridx = 2;
+		c.weightx = 0.5;
 		panelDataEntry.add(labSurveyID, c);
 		
 
 		//4th row
 		c.insets = noInsets;
 		c.gridx = 0;
-		c.weightx = 2;
+		c.weightx = 0;
 		c.gridy = 3;
 		//panelDataEntry.add(entryDatePicker,c);
 		//c.gridx = 1;
@@ -627,6 +627,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		panelDataEntry.add(comboObserver, c);
 		c.gridx = 2;
 		c.weightx = 0.5;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		textSurveyID.setMinimumSize(textSurveyID.getPreferredSize());
 		panelDataEntry.add(textSurveyID, c);
 		
@@ -644,7 +645,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		labLength.setText("Length, mm");
 		textLength.setColumns(5);
 		labSurveyID.setText("Survey ID");
-		textSurveyID.setColumns(30);
+		textSurveyID.setColumns(5);
 		
 		labFrogComments.setText("Comments");
 		textFrogComments.setColumns(210);
@@ -1302,7 +1303,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	 */
 	public SiteImage addImage() {
 		String home = System.getProperty("user.home");
-		DialogImageFileChooser imageChooser = new DialogImageFileChooser("Choose Frog Photograph...", false, home);
+		DialogFileChooser imageChooser = new DialogFileChooser(this, "Choose Frog Photograph...", home);
 		String filename = imageChooser.getName();
 		if (filename != null) {
 			SiteImage image = new SiteImage();

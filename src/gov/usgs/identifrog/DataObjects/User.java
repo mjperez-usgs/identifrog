@@ -89,4 +89,11 @@ public class User implements Comparable<User>{
 	public int compareTo(User otherUser) {
 		return firstName.compareToIgnoreCase(otherUser.firstName);
 	}
+
+	@Override
+	public String toString() {
+		return "User [firstName=" + firstName + ", lastName=" + lastName + ", ID=" + ID + ", inUse=" + inUse + "]";
+	}
+	
+	
 }
