@@ -59,11 +59,11 @@ public class SiteSample {
 		// CREATE BIOMETRICS ELEMENT
 		Element biometrics = document.createElement("biometrics");
 		// SET MASS ATTRIBUTE OF BIOMETRICS
-		if (getMass() != null || getMass().length() > 0) {
+		if (getMass() != null && getMass().length() > 0) {
 			biometrics.setAttribute("mass", getMass().toString());
 		}
 		// SET LENGTH ATTRIBUTE OF BIOMETRICS
-		if (getLength() != null || getLength().length() > 0) {
+		if (getLength() != null && getLength().length() > 0) {
 			biometrics.setAttribute("length", getLength().toString());
 		}
 
@@ -85,7 +85,7 @@ public class SiteSample {
 		comments.appendChild(document.createTextNode(getComments()));
 
 		//
-		Location elementLocation = new Location(getLocation(), document);
+		Element locationElem = getLocation().createElement(document);
 
 		//
 		// element.appendChild(setupImage(document, "image",
@@ -94,7 +94,7 @@ public class SiteSample {
 		element.appendChild(surveyid);
 		element.appendChild(comments);
 		element.appendChild(recorderElem);
-		element.appendChild(elementLocation.getElement());
+		element.appendChild(locationElem);
 		element.appendChild(biometrics);
 		element.appendChild(date);
 		element.appendChild(observerElem);
@@ -116,6 +116,27 @@ public class SiteSample {
 		siteImages = new ArrayList<SiteImage>();
 	}
 	
+	/**
+	 * Copy constructor
+	 * @param s object to copy
+	 */
+	public SiteSample(SiteSample s) {
+		siteImages = new ArrayList<SiteImage>();
+		for (SiteImage img : s.getSiteImages()) {
+			siteImages.add(new SiteImage(img));
+		}
+		this.frogID = s.getFrogID();
+		this.dateCapture = s.getDateCapture();
+		this.dateEntry = s.getDateEntry();
+		this.surveyID = s.getSurveyID();
+		this.mass = s.getMass();
+		this.length = s.getLength();
+		this.comments = s.getComments();
+		this.observer = s.getObserver(); //not duplicated cause this is a reference to an object we don't modify
+		this.recorder = s.getRecorder(); //not duplicated cause this is a reference to an object we don't modify
+		this.location = new Location(s.getLocation());
+	}
+
 	public ArrayList<SiteImage> getSiteImages() {
 		return siteImages;
 	}
@@ -206,19 +227,6 @@ public class SiteSample {
 	
 	public String toString() {
 		String str = "----SiteSample--\n";
-/*	private int frogID; //used only for looking up what this belongs to without keeping a reference
-	private String surveyID;
-	private String mass;
-	private String length;
-	private String dateCapture;
-	private String dateEntry;
-	private User observer;
-	private User recorder;
-	private String discriminator;
-	private String comments;
-	private Location location;
-	private String pathImage;
-	private ArrayList<SiteImage> siteImages;*/
 		str += "--Entry Date: "+dateEntry+"\n";
 		str += "--Capture Date: "+dateCapture+"\n";
 		str += "--Survey ID: "+surveyID+"\n";
@@ -245,4 +253,6 @@ public class SiteSample {
 	public void addSiteImage(SiteImage img) {
 		siteImages.add(img);
 	}
+	
+	
 }

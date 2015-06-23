@@ -65,18 +65,6 @@ public class FrogEditorImageRenderer extends JPanel implements ListCellRenderer<
     	add(cellImage);
     	add(cellLabel);
     	setBorder(new EmptyBorder(4,4,4,4));
-        
-    	/*
-    	if (!isSelected) {
-	      setForeground(Color.RED);
-	    } else {
-	    	setForeground(Color.white);
-	    }*/
-    	
-    	//ImageIcon imageIcon = new ImageIcon(getClass().getResource("/images/" + code + ".png"));
-         
-        //setIcon(imageIcon);
-        //setText(country.getName());
         return this;
     }
 }

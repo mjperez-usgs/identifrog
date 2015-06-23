@@ -35,8 +35,16 @@ public class Discriminator implements InUseFlag {
 	}
 
 	/**
-	 * Empty constructor loading from DB
+	 * Copy constructor
+	 * @param d Object to copy
 	 */
+	public Discriminator(Discriminator d) {
+		//Strings are immutable
+		this.text = d.getText();
+		this.inUse = d.isInUse();
+		this.id = d.getID();
+	}
+
 	public Discriminator() {
 		// TODO Auto-generated constructor stub
 	}

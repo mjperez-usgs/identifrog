@@ -4,6 +4,10 @@ import gov.usgs.identifrog.Frames.ProjectManagerFrame;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 import gov.usgs.identifrog.logger.GSLogger;
 
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -25,7 +29,8 @@ import org.w3c.dom.Element;
  * <p>
  * Title: IdentiFrog.java
  * <p>
- * Description: An Automated Pattern Recognition Program for Leopard Frogs (Lithobates pipiens).
+ * Description: An Automated Pattern Recognition Program for Leopard Frogs
+ * (Lithobates pipiens).
  * 
  * @author Hidayatullah Ahsan 2011
  * @author Oksana V. Kelly 2008
@@ -42,49 +47,41 @@ public class IdentiFrog {
 	public static boolean LOGGING = true;
 	public static GSLogger LOGGER;
 	public static XMLFrogDatabase DB;
+
 	// construct the application
 	public IdentiFrog() throws FileNotFoundException, ParseException, IOException {
-		  System.setProperty("apple.laf.useScreenMenuBar", "true");
+		System.setProperty("apple.laf.useScreenMenuBar", "true");
 
 		LOGGER = new GSLogger();
-	  // if the application is already open, then verify that the user wants to open another instance of the application
+		// if the application is already open, then verify that the user wants to open another instance of the application
 		boolean alreadyOpen = node.getBoolean("alreadyOpen", false);
-		
-		
+
 		/*
-		if (alreadyOpen) {
-			if (ChoiceDialog.choiceMessage("Another instance of IdentiFrog may already running.\n" + "Open Anyway?") == 0) {
-				node.putBoolean("alreadyOpen", true);
-			} else {
-				System.exit(5);
-			}
-		} else {
-			node.putBoolean("alreadyOpen", true);
-		}*/
-		
-		
+		 * if (alreadyOpen) { if (ChoiceDialog.choiceMessage(
+		 * "Another instance of IdentiFrog may already running.\n" +
+		 * "Open Anyway?") == 0) { node.putBoolean("alreadyOpen", true); } else
+		 * { System.exit(5); } } else { node.putBoolean("alreadyOpen", true); }
+		 */
+
 		//splash screen ==== likely removed
 		// set splash screen
 		//SplashScreen splash = new SplashScreen("SplashScreen.png");
 		//splash.splash();
-		/*try {
-			Thread.sleep(1);
-		} catch (InterruptedException ex) {
-			ex.printStackTrace();
-		}*/
+		/*
+		 * try { Thread.sleep(1); } catch (InterruptedException ex) {
+		 * ex.printStackTrace(); }
+		 */
 		// setup data folders and database xml file
-		
-		
+
 		ProjectManagerFrame startupFrame = new ProjectManagerFrame();
 		// center the window
-		/*Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		Dimension frameSize = startupFrame.getSize();
-		if (frameSize.height > screenSize.height) {
-			frameSize.height = screenSize.height;
-		}
-		if (frameSize.width > screenSize.width) {
-			frameSize.width = screenSize.width;
-		}*/
+		/*
+		 * Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		 * Dimension frameSize = startupFrame.getSize(); if (frameSize.height >
+		 * screenSize.height) { frameSize.height = screenSize.height; } if
+		 * (frameSize.width > screenSize.width) { frameSize.width =
+		 * screenSize.width; }
+		 */
 		startupFrame.setLocationRelativeTo(null);
 		// close Splash Screen
 		//splash.dispose();
@@ -101,26 +98,28 @@ public class IdentiFrog {
 		}
 		new IdentiFrog();
 	}
-	
+
 	/**
-	 * Gets a reference to the singular DB that is currently in use by IdentiFrog. May need loading before first use.
+	 * Gets a reference to the singular DB that is currently in use by
+	 * IdentiFrog. May need loading before first use.
+	 * 
 	 * @return
 	 */
-	public static XMLFrogDatabase getDB(){
+	public static XMLFrogDatabase getDB() {
 		return DB;
 	}
-	
+
 	public static String elementToXMLStr(Element elem) {
 		String str = "error occured.";
 		try {
-		TransformerFactory transFactory = TransformerFactory.newInstance();
-		Transformer transformer;
-		transformer = transFactory.newTransformer();
-		
-		StringWriter buffer = new StringWriter();
-		transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-		transformer.transform(new DOMSource(elem),new StreamResult(buffer));
-		str = buffer.toString();
+			TransformerFactory transFactory = TransformerFactory.newInstance();
+			Transformer transformer;
+			transformer = transFactory.newTransformer();
+
+			StringWriter buffer = new StringWriter();
+			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+			transformer.transform(new DOMSource(elem), new StreamResult(buffer));
+			str = buffer.toString();
 		} catch (TransformerConfigurationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -129,5 +128,41 @@ public class IdentiFrog {
 			e.printStackTrace();
 		}
 		return str;
+	}
+
+	public static BufferedImage copyImage(Image source) {
+		if (source == null) {
+			return null;
+		}
+		BufferedImage copyOfImage = new BufferedImage(source.getWidth(null), source.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+		Graphics g = copyOfImage.createGraphics();
+		g.drawImage(source, 0, 0, null);
+		g.dispose();
+		return copyOfImage;
+	}
+	
+	/**
+	 * Converts a given Image into a BufferedImage
+	 *
+	 * @param img The Image to be converted
+	 * @return The converted BufferedImage
+	 */
+	public static BufferedImage toBufferedImage(Image img)
+	{
+	    if (img instanceof BufferedImage)
+	    {
+	        return (BufferedImage) img;
+	    }
+
+	    // Create a buffered image with transparency
+	    BufferedImage bimage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+
+	    // Draw the image on to the buffered image
+	    Graphics2D bGr = bimage.createGraphics();
+	    bGr.drawImage(img, 0, 0, null);
+	    bGr.dispose();
+
+	    // Return the buffered image
+	    return bimage;
 	}
 }

@@ -30,8 +30,8 @@ import org.w3c.dom.Element;
  */
 public class SiteImage {
 	private String imageFileName, sourceFilePath;
-	private BufferedImage sourceFileThumbnail;
-	Image greyScaleThumbnail;
+	private BufferedImage colorFileThumbnail;
+	private BufferedImage greyScaleThumbnail;
 	private boolean signatureGenerated, processed;
 	private String sourceImageHash;
 	
@@ -59,6 +59,26 @@ public class SiteImage {
 		return element;
 	}
 	
+	/**
+	 * Copy constructor
+	 * @param img object to copy
+	 */
+	public SiteImage(SiteImage img) {
+		this.imageFileName = img.getImageFileName();
+		this.sourceFilePath = img.getSourceFilePath();
+		this.colorFileThumbnail = IdentiFrog.copyImage(getColorThumbnail());
+		this.greyScaleThumbnail = IdentiFrog.copyImage(img.getGreyScaleThumbnail());
+		this.signatureGenerated = img.isSignatureGenerated();
+		this.processed = img.isProcessed();
+		this.sourceImageHash = img.getSourceImageHash();
+		
+		// TODO Auto-generated constructor stub
+	}
+	
+	public SiteImage() {
+		// TODO Auto-generated constructor stub
+	}
+
 	/**
 	 * Generates hash code for original source image. processed should not be set to true for this method to work correctly.
 	 */
@@ -118,17 +138,17 @@ public class SiteImage {
 
 	/**
 	 * Returns if this image has had a thumbnail created in the thumbnail directory and the full resolution placed in the images/ directory
-	 * @return
+	 * @return true if images are processed into DB, false otherwise
 	 */
 	public boolean isProcessed() {
 		return this.processed;
 	}
 
 	public BufferedImage getColorThumbnail() {
-		if (sourceFileThumbnail == null) {
+		if (colorFileThumbnail == null) {
 			createListThumbnail();
 		}
-		return sourceFileThumbnail;
+		return colorFileThumbnail;
 	}
 
 	/**
@@ -136,21 +156,24 @@ public class SiteImage {
 	 * @param sourceFileThumbnail
 	 */
 	public void setColorThumbnail(BufferedImage sourceFileThumbnail) {
-		this.sourceFileThumbnail = sourceFileThumbnail;
+		this.colorFileThumbnail = sourceFileThumbnail;
 	}
 
 	public Image getGreyScaleThumbnail() {
 		return greyScaleThumbnail;
 	}
 	
+	/**
+	 * Loads the greyscale thumbnail into memory if a signature has not yet been generated
+	 */
 	public void generateGreyscaleImage(){
 		if (isSignatureGenerated()) {
 			IdentiFrog.LOGGER.writeError("Image already has signature! should not be greyscale!");
 			return;
 		}
 		ImageFilter filter = new GrayFilter(true, 30);  
-		ImageProducer producer = new FilteredImageSource(sourceFileThumbnail.getSource(), filter);  
-		greyScaleThumbnail = Toolkit.getDefaultToolkit().createImage(producer);  
+		ImageProducer producer = new FilteredImageSource(colorFileThumbnail.getSource(), filter);  
+		greyScaleThumbnail = IdentiFrog.toBufferedImage(Toolkit.getDefaultToolkit().createImage(producer));  
 	}
 
 	@Override
@@ -225,7 +248,8 @@ public class SiteImage {
 	 * @return Modified image with loaded thumbnails
 	 */
 	public void createListThumbnail() {
-		IdentiFrog.LOGGER.writeMessage("Generating list thumbnail for " + this);
+		IdentiFrog.LOGGER.writeMessage("===Loading image thumbnail "+this);
+
 		BufferedImage src;
 		try {
 			if (isProcessed()) {
@@ -243,6 +267,7 @@ public class SiteImage {
 			} else {
 				greyScaleThumbnail = null; //clear references
 			}
+			IdentiFrog.LOGGER.writeMessage("===Loaded thumbnail===");
 		} catch (IOException e) {
 			IdentiFrog.LOGGER.writeExceptionWithMessage("Unable to generate thumbnail for image (in memory): " + toString(), e);
 		}

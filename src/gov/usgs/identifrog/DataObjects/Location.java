@@ -13,8 +13,6 @@ public class Location implements Comparable<Location> {
 	private String latitude;
 	private String datum;
 	private String zone;
-	private Document document;
-	private Element element;
 
 	private enum ListItem {
 		NAME(1), DESCRIPTION(2), LATITUDE(3), LONGITUDE(4), TYPE(5), DATUM(6), ZONE(7);
@@ -62,24 +60,11 @@ public class Location implements Comparable<Location> {
 		}
 	}
 
-	public Location(String name, String description, String coordinateType, String longitude, String latitude, String datum, String zone, Document document) {
-		this.name = name;
-		this.description = description;
-		this.coordinateType = coordinateType;
-		if (coordinateType != null) {
-			this.longitude = longitude;
-			this.latitude = latitude;
-			this.datum = datum;
-			if (coordinateType.equals("UTM")) {
-				this.zone = zone;
-			} else {
-				this.zone = null;
-			}
-		}
-		this.document = document;
-	}
-
-	public Location(Location location, Document document) {
+	/**
+	 * Copy constructor
+	 * @param location object to be copied
+	 */
+	public Location(Location location) {
 		name = location.getName();
 		description = location.getDescription();
 		coordinateType = location.getCoordinateType();
@@ -88,15 +73,20 @@ public class Location implements Comparable<Location> {
 			latitude = location.getLatitude();
 			datum = location.getDatum();
 			if (coordinateType.equals("UTM")) {
-				zone = null;
+				zone = location.getZone();
 			}
 		}
-		this.document = document;
 	}
 
-	private void createElement() {
+	/**
+	 * Creates an XML representation of this object for storing in the DB.
+	 * Creates the location element and populates and returns the entire object that can be directly attached to a parent
+	 * @param document Document to use for construction of the node
+	 * @return Element that can be attached to a parent
+	 */
+	public Element createElement(Document document) {
 		// CREATE LOCATION ELEMENT
-		element = document.createElement("location");
+		Element element = document.createElement("location");
 		// CREATE NAME ELEMENT
 		Element elementName = document.createElement("name");
 		elementName.appendChild(document.createTextNode(getName()));
@@ -143,11 +133,8 @@ public class Location implements Comparable<Location> {
 				elementCoordinate.appendChild(elementZone);
 			}
 		}
-		
-		System.out.println("====Location====");
-		System.out.println(IdentiFrog.elementToXMLStr(elementCoordinate));
-		
 		element.appendChild(elementCoordinate);
+		return element;
 	}
 
 	public String toString() {
@@ -185,10 +172,39 @@ public class Location implements Comparable<Location> {
 		return coordinateType;
 	}
 
+	/**
+	 * In an (X,Y) plane, this returns the horizontal point (in standard US coordinate system, known as X), aka EAST/WEST<br>
+	 * For UTM it returns Y. For LatLong it returns X.<br>
+	 * <br>
+	 * Latitude: Y<br>
+	 * Longitude: X<br>
+	 * <br>
+	 * Easting: X<br>
+	 * Northing: Y<br>
+	 * <br>
+	 * On a standard north facing map, latitude is represented by horizontal lines, which are drawn an equal distance from the equator that are equally spaced up and down (North and South) the Y axis. <br>
+	 * It's easy to think that since they are horizontal lines, they would be on the x axis, but they are not, as the lines trace an equal distance from the equator line at the same X point.
+	 * 
+	 * @return horizontal point value
+	 */
 	public String getLongitude() {
 		return longitude;
 	}
-
+	/**
+	 * In an (X,Y) plane, this returns the vertical point (in standard US coordinate system, known as Y), aka NORTH/SOUTH<br>
+	 * For UTM it returns X. For LatLong it returns Y.<br>
+	 * <br>
+	 * Latitude: Y<br>
+	 * Longitude: X<br>
+	 * <br>
+	 * Easting: X<br>
+	 * Northing: Y<br>
+	 * <br>
+	 * On a standard north facing map, longitude is represented by vertical lines, which are drawn an equal distance from the Prime Meridian that are equally spaced left and right (East and West) the Y axis.<br> 
+	 * It's easy to think that since they are vertical lines, they would be on the y axis, but they are not, as the lines trace an equal distance from the Prime Meridian line at the same Y point.
+	 * 
+	 * @return vertical point value
+	 */
 	public String getLatitude() {
 		return latitude;
 	}
@@ -199,11 +215,6 @@ public class Location implements Comparable<Location> {
 
 	public String getZone() {
 		return zone;
-	}
-
-	public Element getElement() {
-		createElement();
-		return element;
 	}
 
 	public void setName(String name) {

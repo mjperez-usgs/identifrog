@@ -158,6 +158,7 @@ public class XMLFrogDatabase {
 		
 		IdentiFrog.LOGGER.writeMessage("Writing frogs to DB");
 		for (Frog frog : frogs) {
+			IdentiFrog.LOGGER.writeMessage(frog.toString());
 			frogsElement.appendChild(frog.createDBElement(doc));
 		}
 		
@@ -205,7 +206,9 @@ public class XMLFrogDatabase {
 		DOMSource source = new DOMSource(doc);
 		StreamResult result = new StreamResult(dbfile);
 		try {
+			IdentiFrog.LOGGER.writeMessage("Saving DB to disk");
 			transformer.transform(source, result);
+			IdentiFrog.LOGGER.writeMessage("Saved DB to disk");
 		} catch (TransformerException e) {
 			IdentiFrog.LOGGER.writeException(e);
 			return false;
@@ -371,7 +374,7 @@ public class XMLFrogDatabase {
 				// Location - name
 				location.setName(locationElement.getElementsByTagName("name").item(0).getTextContent());
 				// Location - description
-				location.setDescription(locationElement.getElementsByTagName("description").item(0).getNodeValue());
+				location.setDescription(locationElement.getElementsByTagName("description").item(0).getTextContent());
 				// Location - coordinate
 				NodeList coordinate = locationElement.getElementsByTagName("coordinate");
 				if (coordinate.getLength() < 1) {
@@ -380,12 +383,12 @@ public class XMLFrogDatabase {
 					location.setCoordinateType(null);
 				} else {
 					Element coordinateElement = (Element) coordinate.item(0);
-					Node ct = coordinateElement.getAttributes().getNamedItem("type");
-					if (ct != null && ct.hasAttributes()) {
+					//Node ct = coordinateElement.getAttributes().("type");
+					if (coordinateElement != null && coordinateElement.getAttributes().getNamedItem("type") != null) {
 						location.setCoordinateType(coordinate.item(0).getAttributes().getNamedItem("type").getTextContent());
 						// Element coordinateElement = ((Element)
 						// nn.item(0)).getElementsByTagName("coordinate");
-						if (location.getCoordinateType().equals("LatLong")) {
+						if (location.getCoordinateType().equals("Lat/Long")) {
 							IdentiFrog.LOGGER.writeMessage("Loading LatLong -location- for SiteSample #" + s + " on frog with ID " + frog.getID());
 							location.setLongitude(coordinateElement.getElementsByTagName("longitude").item(0).getTextContent());
 							location.setLatitude(coordinateElement.getElementsByTagName("latitude").item(0).getTextContent());
@@ -397,9 +400,11 @@ public class XMLFrogDatabase {
 							location.setDatum(coordinateElement.getElementsByTagName("datum").item(0).getTextContent());
 							location.setZone(coordinateElement.getElementsByTagName("zone").item(0).getTextContent());
 						} else {
-							IdentiFrog.LOGGER.writeError("Error: Unknown coordinate type for -location- in SiteSample #" + s + " on frog with ID "
+							IdentiFrog.LOGGER.writeError("Error: Unknown coordinate type ("+location.getCoordinateType()+")for -location- in SiteSample #" + s + " on frog with ID "
 									+ frog.getID() + ", skipping coordinate data.");
 						}
+					} else {
+						IdentiFrog.LOGGER.writeError("Frog has sample in DB that has a location without a TYPE attribute on the LOCATION node.");
 					}
 				}
 				sample.setLocation(location);

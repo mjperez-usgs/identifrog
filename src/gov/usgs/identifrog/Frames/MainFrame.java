@@ -86,29 +86,27 @@ public class MainFrame extends JFrame {
 	//private Preferences root = Preferences.userRoot();
 	//public final Preferences node = root.node("edu/isu/aadis/defaults");
 
-	private ImageIcon imageNew = new ImageIcon(MainFrame.class.getResource("/resources/IconNew32.png"));
+	private ImageIcon imageNew32 = new ImageIcon(MainFrame.class.getResource("/resources/IconNew32.png"));
+	private ImageIcon imageNew16 = new ImageIcon(MainFrame.class.getResource("/resources/IconNew16.png"));
 	private ImageIcon imageDelete = new ImageIcon(MainFrame.class.getResource("/resources/IconDelete32.png"));
 	private ImageIcon imageHelp = new ImageIcon(MainFrame.class.getResource("/resources/IconHelp32.png"));
 
 	private ImageIcon imageSaveAs16 = new ImageIcon(MainFrame.class.getResource("/resources/IconFloppy16.png"));
 
-	
 	private ImageIcon imageFind = new ImageIcon(MainFrame.class.getResource("/resources/IconSearch32.png"));
 	private ImageIcon imageEdit = new ImageIcon(MainFrame.class.getResource("/resources/IconEdit32.png"));
 	private ImageIcon imageUsers = new ImageIcon(MainFrame.class.getResource("/resources/IconUsers32.png"));
 	private ImageIcon imageDiscriminators = new ImageIcon(MainFrame.class.getResource("/resources/IconDiscriminator32.png"));
 	private ImageIcon imageTemplates = new ImageIcon(MainFrame.class.getResource("/resources/IconBookmark32.png"));
-	
+
 	private ImageIcon imageImage16 = new ImageIcon(MainFrame.class.getResource("/resources/IconImage16.png"));
 	private ImageIcon imageDelete16 = new ImageIcon(MainFrame.class.getResource("/resources/IconDelete16.png"));
 	private ImageIcon imageEdit16 = new ImageIcon(MainFrame.class.getResource("/resources/IconEdit16.png"));
 
-
-
 	private JButton bFind = new JButton("", imageFind);
 	private JButton bEdit = new JButton("", imageEdit);
 	private JButton bDelete = new JButton("", imageDelete);
-	private JButton bNew = new JButton("", imageNew);
+	private JButton bNew = new JButton("", imageNew32);
 	private JButton bUsers = new JButton("", imageUsers);
 	private JButton bTemplates = new JButton("", imageTemplates);
 	private JButton bDiscriminators = new JButton("", imageDiscriminators);
@@ -131,9 +129,8 @@ public class MainFrame extends JFrame {
 
 	private JMenuBar mainMenu = new JMenuBar();
 	private JMenu menuFile = new JMenu("File");
-	private JMenuItem menuItemCreateXLSX = new JMenuItem("Batch Processing", new ImageIcon(
-			MainFrame.class.getResource("/resources/IconXLS16.png")));
-	private JMenuItem MenuItemNew = new JMenuItem("New Frog Image", new ImageIcon(MainFrame.class.getResource("/resources/IconNew16.png")));
+	private JMenuItem menuItemCreateXLSX = new JMenuItem("Batch Processing", new ImageIcon(MainFrame.class.getResource("/resources/IconXLS16.png")));
+	private JMenuItem MenuItemNew = new JMenuItem("New Frog Image", imageNew16);
 	private JMenuItem MenuItemMarkExport = new JMenuItem("Export to MARK");
 	private JMenuItem menuItemFileExit = new JMenuItem("Exit");
 	private JMenu menuHelp = new JMenu("Help");
@@ -148,7 +145,8 @@ public class MainFrame extends JFrame {
 	private JMenuItem MenuItemHelp = new JMenuItem("User Manual", new ImageIcon(MainFrame.class.getResource("/resources/IconHelp16.png")));
 	private JMenuItem MenuItemUsers = new JMenuItem("Users", new ImageIcon(MainFrame.class.getResource("/resources/IconUsers16.png")));
 	private JMenuItem MenuItemTemplates = new JMenuItem("Data Templates", new ImageIcon(MainFrame.class.getResource("/resources/IconBookmark16.png")));
-	private JMenuItem MenuItemDiscriminators = new JMenuItem("Discriminators", new ImageIcon(MainFrame.class.getResource("/resources/IconDiscriminator16.png")));
+	private JMenuItem MenuItemDiscriminators = new JMenuItem("Discriminators", new ImageIcon(
+			MainFrame.class.getResource("/resources/IconDiscriminator16.png")));
 	private JCheckBoxMenuItem CheckBoxMenuItemShowThumbs = new JCheckBoxMenuItem("Show Thumbnails", true);
 	private JMenuItem MenuItemParams = new JMenuItem("Rows per Page");
 	private JMenuItem MenuItemSearchCriteria = new JMenuItem("Search Criteria");
@@ -158,7 +156,7 @@ public class MainFrame extends JFrame {
 	private TitledBorder titledBorder1 = new TitledBorder("");
 	private int viewerX = 0;
 	private int viewerY = 0;
-	
+
 	private JList<Frog> frogList;
 	private DefaultListModel<Frog> frogModel;
 
@@ -173,7 +171,7 @@ public class MainFrame extends JFrame {
 		this.setTitle("IdentiFrog - " + XMLFrogDatabase.getFileNamePath());
 		try {
 			init();
-			statusBar.setRightStatus(XMLFrogDatabase.getFrogs().size()+" Frogs");
+			statusBar.setRightStatus(XMLFrogDatabase.getFrogs().size() + " Frogs");
 			statusBar.setMessage("Loaded project");
 		} catch (Exception e) {
 			IdentiFrog.LOGGER.writeMessage("MainFrame.MainFrame() Exception");
@@ -205,8 +203,6 @@ public class MainFrame extends JFrame {
 		//ArrayList<Frog> frogs = new XMLFrogDatabase(XMLFrogDatabase.getFileNamePath())
 		//		.loadXMLFile();
 		updateRecentlyOpened(XMLFrogDatabase.getFileNamePath());
-
-
 
 		this.setTitle("IdentiFrog " + XMLFrogDatabase.getFileNamePath());
 	}
@@ -298,31 +294,31 @@ public class MainFrame extends JFrame {
 		menuItemHelpAbout.addActionListener(new MainFrame_menuItemHelpAbout_ActionAdapter(this));
 		MenuItemNew.setAccelerator(javax.swing.KeyStroke.getKeyStroke('N', InputEvent.CTRL_MASK, false));
 		MenuItemNew.addActionListener(new MainFrame_MenuItemNew_actionAdapter(this));
-		
+
 		MenuItemUsers.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				new UsersFrame(MainFrame.this).setVisible(true);
 			}
 		});
-		
+
 		MenuItemTemplates.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("Templates not defined yet");
 			}
 		});
-		
+
 		MenuItemDiscriminators.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				new DiscriminatorFrame(MainFrame.this).setVisible(true);
 			}
 		});
-		
+
 		MenuItemMarkExport.addActionListener(new MainFrame_MenuItemMarkExport_actionAdapter(this));
 		menuItemCreateXLSX.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				new XLSXTemplateGeneratorFrame(MainFrame.this);
@@ -342,7 +338,7 @@ public class MainFrame extends JFrame {
 
 		// action listeners for the buttons
 		bFind.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -352,9 +348,9 @@ public class MainFrame extends JFrame {
 				}
 			}
 		});
-		
+
 		bEdit.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -365,7 +361,7 @@ public class MainFrame extends JFrame {
 			}
 		});
 		bDelete.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
@@ -376,31 +372,30 @@ public class MainFrame extends JFrame {
 			}
 		});
 		bNew.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				MenuItemNew_actionPerformed(null);
 			}
 		});
-		
+
 		bUsers.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				new UsersFrame(MainFrame.this).setVisible(true);
 			}
 		});
-		
+
 		bDiscriminators.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				new DiscriminatorFrame(MainFrame.this).setVisible(true);
 			}
 		});
-		
-		
+
 		bHelp.addActionListener(new MainFrame_butHelp_actionAdapter(this));
 		//
 		MenuItemSearch.setAccelerator(javax.swing.KeyStroke.getKeyStroke('S', InputEvent.CTRL_MASK, false));
@@ -411,7 +406,7 @@ public class MainFrame extends JFrame {
 		MenuItemDelete.setAccelerator(javax.swing.KeyStroke.getKeyStroke('D', InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
 		//
 		MenuItemSearch.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
@@ -419,7 +414,7 @@ public class MainFrame extends JFrame {
 			}
 		});
 		MenuItemEdit.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
@@ -427,7 +422,7 @@ public class MainFrame extends JFrame {
 			}
 		});
 		MenuItemDelete.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
@@ -435,7 +430,7 @@ public class MainFrame extends JFrame {
 			}
 		});
 		MenuItemHelp.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
@@ -482,8 +477,8 @@ public class MainFrame extends JFrame {
 
 		// add buttons to the toolbar
 		barButtons.setFloatable(false);
-		barButtons.setMargin(new Insets(2,4,2,4));
-		barButtons.setMinimumSize(new Dimension(100000,36));
+		barButtons.setMargin(new Insets(2, 4, 2, 4));
+		barButtons.setMinimumSize(new Dimension(100000, 36));
 		barButtons.add(bNew, null);
 		//barButtons.add(new JToolBar.Separator(new Dimension(0, 8)), null);
 		barButtons.add(bFind, null);
@@ -511,7 +506,7 @@ public class MainFrame extends JFrame {
 		menuHelp.addSeparator();
 		menuHelp.add(menuItemHelpAbout);
 		mainMenu.add(menuFile);
-		
+
 		menuProject.add(MenuItemSearchCriteria);
 		menuProject.addSeparator();
 		menuProject.add(MenuItemNew);
@@ -537,9 +532,7 @@ public class MainFrame extends JFrame {
 		MenuItemDelete.setEnabled(false);
 		MenuItemEdit.setEnabled(false);
 		MenuItemSearch.setEnabled(false);
-		
-		
-		
+
 		//Frog list=====================
 		frogList = new JList<Frog>();
 		frogModel = new DefaultListModel<Frog>();
@@ -550,7 +543,7 @@ public class MainFrame extends JFrame {
 		//frogList.setFixedCellHeight(160);
 		//frogList.setFixedCellWidth(150);
 		frogList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-		
+
 		frogList.addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
@@ -563,7 +556,7 @@ public class MainFrame extends JFrame {
 						MenuItemDelete.setEnabled(true);
 						MenuItemEdit.setEnabled(true);
 						MenuItemSearch.setEnabled(true);
-						
+
 					} else {
 						//empty selection
 						// icon states
@@ -577,87 +570,96 @@ public class MainFrame extends JFrame {
 				}
 			}
 		});
-		
+
 		//match right click selection
-		frogList.addMouseListener( new MouseAdapter()
-	     {
-	        public void mousePressed(MouseEvent e)
-	        {
-	            if ( SwingUtilities.isRightMouseButton(e) )
-	            {
-	                frogList.setSelectedIndex(frogList.locationToIndex(e.getPoint()));
-	            }
-	            if (e.isPopupTrigger()) {
-	            	createFrogPopup(e);
-	            }
-	        }
-	        
-	        public void mouseReleased(MouseEvent e)
-	        {
-	            if ( SwingUtilities.isRightMouseButton(e) )
-	            {
-	                frogList.setSelectedIndex(frogList.locationToIndex(e.getPoint()));
-	            }
-	            if (e.isPopupTrigger()) {
-	            	createFrogPopup(e);
-	            }
-	        }
-	        
-	     });
-		
+		frogList.addMouseListener(new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				if (SwingUtilities.isRightMouseButton(e)) {
+					frogList.setSelectedIndex(frogList.locationToIndex(e.getPoint()));
+				}
+				if (e.isPopupTrigger()) {
+					createFrogPopup(e);
+				}
+			}
+
+			public void mouseReleased(MouseEvent e) {
+				if (SwingUtilities.isRightMouseButton(e)) {
+					frogList.setSelectedIndex(frogList.locationToIndex(e.getPoint()));
+				}
+				if (e.isPopupTrigger()) {
+					createFrogPopup(e);
+				}
+			}
+
+		});
+
 		for (Frog frog : XMLFrogDatabase.getFrogs()) {
 			frogModel.addElement(frog);
 		}
-		
+
 		JScrollPane frogListPane = new JScrollPane(frogList);
 		//frogListPane.set
-		
+
 		//Compile interface================
 		GridBagConstraints cons = new GridBagConstraints();
 		cons.fill = GridBagConstraints.HORIZONTAL;
 		cons.weightx = 1;
 		cons.gridx = 0;
-		add(barButtons,cons);
+		add(barButtons, cons);
 		cons.gridy = 1;
 		cons.weighty = 1;
 		cons.fill = GridBagConstraints.BOTH;
-		add(frogListPane,cons);
+		add(frogListPane, cons);
 		cons.gridy = 2;
 		cons.weighty = 0;
 		cons.fill = GridBagConstraints.HORIZONTAL;
 		add(statusBar, cons);
 	}
-	
-	private void createFrogPopup(MouseEvent e){
-    	System.out.println("IS POPUP TRIG");
-    	final Frog f = frogModel.get(frogList.locationToIndex(e.getPoint()));
-    	
-    	//codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
-        JPopupMenu popup = new JPopupMenu();
-		JMenuItem popupAddImage, popupEditInfo, popupDeleteFrog, popupSearch;
+
+	private void createFrogPopup(MouseEvent e) {
+		System.out.println("IS POPUP TRIG");
+		final Frog f = frogModel.get(frogList.locationToIndex(e.getPoint()));
+
+		//codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
+		JPopupMenu popup = new JPopupMenu();
+		JMenuItem popupAddImage, popupEditInfo, popupDeleteFrog, popupSearch, popupAddSample;
 		popupAddImage = new JMenuItem("Add image to this frog", imageImage16);
 		popupAddImage.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-				IdentiFrog.LOGGER.writeMessage("MainFrame: Right click > Add image to this frog on ID: "+f.getID());
+				IdentiFrog.LOGGER.writeMessage("MainFrame: Right click > Add image to this frog on ID: " + f.getID());
 			}
 		});
-		popupEditInfo = new JMenuItem("Edit frog information",imageEdit16);
+		popupEditInfo = new JMenuItem("Edit frog information", imageEdit16);
 		popupEditInfo.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				IdentiFrog.LOGGER.writeMessage("Opening Frog Editor via Right Click Menu: "+f.toString());
+				IdentiFrog.LOGGER.writeMessage("Opening Frog Editor via Right Click Menu: " + f.toString());
 				FrogEditor editFrogWindow = new FrogEditor(MainFrame.this, "Edit Frog", f);
 				editFrogWindow.pack();
 				editFrogWindow.setVisible(true);
 			}
 		});
-		popupDeleteFrog = new JMenuItem("Delete Frog",imageDelete16);
+
+		popupAddSample = new JMenuItem("Add Site Survey", imageNew16);
+		popupAddSample.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				IdentiFrog.LOGGER.writeMessage("Opening Frog Editor (NEW SITE SAMPLE) via Right Click Menu: " + f.toString());
+				FrogEditor editFrogWindow = new FrogEditor(MainFrame.this, "Edit Frog", f);
+				editFrogWindow.createNewSample();
+				editFrogWindow.pack();
+				editFrogWindow.setVisible(true);
+			}
+		});
+
+		popupDeleteFrog = new JMenuItem("Delete Frog", imageDelete16);
 		popupDeleteFrog.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				deleteFrog(f);
@@ -665,10 +667,11 @@ public class MainFrame extends JFrame {
 		});
 		popupSearch = new JMenuItem("Merge Frog...?");
 		popup.add(popupAddImage);
+		popup.add(popupAddSample);
 		popup.add(popupEditInfo);
 		popup.add(popupDeleteFrog);
 		popup.add(popupSearch);
-        popup.show(e.getComponent(), e.getX(), e.getY());
+		popup.show(e.getComponent(), e.getX(), e.getY());
 	}
 
 	// File | Exit action performed
@@ -705,17 +708,16 @@ public class MainFrame extends JFrame {
 	}
 
 	/**
-	 * Edit frog from the selected row
-	 * 
-	 * @throws Exception
+	 * Opens the frog editor for the specified frog object
 	 */
 	private void editFrog(Frog f) {
 		FrogEditor editFrogFrame = new FrogEditor(this, "Edit Frog", f);
 		editFrogFrame.pack();
 		editFrogFrame.setVisible(true);
-		IdentiFrog.LOGGER.writeError("Did not capture returned frog - might not be edited in DB");
-		//localFrog = editFrogFrame.getFrog();
-		XMLFrogDatabase.writeXMLFile();
+		if (editFrogFrame.getFrog() != null) {
+			f = editFrogFrame.getFrog();
+			XMLFrogDatabase.writeXMLFile();
+		}
 	}
 
 	/**
@@ -727,15 +729,15 @@ public class MainFrame extends JFrame {
 		int numSignatures = 0;
 		for (SiteSample sample : f.getSiteSamples()) {
 			for (SiteImage img : sample.getSiteImages()) {
-				if (img.isSignatureGenerated()){
+				if (img.isSignatureGenerated()) {
 					numSignatures++;
 				}
 			}
 		}
-		if (JOptionPane.showConfirmDialog(null, "Deleting this frog will remove "+numImages+" "+((numImages == 1) ? "image" : "images") + " and "+numSignatures+" "+((numSignatures == 1) ? "signature" : "signatures")+ ".\n"
-				+"Delete this frog?", "Delete Frog", JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
-			
-			
+		if (JOptionPane.showConfirmDialog(null, "Deleting this frog will remove " + numImages + " " + ((numImages == 1) ? "image" : "images")
+				+ " and " + numSignatures + " " + ((numSignatures == 1) ? "signature" : "signatures") + ".\n" + "Delete this frog?", "Delete Frog",
+				JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
+
 			frogModel.removeElement(f);
 			XMLFrogDatabase.removeFrog(f.getID());
 			XMLFrogDatabase.writeXMLFile();
@@ -743,11 +745,17 @@ public class MainFrame extends JFrame {
 			//String localSignatureName = localFrog.getPathSignature();
 			// check if exists then delete
 			/*
-			new File(XMLFrogDatabase.getImagesFolder() + localImageName).delete();
-			new File(XMLFrogDatabase.getDorsalFolder() + localImageName).delete();
-			new File(XMLFrogDatabase.getThumbnailFolder() + localImageName).delete();
-			new File(XMLFrogDatabase.getBinaryFolder() + localImageName).delete();
-			new File(XMLFrogDatabase.getSignaturesFolder() + localSignatureName).delete();*/
+			 * new File(XMLFrogDatabase.getImagesFolder() +
+			 * localImageName).delete(); new
+			 * File(XMLFrogDatabase.getDorsalFolder() +
+			 * localImageName).delete(); new
+			 * File(XMLFrogDatabase.getThumbnailFolder() +
+			 * localImageName).delete(); new
+			 * File(XMLFrogDatabase.getBinaryFolder() +
+			 * localImageName).delete(); new
+			 * File(XMLFrogDatabase.getSignaturesFolder() +
+			 * localSignatureName).delete();
+			 */
 		}
 	}
 
@@ -803,8 +811,8 @@ public class MainFrame extends JFrame {
 	 */
 
 	protected void MenuItemNew_actionPerformed(ActionEvent e) {
-		DialogFileChooser imageChooser = new DialogFileChooser(MainFrame.this, "Choose Frog Photograph...",
-				System.getProperty("user.home"),DialogFileChooser.getImageFilter());
+		DialogFileChooser imageChooser = new DialogFileChooser(MainFrame.this, "Choose Frog Photograph...", System.getProperty("user.home"),
+				DialogFileChooser.getImageFilter());
 		String filename = imageChooser.getName();
 		if (filename != null) {
 			currentFile = new File(filename);
@@ -838,27 +846,24 @@ public class MainFrame extends JFrame {
 	protected void butFind_actionPerformed(ActionEvent e) {
 		IdentiFrog.LOGGER.writeMessage("Find/match is not implemented yet!");
 		/*
-		// simulation
-		// ConfusionMatrix confmatrix = new ConfusionMatrix();
-		// confmatrix.simulateIdentification();
-		// Find Hamming Dist Threshold
-		// ThresholdHammingDistance Threshold = new ThresholdHammingDistance();
-		// double thresholdHammingDistance = Threshold.getThresholdHamDist();
-		Integer[] tfrog = getSelectedRowDbId();
-		if (tfrog.length == 0) {
-			new ErrorDialog("You must select a row first.");
-			return;
-		}
-		// TODO fix this
-		// File dorspath = workingAreaPanel.getDorsalImageFileFromSelectedRow();
-		File dorsalImage = new File(XMLFrogDatabase.getDorsalFolder()
-				+ XMLFrogDatabase.searchFrogByID(workingAreaPanel.getSelectedFrog_Id()).getGenericImageName());
-		setButtonsOn(false);
-		// IdentiFrog.LOGGER.writeMessage("In butFind Action Performed tfrog[0].intValue() is "
-		// +
-		// tfrog[0].intValue());
-		OpenMatchingDialog(dorsalImage, tfrog[0].intValue());
-		*/
+		 * // simulation // ConfusionMatrix confmatrix = new ConfusionMatrix();
+		 * // confmatrix.simulateIdentification(); // Find Hamming Dist
+		 * Threshold // ThresholdHammingDistance Threshold = new
+		 * ThresholdHammingDistance(); // double thresholdHammingDistance =
+		 * Threshold.getThresholdHamDist(); Integer[] tfrog =
+		 * getSelectedRowDbId(); if (tfrog.length == 0) { new
+		 * ErrorDialog("You must select a row first."); return; } // TODO fix
+		 * this // File dorspath =
+		 * workingAreaPanel.getDorsalImageFileFromSelectedRow(); File
+		 * dorsalImage = new File(XMLFrogDatabase.getDorsalFolder() +
+		 * XMLFrogDatabase
+		 * .searchFrogByID(workingAreaPanel.getSelectedFrog_Id()).
+		 * getGenericImageName()); setButtonsOn(false); //
+		 * IdentiFrog.LOGGER.writeMessage
+		 * ("In butFind Action Performed tfrog[0].intValue() is " // + //
+		 * tfrog[0].intValue()); OpenMatchingDialog(dorsalImage,
+		 * tfrog[0].intValue());
+		 */
 	}
 
 	protected void MenuItemHelp_actionPerformed(ActionEvent e) {
@@ -915,9 +920,9 @@ public class MainFrame extends JFrame {
 	}
 
 	/*
-	public ThumbnailCreator getThumbnailCreator() {
-		return thumbnailCreator;
-	}*/
+	 * public ThumbnailCreator getThumbnailCreator() { return thumbnailCreator;
+	 * }
+	 */
 
 	public void OpenImageViewer(int localFrogID, String title, File imageFile, boolean displayallimages) {
 		if (imageFile.exists()) {
@@ -937,13 +942,12 @@ public class MainFrame extends JFrame {
 	}
 
 	private void OpenMatchingDialog(File imageFile, int DbID) {
-		/*workingAreaPanel.setLastFrogID(DbID);
-		if (matchingDialog == null || !matchingDialog.isOpen()) {
-			matchingDialog = new MatchingDialog(MainFrame.this, imageFile, DbID);
-		}*/
+		/*
+		 * workingAreaPanel.setLastFrogID(DbID); if (matchingDialog == null ||
+		 * !matchingDialog.isOpen()) { matchingDialog = new
+		 * MatchingDialog(MainFrame.this, imageFile, DbID); }
+		 */
 	}
-
-
 
 	/**
 	 * Turns buttons on or off. Does not apply to buttons that depend on a
@@ -1048,8 +1052,6 @@ class MainFrame_MenuItemMarkExport_actionAdapter implements java.awt.event.Actio
 	}
 }
 
-
-
 class MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter implements java.awt.event.ActionListener {
 	MainFrame adaptee;
 
@@ -1058,7 +1060,7 @@ class MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter implements java.awt.eve
 	}
 
 	public void actionPerformed(ActionEvent e) {
-	//	adaptee.CheckBoxMenuItemShowThumbs_actionPerformed(e);
+		//	adaptee.CheckBoxMenuItemShowThumbs_actionPerformed(e);
 	}
 }
 
