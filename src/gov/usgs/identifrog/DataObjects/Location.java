@@ -1,20 +1,22 @@
 package gov.usgs.identifrog.DataObjects;
 
-import gov.usgs.identifrog.IdentiFrog;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 public class Location implements Comparable<Location> {
+	public static String COORDINATE_LATLONG = "Lat/Long";
+	public static String COORDINATE_UTM = "UTM";
+	public static int EMPTY_ZONE = 0;
+	
 	private String name;
 	private String description;
 	private String coordinateType;
 	private String longitude;
 	private String latitude;
 	private String datum;
-	private String zone;
+	private int zone;
 
-	private enum ListItem {
+/*	private enum ListItem {
 		NAME(1), DESCRIPTION(2), LATITUDE(3), LONGITUDE(4), TYPE(5), DATUM(6), ZONE(7);
 		private int value;
 
@@ -29,7 +31,7 @@ public class Location implements Comparable<Location> {
 		public static int getSize() {
 			return 7 + 1;
 		}
-	}
+	}*/
 
 	public Location() {
 	}
@@ -41,10 +43,10 @@ public class Location implements Comparable<Location> {
 		this.longitude = longitude;
 		this.latitude = latitude;
 		this.datum = datum;
-		zone = null;
+		zone = EMPTY_ZONE;
 	}
 
-	public Location(String name, String description, String coordinateType, String longitude, String latitude, String datum, String zone) {
+	public Location(String name, String description, String coordinateType, String longitude, String latitude, String datum, int zone) {
 		this.name = name;
 		this.description = description;
 		this.coordinateType = coordinateType;
@@ -55,7 +57,7 @@ public class Location implements Comparable<Location> {
 			if (coordinateType != null && coordinateType.equals("UTM")) {
 				this.zone = zone;
 			} else {
-				this.zone = null;
+				this.zone = EMPTY_ZONE;
 			}
 		}
 	}
@@ -129,7 +131,7 @@ public class Location implements Comparable<Location> {
 				elementDatum.appendChild(document.createTextNode(getDatum()));
 				elementCoordinate.appendChild(elementDatum);
 				Element elementZone = document.createElement("zone");
-				elementZone.appendChild(document.createTextNode(getZone()));
+				elementZone.appendChild(document.createTextNode(Integer.toString(getZone())));
 				elementCoordinate.appendChild(elementZone);
 			}
 		}
@@ -148,6 +150,7 @@ public class Location implements Comparable<Location> {
 		return str;
 	}
 
+	/*
 	public Object[] toArray() {
 		Object fo[] = new Object[ListItem.getSize()];
 		fo[ListItem.NAME.getValue()] = name;
@@ -158,7 +161,7 @@ public class Location implements Comparable<Location> {
 		fo[ListItem.DATUM.getValue()] = datum;
 		fo[ListItem.ZONE.getValue()] = zone;
 		return fo;
-	}
+	}*/
 
 	public String getName() {
 		return name;
@@ -213,7 +216,7 @@ public class Location implements Comparable<Location> {
 		return datum;
 	}
 
-	public String getZone() {
+	public int getZone() {
 		return zone;
 	}
 
@@ -245,7 +248,7 @@ public class Location implements Comparable<Location> {
 		this.datum = datum;
 	}
 
-	public void setZone(String zone) {
+	public void setZone(int zone) {
 		this.zone = zone;
 	}
 

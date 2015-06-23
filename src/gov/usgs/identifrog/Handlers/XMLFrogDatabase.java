@@ -398,7 +398,7 @@ public class XMLFrogDatabase {
 							location.setLongitude(coordinateElement.getElementsByTagName("easting").item(0).getTextContent());
 							location.setLatitude(coordinateElement.getElementsByTagName("northing").item(0).getTextContent());
 							location.setDatum(coordinateElement.getElementsByTagName("datum").item(0).getTextContent());
-							location.setZone(coordinateElement.getElementsByTagName("zone").item(0).getTextContent());
+							location.setZone(Integer.parseInt(coordinateElement.getElementsByTagName("zone").item(0).getTextContent()));
 						} else {
 							IdentiFrog.LOGGER.writeError("Error: Unknown coordinate type ("+location.getCoordinateType()+")for -location- in SiteSample #" + s + " on frog with ID "
 									+ frog.getID() + ", skipping coordinate data.");

@@ -104,18 +104,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 	String surveyID;
 	protected int frogID;
-/*	protected String species;
-	protected String locationDescription;
-	protected String locationName;*/
-	//protected String locCoorType;
-	//protected String obsLastName;
-	//protected String obsFirstName;
-	//protected String comments;
-	//protected String gender;
-	//protected String entryLastName;
-	//protected String entryFirstName;
-	//protected String datum;
-	//protected String addDiscriminator = "";
 	protected String entrydate, capturedate;
 	protected double x;
 	protected double y;
@@ -169,7 +157,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			LocalDate now = LocalDate.now();
 			entryDatePicker.getModel().setDate(now.getYear(), now.getMonthValue() - 1, now.getDayOfMonth()); //-1 cause it's 0 indexed
 			entryDatePicker.getModel().setSelected(true);
-			
+
 			loadSiteSample(0);
 		} catch (Exception e) {
 			IdentiFrog.LOGGER.writeExceptionWithMessage("Exception while starting FrogEditor's NEW mode.", e);
@@ -186,7 +174,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	 * @param title
 	 *            Title of the page
 	 * @param frog
-	 *            Frog to edit and populate the interface with. The frog is copied in memory and is known as copyfrog until saved to disk.
+	 *            Frog to edit and populate the interface with. The frog is
+	 *            copied in memory and is known as copyfrog until saved to disk.
 	 */
 	public FrogEditor(MainFrame frame, String title, Frog frog) {
 		super((Frame) frame, title);
@@ -195,7 +184,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		isNewFrog = false;
 
 		Frog f = new Frog(frog);
-
 		this.frog = f;
 
 		try {
@@ -207,6 +195,10 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		} catch (Exception e) {
 			IdentiFrog.LOGGER.writeExceptionWithMessage("Exception while starting FrogEditor's EDIT mode.", e);
 		}
+		for (SiteSample sample : f.getSiteSamples()) {
+			sampleModel.addElement(sample);
+		}
+
 		int index = f.getLatestSampleIndex();
 		loadSiteSample(index);
 	}
@@ -215,18 +207,14 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		public void actionPerformed(ActionEvent e) {
 			if (((JRadioButton) e.getSource()).getText() == "Lat/Long") {
 				//locCoorType = "Lat/Long";
-				textDatum.setVisible(false);
 				textZone.setVisible(false);
-				labDatum.setVisible(false);
 				labZone.setVisible(false);
 				labX.setText("Latitude");
 				labY.setText("Longitude");
 			}
 			if (((JRadioButton) e.getSource()).getText() == "UTM") {
 				//locCoorType = "UTM";
-				textDatum.setVisible(true);
 				textZone.setVisible(true);
-				labDatum.setVisible(true);
 				labZone.setVisible(true);
 				labX.setText("Northing");
 				labY.setText("Easting");
@@ -273,7 +261,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JLabel labObserverFirstName = new JLabel();
 	JLabel labSex = new JLabel("Gender");
 	JLabel labNextFrog_ID = new JLabel();
-	JLabel lab2NextFrog_ID = new JLabel();
 	JTextField textNextFrog_ID = new JTextField();
 	JLabel labSpecies = new JLabel("Species");
 	JTextField textDatum = new JTextField();
@@ -288,8 +275,9 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JRadioButton additDiscrNo = new JRadioButton("No", false);
 	JRadioButton additDiscrYes = new JRadioButton("Yes", false);
 	//JCheckBox checkAdditionalDescriptor = new JCheckBox("Additional Discriminator");
-	JButton butDiscriminators = new JButton("Discriminators",imageDiscriminators16);
+	JButton butDiscriminators = new JButton("Discriminators", imageDiscriminators16);
 	DecimalFormat decimalFormat = new DecimalFormat("#.00");
+	DecimalFormat integerFormat = new DecimalFormat("#");
 	JFormattedTextField textMass = new JFormattedTextField(decimalFormat);
 	JLabel labFrogComments = new JLabel();
 	JTextField textComments = new JTextField();
@@ -298,11 +286,11 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JTextField textX = new JTextField();
 	JLabel labY = new JLabel();
 	JTextField textY = new JTextField();
-	JButton butNewEntry = new JButton();
+	JButton butSave = new JButton();
 	JRadioButton LatLongButton = new JRadioButton("Lat/Long", false);
 	JRadioButton UTMButton = new JRadioButton("UTM", false);
 	ButtonGroup Butgroup = new ButtonGroup();
-	JTextField textZone = new JTextField();
+	JFormattedTextField textZone = new JFormattedTextField(integerFormat);
 	JButton addImageButton = new JButton("Add Image", imageImage16);
 	JButton addSurveyButton = new JButton("Add Survey", imageNew16);
 	JLabel labelActiveSurvey = new JLabel("SURVEY");
@@ -431,6 +419,17 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		JPanel surveysPanel = new JPanel(new BorderLayout());
 		surveysPanel.setMinimumSize(new Dimension(100, 50));
 		addSurveyButton.setMaximumSize(new Dimension(160, 15));
+		addSurveyButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (commitChanges()) {
+					SiteSample sample = new SiteSample();
+					FrogEditor.this.frog.addSiteSample(sample);
+					FrogEditor.this.sampleModel.addElement(sample);
+					loadSiteSample(FrogEditor.this.frog.getSiteSamples().indexOf(sample));
+				}
+			}
+		});
 		surveysPanel.add(addSurveyButton, BorderLayout.NORTH);
 		JScrollPane ssp = new JScrollPane(sampleList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		surveysPanel.add(ssp, BorderLayout.CENTER);
@@ -441,6 +440,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		imagesPanel.setMinimumSize(new Dimension(100, 50));
 
 		addImageButton.setMaximumSize(new Dimension(160, 15));
+		addImageButton.setToolTipText("<html>Add an image to the active site survey.</html>");
 		addImageButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -738,9 +738,10 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		labDatum.setText("Datum");
 		labZone.setText("Zone");
 		textZone.setColumns(200);
-		butNewEntry.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconSave32.png")));
-		butNewEntry.setText("Save Entry");
-		butNewEntry.addActionListener(new java.awt.event.ActionListener() {
+		butSave.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconSave32.png")));
+		butSave.setText("Save Entry");
+		butSave.setToolTipText("Saves this frog's information to the database and commits it to disk.");
+		butSave.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				butNewEntry_actionPerformed(e);
 			}
@@ -749,6 +750,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		butCancel.setVerifyInputWhenFocusTarget(true);
 		butCancel.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconCancel32.png")));
 		butCancel.setText("Cancel");
+		butCancel.setToolTipText("Discards all edits to this frog.");
 		butCancel.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				butCancel_actionPerformed(e);
@@ -805,28 +807,28 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		panelLocation.add(textLocDesc, c);
 
 		//row 3
-		c.insets = topInsets;
-		c.gridx = 0;
-		c.gridy = 2;
-		panelLocation.add(labX, c);
-		c.gridx = 1;
-		panelLocation.add(labY, c);
-
-		//row 4
-		c.insets = bottomInsets;
-		c.gridy = 3;
-		c.gridx = 0;
-		panelLocation.add(textX, c);
-		c.gridx = 1;
-		panelLocation.add(textY, c);
-
-		//row 5
 		c.insets = noInsets;
-		c.gridy = 4;
+		c.gridy = 2;
 		c.gridx = 0;
 		panelLocation.add(LatLongButton, c);
 		c.gridx = 1;
 		panelLocation.add(UTMButton, c);
+		
+		//row 4
+		c.insets = topInsets;
+		c.gridx = 0;
+		c.gridy = 3;
+		panelLocation.add(labX, c);
+		c.gridx = 1;
+		panelLocation.add(labY, c);
+
+		//row 5
+		c.insets = bottomInsets;
+		c.gridy = 4;
+		c.gridx = 0;
+		panelLocation.add(textX, c);
+		c.gridx = 1;
+		panelLocation.add(textY, c);
 
 		//row 6
 		c.insets = topInsets;
@@ -854,7 +856,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		panelBottomButtons.add(butClearAll);
 		panelBottomButtons.add(Box.createRigidArea(new Dimension(10, 10)));
 
-		panelBottomButtons.add(butNewEntry);
+		panelBottomButtons.add(butSave);
 		panelBottomButtons.add(Box.createHorizontalGlue());
 		//panelAllInfo.add(labImage);
 		panelAllInfo.add(panelTopButtons);
@@ -884,72 +886,87 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	 * Saves all data in the window to the frog assigned to this frogeditor
 	 * window (copy of the original that was passed in if edit mode) and assigns
 	 * it to the this.frog object (through a sitesample)
+	 * 
+	 * @return
 	 */
-	private void commitChanges() {
-		Date eDate = (Date) entryDatePicker.getModel().getValue();
-		entrydate = df.format(eDate);
-		String species = textSpecies.getText().trim();
-		String gender = (String) sexComboBox.getSelectedItem();
-		// Additional Discriminator
-		//String discriminator = (checkAdditionalDescriptor.isSelected()) ? "true": "false";
-		//int m = monthComboBox.getSelectedIndex() + 1;
-		String capturedate = df.format(captureDatePicker.getModel().getValue());
+	private boolean commitChanges() {
+		if (validateData()) {
+			try {
+				Date eDate = (Date) entryDatePicker.getModel().getValue();
+				entrydate = df.format(eDate);
+				String species = textSpecies.getText().trim();
+				String gender = (String) sexComboBox.getSelectedItem();
+				// Additional Discriminator
+				//String discriminator = (checkAdditionalDescriptor.isSelected()) ? "true": "false";
+				//int m = monthComboBox.getSelectedIndex() + 1;
+				String capturedate = df.format(captureDatePicker.getModel().getValue());
 
-		//yearComboBox.getSelectedItem() + "-" + m + "-"
-		//+ dayComboBox.getSelectedItem();
+				//yearComboBox.getSelectedItem() + "-" + m + "-"
+				//+ dayComboBox.getSelectedItem();
 
-		// mass
-		// length
-		String surveyID = textSurveyID.getText();
-		String comments = textComments.getText();
-		String locationName = (String) comboLocationName.getSelectedItem();
-		String locationDescription = textLocDesc.getText().trim();
-		int zone = Integer.parseInt(textZone.getText().trim());
-		// longitude
-		// latitude
-		// datum
-		// zone
-		String locCoorType;
-		if (LatLongButton.isSelected()) {
-			locCoorType = "Lat/Long";
-		} else if (UTMButton.isSelected()) {
-			locCoorType = "UTM";
+				// mass
+				// length
+				String locationName = (String) comboLocationName.getSelectedItem();
+				String locationDescription = textLocDesc.getText().trim();
+
+				// longitude
+				// latitude
+				// datum
+				// zone
+				String locCoorType;
+				if (LatLongButton.isSelected()) {
+					locCoorType = "Lat/Long";
+				} else if (UTMButton.isSelected()) {
+					locCoorType = "UTM";
+				} else {
+					locCoorType = "UNKNOWN";
+				}
+				int zone = Location.EMPTY_ZONE;
+				try {
+					zone = Integer.parseInt(textZone.getText().trim());
+				} catch (NumberFormatException e) {
+					//not a zone
+				}
+				String datum = textDatum.getText();
+				Location lc = new Location(locationName, locationDescription, locCoorType, textX.getText().trim(), textY.getText().trim(), datum, zone);
+
+				//Generate sitesample
+				SiteSample sample = new SiteSample();
+				sample.setSurveyID(textSurveyID.getText().trim());
+				sample.setMass(textMass.getText().trim());
+				sample.setLength(textLength.getText().trim());
+				sample.setDateCapture(capturedate);
+				sample.setDateEntry(entrydate);
+				User selectedObs = (User) comboObserver.getSelectedItem();
+				User selectedRec = (User) comboRecorder.getSelectedItem();
+				sample.setRecorder(XMLFrogDatabase.getRecorderByID(selectedRec.getID())); //we use IDs instead of assigning values because 
+				sample.setObserver(XMLFrogDatabase.getObserverByID(selectedObs.getID())); //these may be out of sync with the XML database (say a user fools with the file in the background)
+				sample.setComments(textComments.getText().trim());
+				sample.setLocation(lc);
+
+				ArrayList<SiteImage> images = new ArrayList<SiteImage>();
+				for (int i = 0; i < imageModel.getSize(); i++) {
+					images.add(imageModel.get(i));
+				}
+				sample.setSiteImages(images);
+
+				//update copyfrog's sample
+				this.frog.getSiteSamples().set(activeSample, sample);
+
+				//update copyfrog static info
+				this.frog.setSpecies(species);
+				this.frog.setGender(gender);
+				this.frog.setID(XMLFrogDatabase.getNextAvailableFrogID());
+
+				IdentiFrog.LOGGER.writeMessage("Commited updated sample to copyfrog in editor");
+				return true;
+			} catch (Exception e) {
+				IdentiFrog.LOGGER.writeExceptionWithMessage("Failed to commit changes, exception occured.", e);
+				return false;
+			}
 		} else {
-			locCoorType = "UNKNOWN";
+			return false;
 		}
-		String datum = textDatum.getText();
-		Location lc = new Location(locationName, locationDescription, locCoorType, textX.getText(), textY.getText(), datum, Integer.toString(zone));
-
-		//Generate sitesample
-		SiteSample sample = new SiteSample();
-		sample.setSurveyID(textSurveyID.getText());
-		sample.setMass(textMass.getText());
-		sample.setLength(textLength.getText());
-		sample.setDateCapture(capturedate);
-		sample.setDateEntry(entrydate);
-		User selectedObs = (User) comboObserver.getSelectedItem();
-		User selectedRec = (User) comboRecorder.getSelectedItem();
-		sample.setRecorder(XMLFrogDatabase.getRecorderByID(selectedRec.getID())); //we use IDs instead of assigning values because 
-		sample.setObserver(XMLFrogDatabase.getObserverByID(selectedObs.getID())); //these may be out of sync with the XML database (say a user fools with the file in the background)
-		sample.setComments(comments);
-		sample.setLocation(lc);
-		
-		ArrayList<SiteImage> images = new ArrayList<SiteImage>();
-		for (int i = 0; i < imageModel.getSize(); i++) {
-			images.add(imageModel.get(i));
-		}
-		sample.setSiteImages(images);
-		
-		//update copyfrog's sample
-		this.frog.getSiteSamples().set(activeSample, sample);
-		
-		//update copyfrog static info
-		this.frog.setSpecies(species);
-		this.frog.setGender(gender);
-		this.frog.setID(XMLFrogDatabase.getNextAvailableFrogID());
-		
-		
-		IdentiFrog.LOGGER.writeMessage("Commited updated sample to copyfrog in editor");
 	}
 
 	/**
@@ -959,8 +976,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	 */
 	protected void loadSiteSample(int index) {
 		activeSample = index;
-		
-		
+
 		SiteSample sample = this.frog.getSiteSamples().get(index); //must keep list of samples and frog samples in sync
 		imageModel.clear();
 		//Images
@@ -971,31 +987,35 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 		if (!isNewFrog) {
 			try {
-				Date entryDate;
-				entryDate = df.parse(sample.getDateEntry());
-				//ridiculous... thanks oracle
-				Calendar cal = Calendar.getInstance();
-				cal.setTime(entryDate);
-				int year = cal.get(Calendar.YEAR);
-				int month = cal.get(Calendar.MONTH);
-				int day = cal.get(Calendar.DAY_OF_MONTH);
-				entryDatePicker.getModel().setDate(year, month - 1, day); //-1 cause it's 0 indexed
-				entryDatePicker.getModel().setSelected(true);
+				if (sample.getDateEntry() != null) {
+					Date entryDate;
+					entryDate = df.parse(sample.getDateEntry());
+					//ridiculous... thanks oracle
+					Calendar cal = Calendar.getInstance();
+					cal.setTime(entryDate);
+					int year = cal.get(Calendar.YEAR);
+					int month = cal.get(Calendar.MONTH);
+					int day = cal.get(Calendar.DAY_OF_MONTH);
+					entryDatePicker.getModel().setDate(year, month - 1, day); //-1 cause it's 0 indexed
+					entryDatePicker.getModel().setSelected(true);
+				}
 			} catch (ParseException e) {
 				IdentiFrog.LOGGER.writeExceptionWithMessage("Failed to parse entry date when loading sitesample!", e);
 			}
 
 			try {
-				Date captureDate;
-				captureDate = df.parse(sample.getDateEntry());
-				//ridiculous... thanks oracle
-				Calendar cal = Calendar.getInstance();
-				cal.setTime(captureDate);
-				int year = cal.get(Calendar.YEAR);
-				int month = cal.get(Calendar.MONTH);
-				int day = cal.get(Calendar.DAY_OF_MONTH);
-				captureDatePicker.getModel().setDate(year, month - 1, day); //-1 cause it's 0 indexed
-				captureDatePicker.getModel().setSelected(true);
+				if (sample.getDateCapture() != null) {
+					Date captureDate;
+					captureDate = df.parse(sample.getDateCapture());
+					//ridiculous... thanks oracle
+					Calendar cal = Calendar.getInstance();
+					cal.setTime(captureDate);
+					int year = cal.get(Calendar.YEAR);
+					int month = cal.get(Calendar.MONTH);
+					int day = cal.get(Calendar.DAY_OF_MONTH);
+					captureDatePicker.getModel().setDate(year, month - 1, day); //-1 cause it's 0 indexed
+					captureDatePicker.getModel().setSelected(true);
+				}
 			} catch (ParseException e) {
 				IdentiFrog.LOGGER.writeExceptionWithMessage("Failed to parse capture date when loading sitesample!", e);
 			}
@@ -1004,25 +1024,34 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			comboRecorder.setSelectedItem(sample.getRecorder());
 			comboObserver.setSelectedItem(sample.getObserver());
 
-			if (sample.getLocation().getCoordinateType().equals("UTM")) {
-				textX.setText(sample.getLocation().getLatitude());
-				textY.setText(sample.getLocation().getLongitude());
-				UTMButton.setSelected(true);
-			} else {
-				textY.setText(sample.getLocation().getLongitude());
-				textX.setText(sample.getLocation().getLatitude());
-				LatLongButton.setSelected(true);
+			if (sample.getLocation() != null && sample.getLocation().getCoordinateType() != null) {
+				if (sample.getLocation().getCoordinateType().equals("UTM")) {
+					textX.setText(sample.getLocation().getLatitude());
+					textY.setText(sample.getLocation().getLongitude());
+					UTMButton.setSelected(true);
+					textZone.setText(Integer.toString(sample.getLocation().getZone()));
+					labZone.setVisible(true);
+					textZone.setVisible(true);
+				} else {
+					textY.setText(sample.getLocation().getLongitude());
+					textX.setText(sample.getLocation().getLatitude());
+					LatLongButton.setSelected(true);
+					labZone.setVisible(false);
+					textZone.setVisible(false);
+				}
+				textLocDesc.setText(sample.getLocation().getDescription());
+				textDatum.setText(sample.getLocation().getDatum());
 			}
-
-			textLocDesc.setText(sample.getLocation().getDescription());
-
-			textDatum.setText(sample.getLocation().getDatum());
-			textZone.setText(sample.getLocation().getZone());
 
 			textMass.setText(sample.getMass());
 			textLength.setText(sample.getLength());
 			textComments.setText(sample.getComments());
-			labelActiveSurvey.setText(sample.getDateCapture() + " " + sample.getSurveyID());
+			if (sample.getDateCapture() == null && sample.getSurveyID() == null) {
+				labelActiveSurvey.setText("New Survey");
+			} else {
+				labelActiveSurvey.setText(sample.getDateCapture()+" "+sample.getSurveyID());
+			}
+			
 		} else {
 			labelActiveSurvey.setText("New Survey");
 		}
@@ -1243,19 +1272,39 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			textZone.requestFocus(true);
 			errorMessage = "Zone cannot be empty when UTM is selected";
 		} else {
+			//fields are populated
+			System.out.println("Fields are populated.");
 			isError = false;
 			try {
-				mass = Double.parseDouble(textMass.getText());
+				mass = Double.parseDouble(textMass.getText().trim());
 			} catch (NumberFormatException nfe) {
 				errorMessage = "Sample's mass must be a number";
 				isError = true;
 			}
 			try {
-				length = Double.parseDouble(textLength.getText());
+				length = Double.parseDouble(textLength.getText().trim());
 			} catch (NumberFormatException nfe) {
 				errorMessage = "Sample's length must be a number";
 				isError = true;
 			}
+			if (UTMButton.isSelected()) {
+				try {
+					zone = Integer.parseInt(textZone.getText().trim());
+					if (zone > 60 || zone < 1){
+						errorMessage = "Sample's capture location zone must be between 1 and 60";
+						isError = true;
+					}
+				} catch (NumberFormatException nfe) {
+					errorMessage = "Sample's capture location zone must be a number";
+					isError = true;
+				}
+			}
+			
+			if (imageList.getModel().getSize() <= 0) {
+				errorMessage = "All site sample's must contain at least 1 image";
+				isError = true;
+			}
+
 			/*
 			 * try { x = Double.parseDouble(textX.getText()); } catch
 			 * (NumberFormatException nfe) { errorMessage =
@@ -1298,16 +1347,15 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	protected void butNewEntry_actionPerformed(ActionEvent e) {
 
 		// ******************** VALIDATE FIELD ******************** //
-		if (validateData()) {
+		if (commitChanges()) {
 			IdentiFrog.LOGGER.writeMessage("FrogEditor is closing with status SAVED");
-			commitChanges();
 			ArrayList<SiteImage> images = new ArrayList<SiteImage>();
-			for (SiteImage img : this.frog.getAllSiteImages()){
+			for (SiteImage img : this.frog.getAllSiteImages()) {
 				//once processed an image is moved into the DB folders and a thumbnail is generated
 				img.processImageIntoDB();
 				images.add(img);
 			}
-			
+
 			dispose();
 			IdentiFrog.LOGGER.writeMessage("FrogEditor has closed");
 

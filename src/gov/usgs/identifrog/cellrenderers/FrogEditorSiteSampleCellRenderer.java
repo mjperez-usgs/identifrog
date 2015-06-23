@@ -9,10 +9,14 @@ import javax.swing.JList;
 
 public class FrogEditorSiteSampleCellRenderer extends DefaultListCellRenderer {
 	public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-		//super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+		super.getListCellRendererComponent(list, null, index, isSelected, cellHasFocus); //null - don't run toString()
 		if (value instanceof SiteSample) {
 			SiteSample sample = (SiteSample) value;
-			setText(sample.getDateCapture()+" "+sample.getSurveyID());
+			if (sample.getDateCapture() == null && sample.getSurveyID() == null) {
+				setText("New Survey");
+			} else {
+				setText(sample.getDateCapture()+" "+sample.getSurveyID());
+			}
 		}
 		return this;
 	}
