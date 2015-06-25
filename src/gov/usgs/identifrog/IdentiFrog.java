@@ -7,6 +7,7 @@ import gov.usgs.identifrog.logger.GSLogger;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -50,7 +51,12 @@ public class IdentiFrog {
 
 	// construct the application
 	public IdentiFrog() throws FileNotFoundException, ParseException, IOException {
-		System.setProperty("apple.laf.useScreenMenuBar", "true");
+		//Set UI defaults before any UI is loaded
+		System.setProperty("apple.laf.useScreenMenuBar", "true"); //makes mac use the system bar instead of windows style bar
+		//removes the weird padding aroudn tab contents
+		Insets insets = (Insets) UIManager.getDefaults().get("TabbedPane.contentBorderInsets");
+		UIManager.getDefaults().put("TabbedPane.contentBorderInsets", new Insets(0,insets.left,0,insets.right));
+		//UIManager.getDefaults().put("TabbedPane.tabsOverlapBorder", true);
 
 		LOGGER = new GSLogger();
 		// if the application is already open, then verify that the user wants to open another instance of the application

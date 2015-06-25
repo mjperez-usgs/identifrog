@@ -47,11 +47,12 @@ import javax.swing.event.ChangeListener;
  * <p>
  * Title: ImageManipFrame.java
  * <p>
- * Description: frame for image processing, Color Fingerprint and Spot Extraction Tools
+ * Description: frame for image processing, Color Fingerprint and Spot
+ * Extraction Tools
  * 
  * @author Oksana V. Kelly 2008
- * @author Oksana V. Kelly used image rotation/alignment by Steven P. Miller from <b>IdentiFrog</b>
- *         <i>2005</i>
+ * @author Oksana V. Kelly used image rotation/alignment by Steven P. Miller
+ *         from <b>IdentiFrog</b> <i>2005</i>
  */
 @SuppressWarnings("serial")
 public class ImageManipFrame extends JDialog {
@@ -143,15 +144,17 @@ public class ImageManipFrame extends JDialog {
 	@SuppressWarnings("unused")
 	private boolean noise_radius_active = false;
 	private boolean searchDB; // this is currently unutilized
-//	private int DbId = -1;
+	//	private int DbId = -1;
 	JButton butDustFrame = new JButton();
 	FlowLayout flowLayout1 = new FlowLayout();
 	private Color sliderToolBoxColor = new Color(224, 223, 227);
 	public int imageInEllipse_width = 0;
 	public int imageInEllipse_heigth = 0;
-	
+
 	/**
-	 * Creates a new Digital Signature Window using the specified parent and SiteImage.
+	 * Creates a new Digital Signature Window using the specified parent and
+	 * SiteImage.
+	 * 
 	 * @param parent
 	 * @param imageFile
 	 */
@@ -163,7 +166,7 @@ public class ImageManipFrame extends JDialog {
 		try {
 			init();
 		} catch (Exception e) {
-			IdentiFrog.LOGGER.writeExceptionWithMessage("ImageManipFrame failed init()",e);
+			IdentiFrog.LOGGER.writeExceptionWithMessage("ImageManipFrame failed init()", e);
 		}
 		parentFrame.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 	}
@@ -297,8 +300,9 @@ public class ImageManipFrame extends JDialog {
 		// inPanelButtons.setMinimumSize(new Dimension(381, 85)); // 55
 		// inPanelButtons.setPreferredSize(new Dimension(381, 85)); // 55
 		/*
-		 * butDustFrame.setIcon(new ImageIcon(ImageManipFrame.class.getResource( "duster.gif")));
-		 * butDustFrame.setText("Dust Image"); butDustFrame.addActionListener(new
+		 * butDustFrame.setIcon(new ImageIcon(ImageManipFrame.class.getResource(
+		 * "duster.gif"))); butDustFrame.setText("Dust Image");
+		 * butDustFrame.addActionListener(new
 		 * ImageManipFrame_butDustFrame_actionAdapter(this));
 		 */
 		SliderThreshold_edges.setOrientation(JSlider.HORIZONTAL);
@@ -687,7 +691,8 @@ public class ImageManipFrame extends JDialog {
 	}
 
 	/**
-	 * Deletes all temp files, removes all interface elements and then cleans up memory.
+	 * Deletes all temp files, removes all interface elements and then cleans up
+	 * memory.
 	 */
 	private void closeAction() {
 		imagePanel.deleteTempFiles();
@@ -702,64 +707,64 @@ public class ImageManipFrame extends JDialog {
 	 */
 	protected void butNext_actionPerformed(ActionEvent e) {
 		switch (step) {
-			case 1:// to spot extraction window
-				ExamplePanelContainer.setVisible(true);
-				ExampleVent.setVisible(false);
-				ExampleSnout.setVisible(false);
-				ExampleLSide.setVisible(false);
-				ExampleRSide.setVisible(false);
-				ExampleRidge.setVisible(false);
-				inPanelToolsInstructions.setVisible(true);
-				TextAreaStep.setText("Step 7 of 7: BINARY FINGERPRINT CREATION");
-				TextAreaStatus.setText("Use the Tools to extract a spot pattern into\nthe Binary Fingerprint.\nThen click Next>>");
-				TextAreaTools
-						.setText("Use the Spot Filler and click inside each\nspot contour.\nFilled spots are added to the Binary Fingerprint.\n\nAdjust the Edge Threshold and Dilation Radius\nfor edge detection.\n\nUse the Pencil on the Color Fingerprint to\nconnect any broken contours.");
-				setSpotExtractionPanelTools(true);
-				imagePanel.setImageinEllipse(false);
-				// ready to map fingerprint onto Standard Rectangle
-				imagePanel.mapOntoRectangle();
-				imagePanel.standardRectEdgesDilated = imagePanel.detectEdges();
-				imagePanel.trackOriginalRectImage();
-				imagePanel.setSpotExtraction(true);
-				imagePanel.reset = true;
-				// imagePanel.filterMedian3x3();
-				// imagePanel.adjustContrast();
-				imagePanel.setRidgeInBox(false);
-				imagePanel.setTwoEyeClicks(false);
-				imagePanel.setRidgeRect(false);
-				butStartOver.setEnabled(true);
-				butNext.setText("Save");
-				// imagePanel.setNoise_slider_Active(false);
-				increaseStep();
-				imagePanel.newOperationStep();
-				imagePanel.repaint();
-				break;
-			case 2:// when final Next button pressed
+		case 1:// to spot extraction window
+			ExamplePanelContainer.setVisible(true);
+			ExampleVent.setVisible(false);
+			ExampleSnout.setVisible(false);
+			ExampleLSide.setVisible(false);
+			ExampleRSide.setVisible(false);
+			ExampleRidge.setVisible(false);
+			inPanelToolsInstructions.setVisible(true);
+			TextAreaStep.setText("Step 7 of 7: BINARY FINGERPRINT CREATION");
+			TextAreaStatus.setText("Use the Tools to extract a spot pattern into\nthe Binary Fingerprint.\nThen click Next>>");
+			TextAreaTools
+					.setText("Use the Spot Filler and click inside each\nspot contour.\nFilled spots are added to the Binary Fingerprint.\n\nAdjust the Edge Threshold and Dilation Radius\nfor edge detection.\n\nUse the Pencil on the Color Fingerprint to\nconnect any broken contours.");
+			setSpotExtractionPanelTools(true);
+			imagePanel.setImageinEllipse(false);
+			// ready to map fingerprint onto Standard Rectangle
+			imagePanel.mapOntoRectangle();
+			imagePanel.standardRectEdgesDilated = imagePanel.detectEdges();
+			imagePanel.trackOriginalRectImage();
+			imagePanel.setSpotExtraction(true);
+			imagePanel.reset = true;
+			// imagePanel.filterMedian3x3();
+			// imagePanel.adjustContrast();
+			imagePanel.setRidgeInBox(false);
+			imagePanel.setTwoEyeClicks(false);
+			imagePanel.setRidgeRect(false);
+			butStartOver.setEnabled(true);
+			butNext.setText("Save");
+			// imagePanel.setNoise_slider_Active(false);
+			increaseStep();
+			imagePanel.newOperationStep();
+			imagePanel.repaint();
+			break;
+		case 2:// when final Next button pressed
 				// binaryImage 256x128 is used to create signature
 				//parentFrame.setChangesMade(true);
-				image.generateHash();
-				String fileName = image.isProcessed() ? image.getImageFileName() : image.createUniqueDBFilename();
-				imagePanel.exportDownsampledImage(fileName);
-				BufferedImage binaryImage = imagePanel.saveBinaryImage(XMLFrogDatabase.getBinaryFolder(),fileName);
+			image.generateHash();
+			String fileName = image.isProcessed() ? image.getImageFileName() : image.createUniqueDBFilename();
+			imagePanel.exportDownsampledImage(fileName);
+			BufferedImage binaryImage = imagePanel.saveBinaryImage(XMLFrogDatabase.getBinaryFolder(), fileName);
 
-				String sigFileLocation = XMLFrogDatabase.getSignaturesFolder() + fileName;
-				if (binaryImage != null) {
-					digSignature.makeSignature(binaryImage, sigFileLocation);
-					DigSigThread digSigThread = new DigSigThread(new File(sigFileLocation));
-					digSigThread.start();
-				} else {
-					IdentiFrog.LOGGER.writeError("Could not obtain binary image, variable was null (in case 2)");
-					new ErrorDialog("Could not obtain binary image");
-				}
-				// ///////////////////////////////////////////////////////////////////////////////////
-				//parentFrame.updateCells();
-				//XMLFrogDatabase.getFrogs().get(XMLFrogDatabase.getFrogs().size() - 1).setPathImage(imageName1);
-				////IdentiFrog.LOGGER.writeMessage(XMLFrogDatabase.getFrogs().size());
-				//XMLFrogDatabase.writeXMLFile();
-				image.processImageIntoDB();
-				image.setSignatureGenerated(true);
-				closeAction();
-				break;
+			String sigFileLocation = XMLFrogDatabase.getSignaturesFolder() + fileName;
+			if (binaryImage != null) {
+				digSignature.makeSignature(binaryImage, sigFileLocation);
+				DigSigThread digSigThread = new DigSigThread(new File(sigFileLocation));
+				digSigThread.start();
+			} else {
+				IdentiFrog.LOGGER.writeError("Could not obtain binary image, variable was null (in case 2)");
+				new ErrorDialog("Could not obtain binary image");
+			}
+			// ///////////////////////////////////////////////////////////////////////////////////
+			//parentFrame.updateCells();
+			//XMLFrogDatabase.getFrogs().get(XMLFrogDatabase.getFrogs().size() - 1).setPathImage(imageName1);
+			////IdentiFrog.LOGGER.writeMessage(XMLFrogDatabase.getFrogs().size());
+			//XMLFrogDatabase.writeXMLFile();
+			image.setSignatureGenerated(true);
+			image.processImageIntoDB(true);
+			closeAction();
+			break;
 		}
 	}
 
@@ -769,80 +774,80 @@ public class ImageManipFrame extends JDialog {
 	protected void butBack_actionPerformed(ActionEvent e) {
 		parentFrame.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 		switch (step) {
-			case 1:// from one to zero
-				ExamplePanelContainer.setVisible(true);
-				ExampleVent.setVisible(true);
-				ExampleSnout.setVisible(false);
-				ExampleLSide.setVisible(false);
-				ExampleRSide.setVisible(false);
-				ExampleRidge.setVisible(false);
-				TextAreaStep.setText("Step 1 of 7: BODY ALIGNMENT");
-				TextAreaStatus.setText("Click on the frog's vent at the midline\nof the body.");
-				imagePanel.resetToOrigImage();
-				imagePanel.setRubberBandLineOn(true);
-				imagePanel.setImageinEllipse(false);
-				butBack.setEnabled(false);
-				butNext.setEnabled(false);
-				butStartOver.setEnabled(false);
-				ExampleRidge.setVisible(false);
-				imagePanel.setFirstRubberBoxOn(false);
-				imagePanel.setShowBoundingBox(false);
-				imagePanel.setSecondRubberBoxOn(false);
-				imagePanel.setShowCenterLine(false);
-				imagePanel.setFirstClick(false);
-				imagePanel.setRidgeInBox(false);
-				imagePanel.setTwoEyeClicks(false);
-				imagePanel.setRidgeRect(false);
-				imagePanel.setSpotExtraction(false);
-				imagePanel.setPencilOn(false);
-				imagePanel.setFillSpotOn(false);
-				imagePanel.setUndoPencilOn(false);
-				imagePanel.setUndoFillSpotOn(false);
-				butNext.setText("Next");
-				//IdentiFrog.LOGGER.writeMessage("case 1 before back " + step);
-				decreaseStep();
-				//IdentiFrog.LOGGER.writeMessage("case 1 afer back " + step);
-				break;
-			case 2: // from binary fingerprint creation back to clicking on the frog's eyes
-				//IdentiFrog.LOGGER.writeMessage("back case 2");
-				ExamplePanelContainer.setVisible(true);
-				inPanelToolsInstructions.setVisible(false);
-				ExampleVent.setVisible(false);
-				ExampleSnout.setVisible(false);
-				ExampleLSide.setVisible(false);
-				ExampleRSide.setVisible(false);
-				ExampleRidge.setVisible(true);
-				imagePanel.setRubberBandLineOn(false);
-				imagePanel.setFirstRubberBoxOn(false);
-				imagePanel.setShowBoundingBox(false);
-				imagePanel.setSecondRubberBoxOn(false);
-				imagePanel.setShowCenterLine(false);
-				imagePanel.setFirstClick(false);
-				setSpotExtractionPanelTools(false);
-				ExampleRidge.setVisible(false);
-				imagePanel.setSpotExtraction(false);
-				imagePanel.setuptoWorkOnRidges();
-				imagePanel.setFirstClick(false);
-				imagePanel.setSecondRubberBoxOn(false);
-				imagePanel.setPencilOn(false);
-				imagePanel.setFillSpotOn(false);
-				imagePanel.setUndoPencilOn(false);
-				imagePanel.setUndoFillSpotOn(false);
-				imagePanel.setTwoEyeClicks(false);
-				imagePanel.setRidgeRect(false);
-				imagePanel.pencilCoor.clear();
-				imagePanel.spotFilledCoor.clear();
-				butBack.setEnabled(true);
-				butNext.setEnabled(false);
-				butNext.setText("Next");
-				butStartOver.setEnabled(true);
-				//IdentiFrog.LOGGER.writeMessage("case 2 before back " + step);
-				decreaseStep();
-				//IdentiFrog.LOGGER.writeMessage("case 2 afer back " + step);
-				imagePanel.backOperationStep();
-				imagePanel.deleteTempFiles();
-				imagePanel.repaint();
-				break;
+		case 1:// from one to zero
+			ExamplePanelContainer.setVisible(true);
+			ExampleVent.setVisible(true);
+			ExampleSnout.setVisible(false);
+			ExampleLSide.setVisible(false);
+			ExampleRSide.setVisible(false);
+			ExampleRidge.setVisible(false);
+			TextAreaStep.setText("Step 1 of 7: BODY ALIGNMENT");
+			TextAreaStatus.setText("Click on the frog's vent at the midline\nof the body.");
+			imagePanel.resetToOrigImage();
+			imagePanel.setRubberBandLineOn(true);
+			imagePanel.setImageinEllipse(false);
+			butBack.setEnabled(false);
+			butNext.setEnabled(false);
+			butStartOver.setEnabled(false);
+			ExampleRidge.setVisible(false);
+			imagePanel.setFirstRubberBoxOn(false);
+			imagePanel.setShowBoundingBox(false);
+			imagePanel.setSecondRubberBoxOn(false);
+			imagePanel.setShowCenterLine(false);
+			imagePanel.setFirstClick(false);
+			imagePanel.setRidgeInBox(false);
+			imagePanel.setTwoEyeClicks(false);
+			imagePanel.setRidgeRect(false);
+			imagePanel.setSpotExtraction(false);
+			imagePanel.setPencilOn(false);
+			imagePanel.setFillSpotOn(false);
+			imagePanel.setUndoPencilOn(false);
+			imagePanel.setUndoFillSpotOn(false);
+			butNext.setText("Next");
+			//IdentiFrog.LOGGER.writeMessage("case 1 before back " + step);
+			decreaseStep();
+			//IdentiFrog.LOGGER.writeMessage("case 1 afer back " + step);
+			break;
+		case 2: // from binary fingerprint creation back to clicking on the frog's eyes
+			//IdentiFrog.LOGGER.writeMessage("back case 2");
+			ExamplePanelContainer.setVisible(true);
+			inPanelToolsInstructions.setVisible(false);
+			ExampleVent.setVisible(false);
+			ExampleSnout.setVisible(false);
+			ExampleLSide.setVisible(false);
+			ExampleRSide.setVisible(false);
+			ExampleRidge.setVisible(true);
+			imagePanel.setRubberBandLineOn(false);
+			imagePanel.setFirstRubberBoxOn(false);
+			imagePanel.setShowBoundingBox(false);
+			imagePanel.setSecondRubberBoxOn(false);
+			imagePanel.setShowCenterLine(false);
+			imagePanel.setFirstClick(false);
+			setSpotExtractionPanelTools(false);
+			ExampleRidge.setVisible(false);
+			imagePanel.setSpotExtraction(false);
+			imagePanel.setuptoWorkOnRidges();
+			imagePanel.setFirstClick(false);
+			imagePanel.setSecondRubberBoxOn(false);
+			imagePanel.setPencilOn(false);
+			imagePanel.setFillSpotOn(false);
+			imagePanel.setUndoPencilOn(false);
+			imagePanel.setUndoFillSpotOn(false);
+			imagePanel.setTwoEyeClicks(false);
+			imagePanel.setRidgeRect(false);
+			imagePanel.pencilCoor.clear();
+			imagePanel.spotFilledCoor.clear();
+			butBack.setEnabled(true);
+			butNext.setEnabled(false);
+			butNext.setText("Next");
+			butStartOver.setEnabled(true);
+			//IdentiFrog.LOGGER.writeMessage("case 2 before back " + step);
+			decreaseStep();
+			//IdentiFrog.LOGGER.writeMessage("case 2 afer back " + step);
+			imagePanel.backOperationStep();
+			imagePanel.deleteTempFiles();
+			imagePanel.repaint();
+			break;
 		}
 	}
 
@@ -936,7 +941,15 @@ public class ImageManipFrame extends JDialog {
 		}
 	}
 
+	/**
+	 * This class listens for changes to the sliders
+	 * 
+	 * @author mjperez
+	 *
+	 */
 	class SliderListener implements ChangeListener {
+		private ThresholdWorker thresholdWorker = new ThresholdWorker();
+
 		public void stateChanged(ChangeEvent e) {
 			imagePanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 			JSlider slider = (JSlider) e.getSource();
@@ -959,7 +972,8 @@ public class ImageManipFrame extends JDialog {
 				imagePanel.setNoise_slider_Active(true);
 				noise_radius_active = true;
 			}
-			new thresholdWorker().execute();
+			thresholdWorker.cancel(true);
+			thresholdWorker.execute();
 		}
 	}
 
@@ -971,18 +985,13 @@ public class ImageManipFrame extends JDialog {
 	}
 
 	// WORKER
-	private class thresholdWorker extends SwingWorker<BufferedImage, Object> {
-		public thresholdWorker() {
-		}
-
+	private class ThresholdWorker extends SwingWorker<BufferedImage, Object> {
 		// long-running code to be run in a worker thread
 		@Override
 		public BufferedImage doInBackground() throws Exception {
 			@SuppressWarnings("static-access")
 			BufferedImage img = new BufferedImage(imagePanel.rect_width, imagePanel.rect_height, BufferedImage.TYPE_3BYTE_BGR);
-			// if (!noise_radius_active){
 			img = imagePanel.detectEdges();
-			// } else img = imagePanel.removeNoiseInBinaryImage();
 			return img;
 		} // end method doInBackground
 
@@ -993,9 +1002,7 @@ public class ImageManipFrame extends JDialog {
 				@SuppressWarnings("static-access")
 				BufferedImage Img = new BufferedImage(imagePanel.rect_width, imagePanel.rect_height, BufferedImage.TYPE_3BYTE_BGR);
 				Img = get();
-				// if (!noise_radius_active)
 				imagePanel.standardRectEdgesDilated = Img;
-				// else imagePanel.standardRectBinary = Img;
 				imagePanel.repaint();
 			} catch (InterruptedException ignore) {
 			} catch (ExecutionException ex) {
@@ -1094,7 +1101,8 @@ public class ImageManipFrame extends JDialog {
 	}
 
 	/**
-	 * @return boolean returns true if changes have been made since last step, false if not
+	 * @return boolean returns true if changes have been made since last step,
+	 *         false if not
 	 */
 	public boolean isChangeMade() {
 		return changeMade;
@@ -1102,7 +1110,8 @@ public class ImageManipFrame extends JDialog {
 
 	/**
 	 * @param changeMade
-	 *            boolean sets true if changes have been made since last step, false if not
+	 *            boolean sets true if changes have been made since last step,
+	 *            false if not
 	 */
 	public void setChangeMade(boolean changeMade) {
 		this.changeMade = changeMade;

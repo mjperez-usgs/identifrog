@@ -6,6 +6,7 @@ import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
@@ -84,6 +85,8 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 		c.gridwidth = 2;
 		c.gridy = 3;
 		panel.add(lastCapture, c);
+		
+		panel.setMaximumSize(new Dimension(100,130));
 	}
 
 	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -107,10 +110,12 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 			}
 
 			int numberOfDiscriminators = frog.getDiscriminators().size();
-			if (numberOfDiscriminators == 1) {
+			if (numberOfDiscriminators == 0) {
 				numDiscriminators.setText("No discriminators");
-			} else {
+			} else if (numberOfDiscriminators > 1) {
 				numDiscriminators.setText(numberOfDiscriminators + " discriminators");
+			} else {
+				numDiscriminators.setText(numberOfDiscriminators + " discriminator");
 			}
 
 			int numberOfImages = frog.getAllSiteImages().size();

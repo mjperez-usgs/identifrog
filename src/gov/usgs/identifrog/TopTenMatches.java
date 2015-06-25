@@ -407,8 +407,9 @@ public class TopTenMatches {
 		}
 		return retArray;
 
-		// Note the below is to satisfy Java's idiocy of not thinking something returned in a try
+		//Pre 2015:  Note the below is to satisfy Java's idiocy of not thinking something returned in a try
 		// is really returned, if it is actually called we're in trouble
+		//2015: its called scope yo'
 		// Object[][] retArray = new Object[rowcount][col];
 		// return retArray;
 	} // end of getmatching

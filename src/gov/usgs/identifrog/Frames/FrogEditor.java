@@ -92,18 +92,15 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	private Preferences root = Preferences.userRoot();
 	//private Preferences node = root.node("edu/isu/aadis/defaults");
 
-	//	private int DEFAULT_WIDTH = 170, DEFAULT_HEIGHT = 25;
-	private Dimension DEFAULT_MAX_ELEM_SIZE = new Dimension(170, 25);
 	private Font level1TitleFont = new Font("MS Sans Serif", Font.BOLD, 14);
 	private Font level2TitleFont = new Font("MS Sans Serif", Font.BOLD, 12);
 	private ImageIcon imageNew16 = new ImageIcon(MainFrame.class.getResource("/resources/IconNew16.png"));
 	private ImageIcon imageImage16 = new ImageIcon(MainFrame.class.getResource("/resources/IconImage16.png"));
 	private ImageIcon imageDiscriminators16 = new ImageIcon(MainFrame.class.getResource("/resources/IconDiscriminator16.png"));
 
-	int frogDbId, entpersDbId, obsDbId, caplocDbId, zone, frogidNum;
 
 	String surveyID;
-	protected int frogID;
+	//protected int frogID;
 	protected String entrydate, capturedate;
 	protected double x;
 	protected double y;
@@ -114,7 +111,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	protected int maxlocdbid = 0;
 	protected int maxentrypersondbid = 0;
 	protected ImageManipFrame iFrame;
-	private Frog frog; //null if not in edit mode
+	private Frog frog;
 	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 	private boolean isNewFrog = false;
 	private int activeSample = 0;
@@ -152,8 +149,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 			//images.add(simage);
 			init();
-			frogID = XMLFrogDatabase.getNextAvailableFrogID();
-			textFrog_ID.setText(Integer.toString(frogID));
+			textFrog_ID.setText(Integer.toString(XMLFrogDatabase.getNextAvailableFrogID()));
 			LocalDate now = LocalDate.now();
 			entryDatePicker.getModel().setDate(now.getYear(), now.getMonthValue() - 1, now.getDayOfMonth()); //-1 cause it's 0 indexed
 			entryDatePicker.getModel().setSelected(true);
@@ -339,7 +335,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					imageList.setSelectedIndex(idx);
 					//codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
 					JPopupMenu popup = new JPopupMenu();
-					JMenuItem popupGenerateSignature;
+					JMenuItem popupGenerateSignature, popupOriginalFilename;
 					popupGenerateSignature = new JMenuItem();
 					if (img.isSignatureGenerated()) {
 						popupGenerateSignature.setEnabled(false);
@@ -359,7 +355,11 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 						}
 					});
 
+					popupOriginalFilename = new JMenuItem("Originally entered as "+img.getOriginalFilename(),imageImage16);
+					popupOriginalFilename.setEnabled(false);
+					
 					popup.add(popupGenerateSignature);
+					popup.add(popupOriginalFilename);
 					popup.show(e.getComponent(), e.getX(), e.getY());
 				}
 			}
@@ -743,7 +743,20 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		butSave.setToolTipText("Saves this frog's information to the database and commits it to disk.");
 		butSave.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				butNewEntry_actionPerformed(e);
+				if (commitChanges()) {
+					IdentiFrog.LOGGER.writeMessage("FrogEditor is closing with status SAVED");
+					ArrayList<SiteImage> images = new ArrayList<SiteImage>();
+					for (SiteImage img : FrogEditor.this.frog.getAllSiteImages()) {
+						//once processed an image is moved into the DB folders and a thumbnail is generated
+						img.processImageIntoDB(false);
+						images.add(img);
+					}
+
+					dispose();
+					IdentiFrog.LOGGER.writeMessage("FrogEditor has closed");
+
+					//openDigSigFrame(maxfrogdbid);
+				}
 			}
 		});
 		//labImage.setBounds(new Rectangle(8, 6, 165, 133));
@@ -813,7 +826,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		panelLocation.add(LatLongButton, c);
 		c.gridx = 1;
 		panelLocation.add(UTMButton, c);
-		
+
 		//row 4
 		c.insets = topInsets;
 		c.gridx = 0;
@@ -875,8 +888,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		//leftrightSplitpane.setEnabled(false);
 		//topbottomSplitpane.setEnabled(true);
 		add(leftrightSplitpane);
-		setMinimumSize(new Dimension(650, 640));
-		setPreferredSize(new Dimension(650, 640));
+		setMinimumSize(new Dimension(660, 640));
+		setPreferredSize(new Dimension(660, 640));
 		updateDiscriminatorTooltip();
 		pack();
 		setLocationRelativeTo(parentFrame);
@@ -928,7 +941,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					//not a zone
 				}
 				String datum = textDatum.getText();
-				Location lc = new Location(locationName, locationDescription, locCoorType, textX.getText().trim(), textY.getText().trim(), datum, zone);
+				Location lc = new Location(locationName, locationDescription, locCoorType, textX.getText().trim(), textY.getText().trim(), datum,
+						zone);
 
 				//Generate sitesample
 				SiteSample sample = new SiteSample();
@@ -956,7 +970,9 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				//update copyfrog static info
 				this.frog.setSpecies(species);
 				this.frog.setGender(gender);
-				this.frog.setID(XMLFrogDatabase.getNextAvailableFrogID());
+				if (this.frog.getID() <= 0) {
+					this.frog.setID(XMLFrogDatabase.getNextAvailableFrogID());
+				}
 
 				IdentiFrog.LOGGER.writeMessage("Commited updated sample to copyfrog in editor");
 				return true;
@@ -1049,9 +1065,9 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			if (sample.getDateCapture() == null && sample.getSurveyID() == null) {
 				labelActiveSurvey.setText("New Survey");
 			} else {
-				labelActiveSurvey.setText(sample.getDateCapture()+" "+sample.getSurveyID());
+				labelActiveSurvey.setText(sample.getDateCapture() + " " + sample.getSurveyID());
 			}
-			
+
 		} else {
 			labelActiveSurvey.setText("New Survey");
 		}
@@ -1287,10 +1303,11 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				errorMessage = "Sample's length must be a number";
 				isError = true;
 			}
+			int zone = Location.EMPTY_ZONE;
 			if (UTMButton.isSelected()) {
 				try {
 					zone = Integer.parseInt(textZone.getText().trim());
-					if (zone > 60 || zone < 1){
+					if (zone > 60 || zone < 1) {
 						errorMessage = "Sample's capture location zone must be between 1 and 60";
 						isError = true;
 					}
@@ -1299,25 +1316,11 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					isError = true;
 				}
 			}
-			
+
 			if (imageList.getModel().getSize() <= 0) {
 				errorMessage = "All site sample's must contain at least 1 image";
 				isError = true;
 			}
-
-			/*
-			 * try { x = Double.parseDouble(textX.getText()); } catch
-			 * (NumberFormatException nfe) { errorMessage =
-			 * "Longitude must be a number"; isError = true; } try { y =
-			 * Double.parseDouble(textY.getText()); } catch
-			 * (NumberFormatException nfe) { errorMessage =
-			 * "Latitude must be a number"; isError = true; } if
-			 * (!isEmptyString(locCoorType) && locCoorType.equals("UTM") &&
-			 * !isEmptyString(textZone.getText())) { try { zone =
-			 * Integer.parseInt(textZone.getText()); } catch
-			 * (NumberFormatException nfe) { errorMessage = "Zone be a number";
-			 * isError = true; } }
-			 */
 		}
 		if (isError) {
 			JOptionPane.showMessageDialog(this, errorMessage, "Data Validation Error", JOptionPane.ERROR_MESSAGE);
@@ -1342,26 +1345,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			return true;
 		}
 	}
-
-	// ***************** NEW ENTRY *************************** //
-	protected void butNewEntry_actionPerformed(ActionEvent e) {
-
-		// ******************** VALIDATE FIELD ******************** //
-		if (commitChanges()) {
-			IdentiFrog.LOGGER.writeMessage("FrogEditor is closing with status SAVED");
-			ArrayList<SiteImage> images = new ArrayList<SiteImage>();
-			for (SiteImage img : this.frog.getAllSiteImages()) {
-				//once processed an image is moved into the DB folders and a thumbnail is generated
-				img.processImageIntoDB();
-				images.add(img);
-			}
-
-			dispose();
-			IdentiFrog.LOGGER.writeMessage("FrogEditor has closed");
-
-			//openDigSigFrame(maxfrogdbid);
-		}
-	} // end of ActionPerformed for new entry button
 
 	void butCancel_actionPerformed(ActionEvent e) {
 		this.frog = null; //discard
@@ -1480,12 +1463,29 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		DialogFileChooser imageChooser = new DialogFileChooser(this, "Choose Frog Photograph...", home, DialogFileChooser.getImageFilter());
 		String filename = imageChooser.getName();
 		if (filename != null) {
-			SiteImage image = new SiteImage();
-			image.setSourceFilePath(imageChooser.getName());
-			image.setProcessed(false);
-			//TODO - check for duplicates
-			image.createListThumbnail();
-			return image;
+			SiteImage img = new SiteImage();
+			img.setSourceFilePath(imageChooser.getName());
+			img.setProcessed(false);
+			
+			img.generateHash();
+			Frog owner = XMLFrogDatabase.findImageOwnerByHash(img.getSourceImageHash());
+			
+			if (owner != null) {
+				JOptionPane.showMessageDialog(this, "The image '" + filename + "' has already been entered (part of frog "+owner.getID()+").\n"
+						+ "To the image, first delete it from the database.", "Image already entered", JOptionPane.ERROR_MESSAGE);
+				return null;
+			}
+			
+			//we should also see if this frog has the image added since it's technically a copy and not in the DB
+			for (SiteImage copyImg : this.frog.getAllSiteImages()) {
+				if (copyImg.getSourceImageHash().equals(img.getSourceImageHash())) {
+					JOptionPane.showMessageDialog(this, "The image '" + filename + "' has already been entered as an image for this frog.", "Image already entered", JOptionPane.ERROR_MESSAGE);
+					return null;
+				}
+			}
+						
+			img.createListThumbnail();
+			return img;
 		}
 		return null;
 	}

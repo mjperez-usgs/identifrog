@@ -69,12 +69,11 @@ public class ParametersDialog extends JDialog {
 		PanelTabs.setLayout(gridLayout1);
 		labMaxPages.setText("Number of Rows per Page:");
 		labMaxPages.setBounds(new Rectangle(20, 26, 168, 15));
-		ComboBoxNumRows.addActionListener(new ParametersDialog_ComboBoxNumRows_actionAdapter(this));
 		PanelContainer.setPreferredSize(new Dimension(240, 160));
 
 		dbPanel.setLayout(null);
 		ComboBoxNumRows.setBounds(new Rectangle(153, 24, 50, 21)); // 41 instead of 47
-		IdentiFrog.LOGGER.writeMessage(" parentFrame.getWorkingAreaPanel().getMaxPageRows() " + parentFrame.getWorkingAreaPanel().getMaxPageRows());
+		//IdentiFrog.LOGGER.writeMessage(" parentFrame.getWorkingAreaPanel().getMaxPageRows() " + parentFrame.getWorkingAreaPanel().getMaxPageRows());
 		// ComboBoxNumRows.setSelectedIndex((int)(parentFrame.getWorkingAreaPanel().getMaxPageRows()/10));
 		ComboBoxNumRows.setSelectedIndex(0);
 		butClose.setBounds(new Rectangle(70, 80, 94, 35));
@@ -92,24 +91,8 @@ public class ParametersDialog extends JDialog {
 		dbPanel.add(butClose, null);
 	}
 
-	void ComboBoxNumRows_actionPerformed(ActionEvent e) {
-		parentFrame.setDBRows((ComboBoxNumRows.getSelectedIndex() + 1) * 10);
-	}
-
 	void butClose_actionPerformed(ActionEvent e) {
 		dispose();
-	}
-}
-
-class ParametersDialog_ComboBoxNumRows_actionAdapter implements java.awt.event.ActionListener {
-	ParametersDialog adaptee;
-
-	ParametersDialog_ComboBoxNumRows_actionAdapter(ParametersDialog adaptee) {
-		this.adaptee = adaptee;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		adaptee.ComboBoxNumRows_actionPerformed(e);
 	}
 }
 

@@ -23,7 +23,7 @@ import java.util.Arrays;
 
 public class HausdorffDistance {
 
-	public double getHausdorffDistance(String filename1, String filename2) {
+	public static double getHausdorffDistance(String filename1, String filename2) {
 
 		// signature file contains ...
 		ArrayList<String> sig1_string = new ArrayList<String>();
@@ -144,7 +144,7 @@ public class HausdorffDistance {
 		return myHausdorffDistance;
 	}
 
-	private double computeDistance(Double x, Double y, Double[] constellation) {
+	private static double computeDistance(Double x, Double y, Double[] constellation) {
 		double[] d = new double[constellation.length / 2];
 		double minHausdorff = -1;
 		int k = 0;
