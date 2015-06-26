@@ -86,7 +86,7 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 		c.gridy = 3;
 		panel.add(lastCapture, c);
 		
-		panel.setMaximumSize(new Dimension(100,130));
+		//panel.setMaximumSize(new Dimension(100,130));
 	}
 
 	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {

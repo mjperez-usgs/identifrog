@@ -11,10 +11,8 @@ import java.util.Comparator;
  */
 public class ImageMatch implements Comparable<ImageMatch>{
 	private SiteImage image;
-	private double score;
+	private double score = Double.MIN_VALUE;
 	private boolean overThreshhold = false;
-	
-	
 	
 	public SiteImage getImage() {
 		return image;

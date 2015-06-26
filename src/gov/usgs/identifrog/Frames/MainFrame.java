@@ -5,22 +5,27 @@ import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.MainFrogBrowserPanel;
 import gov.usgs.identifrog.MarkExport;
 import gov.usgs.identifrog.SaveAsDialog;
-import gov.usgs.identifrog.SearchCriteriaDialog;
 import gov.usgs.identifrog.Site;
+import gov.usgs.identifrog.DataObjects.Discriminator;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.FrogMatch;
 import gov.usgs.identifrog.DataObjects.ImageMatch;
+import gov.usgs.identifrog.DataObjects.SearchPackage;
 import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.DataObjects.SiteSample;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
+import gov.usgs.identifrog.Operations.SearchWorker;
 import gov.usgs.identifrog.cellrenderers.FrogBrowserCellRenderer;
 import gov.usgs.identifrog.cellrenderers.FrogSearchCellRenderer;
+import gov.usgs.identifrog.ui.JCheckBoxList;
 import gov.usgs.identifrog.ui.StatusBar;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -40,17 +45,24 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -58,10 +70,14 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -78,13 +94,11 @@ import javax.swing.event.ListSelectionListener;
  */
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
-	private boolean changesMade = false;
+	//private boolean changesMade = false;
 
 	private String workingFolder;
-	//private File currentFile;
-
-	//private Preferences root = Preferences.userRoot();
-	//public final Preferences node = root.node("edu/isu/aadis/defaults");
+	private SearchWorker sw;
+	private SiteImage currentSearchImage;
 
 	private ImageIcon imageNew32 = new ImageIcon(MainFrame.class.getResource("/resources/IconNew32.png"));
 	private ImageIcon imageNew16 = new ImageIcon(MainFrame.class.getResource("/resources/IconNew16.png"));
@@ -93,19 +107,20 @@ public class MainFrame extends JFrame {
 
 	private ImageIcon imageSaveAs16 = new ImageIcon(MainFrame.class.getResource("/resources/IconFloppy16.png"));
 
-	private ImageIcon imageFind = new ImageIcon(MainFrame.class.getResource("/resources/IconSearch32.png"));
+	//private ImageIcon imageFind = new ImageIcon(MainFrame.class.getResource("/resources/IconSearch32.png"));
 	private ImageIcon imageEdit = new ImageIcon(MainFrame.class.getResource("/resources/IconEdit32.png"));
 	private ImageIcon imageUsers = new ImageIcon(MainFrame.class.getResource("/resources/IconUsers32.png"));
 	private ImageIcon imageDiscriminators = new ImageIcon(MainFrame.class.getResource("/resources/IconDiscriminator32.png"));
 	private ImageIcon imageTemplates = new ImageIcon(MainFrame.class.getResource("/resources/IconBookmark32.png"));
 
-	private ImageIcon imageImage16 = new ImageIcon(MainFrame.class.getResource("/resources/IconImage16.png"));
+	//private ImageIcon imageImage16 = new ImageIcon(MainFrame.class.getResource("/resources/IconImage16.png"));
 	private ImageIcon imageDelete16 = new ImageIcon(MainFrame.class.getResource("/resources/IconDelete16.png"));
 	private ImageIcon imageEdit16 = new ImageIcon(MainFrame.class.getResource("/resources/IconEdit16.png"));
+	private ImageIcon imageWarning16 = new ImageIcon(MainFrame.class.getResource("/resources/IconWarning16.png"));
 
 	private JTabbedPane tabbedPane = new JTabbedPane();
 
-	private JButton bFind = new JButton("", imageFind);
+	//private JButton bFind = new JButton("", imageFind);
 	private JButton bEdit = new JButton("", imageEdit);
 	private JButton bDelete = new JButton("", imageDelete);
 	private JButton bNew = new JButton("", imageNew32);
@@ -122,8 +137,6 @@ public class MainFrame extends JFrame {
 	private MarkExport markExport = new MarkExport();
 	//private ThumbnailCreator thumbnailCreator;
 	private SaveAsDialog saveAsDialog;
-	private ParametersDialog parametersDialog;
-	private SearchCriteriaDialog searchCriteriaDialog;
 	//private MatchingDialog matchingDialog;
 
 	//private JPanel contentPanel;
@@ -138,7 +151,6 @@ public class MainFrame extends JFrame {
 	private JMenu menuHelp = new JMenu("Help");
 	private JMenuItem menuItemHelpAbout = new JMenuItem("About");
 	private JMenu menuProject = new JMenu("Project");
-	private JMenuItem MenuItemSearch = new JMenuItem("Search for a Match", new ImageIcon(MainFrame.class.getResource("/resources/IconSearch16.png")));
 	private JMenuItem menuItemProjectManager = new JMenuItem("Project Manager");
 	// private JMenuItem menuItemOpenSite = new JMenuItem("Open Existing Site");
 	private JMenuItem menuItemSaveSiteAs = new JMenuItem("Save Site As", imageSaveAs16);
@@ -150,8 +162,9 @@ public class MainFrame extends JFrame {
 	private JMenuItem MenuItemDiscriminators = new JMenuItem("Discriminators", new ImageIcon(
 			MainFrame.class.getResource("/resources/IconDiscriminator16.png")));
 	private JCheckBoxMenuItem CheckBoxMenuItemShowThumbs = new JCheckBoxMenuItem("Show Thumbnails", true);
-	private JMenuItem MenuItemParams = new JMenuItem("Rows per Page");
-	private JMenuItem MenuItemSearchCriteria = new JMenuItem("Search Criteria");
+	private HashMap<JCheckBox, Discriminator> searchDiscriminatorMap = new HashMap<JCheckBox, Discriminator>();
+	private JCheckBoxList discriminatorList = new JCheckBoxList();
+	private final DefaultListModel<JCheckBox> discriminatorModel = new DefaultListModel<JCheckBox>();
 
 	//private JLabel lStatusBar = new JLabel("STATUS: Up to 10 Frogs Per Page");
 
@@ -163,6 +176,23 @@ public class MainFrame extends JFrame {
 	private DefaultListModel<Frog> frogModel;
 	private JList<FrogMatch> frogSearchList;
 	private DefaultListModel<FrogMatch> frogSearchModel;
+	private JFormattedTextField massToleranceField;
+	private JFormattedTextField massField;
+	private JTextField speciesField;
+	private JCheckBox genderCheckbox;
+	private JComboBox<String> genderComboBox;
+	private JCheckBox speciesCheckbox;
+	private JCheckBox lengthCheckBox;
+	private JFormattedTextField lengthField;
+	private JLabel lengthToleranceLabel;
+	private JFormattedTextField lengthToleranceField;
+	private JLabel massToleranceLabel;
+	private JCheckBox massCheckBox;
+	private JLabel searchImageLabel;
+	private JCheckBox searchImageCheckBox;
+	private JButton searchButton;
+	private JProgressBar searchProgress;
+
 	/**
 	 * MainFrame Constructor
 	 */
@@ -188,12 +218,10 @@ public class MainFrame extends JFrame {
 	 * @param state
 	 */
 	public void setButtonState(boolean state) {
-		bFind.setEnabled(state);
 		bEdit.setEnabled(state);
 		bDelete.setEnabled(state);
 		MenuItemDelete.setEnabled(state);
 		MenuItemEdit.setEnabled(state);
-		MenuItemSearch.setEnabled(state);
 	}
 
 	/**
@@ -323,9 +351,8 @@ public class MainFrame extends JFrame {
 			}
 		});
 		// find button verify input when focus target
-		bFind.setVerifyInputWhenFocusTarget(true);
 		// buttons tool tip text
-		bFind.setToolTipText("Search for a Match");
+		//bFind.setToolTipText("Search for a Match");
 		bEdit.setToolTipText("Edit Frog");
 		bDelete.setToolTipText("Delete Frog");
 		bNew.setToolTipText("New Frog");
@@ -333,19 +360,6 @@ public class MainFrame extends JFrame {
 		bDiscriminators.setToolTipText("Manage Discriminators List");
 		bUsers.setToolTipText("Manage Observers and Recorders List");
 		bTemplates.setToolTipText("Manage Templates");
-
-		// action listeners for the buttons
-		bFind.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					butFind_actionPerformed(null);
-				} catch (Exception ex) {
-					IdentiFrog.LOGGER.writeException(ex);
-				}
-			}
-		});
 
 		bEdit.addActionListener(new ActionListener() {
 
@@ -396,21 +410,10 @@ public class MainFrame extends JFrame {
 
 		bHelp.addActionListener(new MainFrame_butHelp_actionAdapter(this));
 		//
-		MenuItemSearch.setAccelerator(javax.swing.KeyStroke.getKeyStroke('S', InputEvent.CTRL_MASK, false));
 		MenuItemEdit.setAccelerator(javax.swing.KeyStroke.getKeyStroke('E', InputEvent.CTRL_MASK, false));
 		CheckBoxMenuItemShowThumbs.setAccelerator(javax.swing.KeyStroke.getKeyStroke('T', InputEvent.CTRL_MASK, false));
-		MenuItemParams.setAccelerator(javax.swing.KeyStroke.getKeyStroke('P', InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
-		MenuItemSearchCriteria.setAccelerator(javax.swing.KeyStroke.getKeyStroke('S', InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
 		MenuItemDelete.setAccelerator(javax.swing.KeyStroke.getKeyStroke('D', InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
 		//
-		MenuItemSearch.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				butFind_actionPerformed(null);
-			}
-		});
 		MenuItemEdit.addActionListener(new ActionListener() {
 
 			@Override
@@ -436,8 +439,6 @@ public class MainFrame extends JFrame {
 			}
 		});
 		CheckBoxMenuItemShowThumbs.addActionListener(new MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter(this));
-		MenuItemParams.addActionListener(new MainFrame_MenuItemParams_actionAdapter(this));
-		MenuItemSearchCriteria.addActionListener(new MainFrame_MenuItemSearchCriteria_actionAdapter(this));
 
 		// ActionListeners for Add Site Functionality
 		menuItemProjectManager.addActionListener(new ActionListener() {
@@ -487,10 +488,8 @@ public class MainFrame extends JFrame {
 		menuHelp.add(menuItemHelpAbout);
 		mainMenu.add(menuFile);
 
-		menuProject.add(MenuItemSearchCriteria);
 		menuProject.addSeparator();
 		menuProject.add(MenuItemNew);
-		menuProject.add(MenuItemSearch);
 		menuProject.add(MenuItemEdit);
 		menuProject.add(MenuItemDelete);
 		menuProject.addSeparator();
@@ -499,19 +498,15 @@ public class MainFrame extends JFrame {
 		menuProject.add(MenuItemDiscriminators);
 		menuProject.addSeparator();
 		menuProject.add(CheckBoxMenuItemShowThumbs);
-		menuProject.add(MenuItemParams);
 		mainMenu.add(menuProject);
 		mainMenu.add(menuHelp);
 		setJMenuBar(mainMenu);
 
 		// icon states
-		bFind.setEnabled(false); // default to false cause nothing is selected
-									//by default+
 		bEdit.setEnabled(false);
 		bDelete.setEnabled(false);
 		MenuItemDelete.setEnabled(false);
 		MenuItemEdit.setEnabled(false);
-		MenuItemSearch.setEnabled(false);
 
 		setupBrowser();
 		setupSearch();
@@ -533,105 +528,403 @@ public class MainFrame extends JFrame {
 	}
 
 	private void setupSearch() {
-		// TODO Auto-generated method stub
-		//Frog list=====================
-				frogSearchList = new JList<FrogMatch>();
-				frogSearchModel = new DefaultListModel<FrogMatch>();
-				frogSearchList.setModel(frogSearchModel);
-				frogSearchList.setCellRenderer(new FrogSearchCellRenderer());
-				//...
-				frogSearchList.setVisibleRowCount(-1);
-				//frogList.setFixedCellHeight(160);
-				//frogList.setFixedCellWidth(150);
-				frogSearchList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+		DecimalFormat biometricFormat = new DecimalFormat("#.00");
 
-				/*frogSearchList.addListSelectionListener(new ListSelectionListener() {
-					@Override
-					public void valueChanged(ListSelectionEvent e) {
-						if (e.getValueIsAdjusting()) {
-							if (frogList.getSelectedIndex() != -1) {
-								// icon states
-								bFind.setEnabled(true);
-								bEdit.setEnabled(true);
-								bDelete.setEnabled(true);
-								MenuItemDelete.setEnabled(true);
-								MenuItemEdit.setEnabled(true);
-								MenuItemSearch.setEnabled(true);
+		JSplitPane searchSplitPane = new JSplitPane();
+		searchSplitPane.setDividerLocation(180);
+		JPanel criteriaPanel = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
 
-							} else {
-								//empty selection
-								// icon states
-								bFind.setEnabled(false);
-								bEdit.setEnabled(false);
-								bDelete.setEnabled(false);
-								MenuItemDelete.setEnabled(false);
-								MenuItemEdit.setEnabled(false);
-								MenuItemSearch.setEnabled(false);
-							}
-						}
-					}
-				});*/
-/*
-				//match right click selection
-				frogList.addMouseListener(new MouseAdapter() {
-					public void mousePressed(MouseEvent e) {
-						if (SwingUtilities.isRightMouseButton(e)) {
-							frogList.setSelectedIndex(frogList.locationToIndex(e.getPoint()));
-						}
-						if (e.isPopupTrigger()) {
-							createFrogPopup(e);
-						}
-					}
+		JLabel searchBoxTitle = new JLabel("Search Critieria");
+		searchBoxTitle.setFont(new Font("MS Sans Serif", Font.BOLD, 14));
 
-					public void mouseReleased(MouseEvent e) {
-						if (SwingUtilities.isRightMouseButton(e)) {
-							frogList.setSelectedIndex(frogList.locationToIndex(e.getPoint()));
-						}
-						if (e.isPopupTrigger()) {
-							createFrogPopup(e);
-						}
-					}
+		searchImageCheckBox = new JCheckBox("Image Signature");
+		searchImageCheckBox.setEnabled(false);
+		searchImageCheckBox
+				.setToolTipText("<html>To use an image, open a frog in the browser<br>and right click the image you want to search, then choose search.</html>");
+		searchImageCheckBox.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				updateCheckBoxes();
+			}
+		});
+		searchImageLabel = new JLabel("No image selected");
+		searchImageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+		searchImageLabel.setEnabled(false);
 
-				});*/
+		genderCheckbox = new JCheckBox("Gender");
+		genderCheckbox.addActionListener(new ActionListener() {
 
-				// add buttons to the toolbar
-				searchBarButtons.setFloatable(false);
-				searchBarButtons.setMargin(new Insets(2, 4, 2, 4));
-				searchBarButtons.setMinimumSize(new Dimension(100000, 40));
-				//searchBarButtons.add(bNew);
-				//barButtons.add(new JToolBar.Separator(new Dimension(0, 8)), null);
-				searchBarButtons.add(bFind);
-				/*searchBarButtons.add(bEdit);
-				searchBarButtons.add(bDelete);
-				searchBarButtons.add(Box.createHorizontalGlue());
-				searchBarButtons.add(bUsers);
-				searchBarButtons.add(bTemplates);
-				searchBarButtons.add(bDiscriminators);*/
-				//barButtons.add(new JToolBar.Separator(new Dimension(0, 8)), null);
-				// barButtons.add(btnPrevious);
-				//barButtons.add(new JToolBar.Separator(new Dimension(0, 8)), null);
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				updateCheckBoxes();
+			}
+		});
+		String[] genders = new String[] { "M", "F", "J", "Unknown" };
+		genderComboBox = new JComboBox<String>(genders);
+		speciesCheckbox = new JCheckBox("Species");
+		speciesCheckbox.addActionListener(new ActionListener() {
 
-				JPanel searchPanel = new JPanel(new BorderLayout());
-				//GridBagConstraints cons = new GridBagConstraints();
-				/*
-				 * cons.fill = GridBagConstraints.HORIZONTAL; cons.weightx = 1;
-				 * cons.gridx = 0; cons.gridy = 0;
-				 */
-				searchPanel.add(searchBarButtons, BorderLayout.NORTH);
-				//cons.gridy = 1;
-				//cons.weighty = 1;
-				//cons.fill = GridBagConstraints.BOTH;
-				searchPanel.add(new JScrollPane(frogSearchList), BorderLayout.CENTER);
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				updateCheckBoxes();
+			}
+		});
+		speciesField = new JTextField();
 
-				FrogMatch m = new FrogMatch();
-				m.setFrog(XMLFrogDatabase.getFrogs().get(0));
-				ImageMatch im = new ImageMatch();
-				im.setImage(m.getFrog().getLatestImage());
-				im.setScore(1.0);
-				m.addImage(im);
-				frogSearchModel.addElement(m);
+		massCheckBox = new JCheckBox("Mass (g)");
+		massCheckBox.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				updateCheckBoxes();
+			}
+		});
+		massField = new JFormattedTextField(biometricFormat);
+		massToleranceLabel = new JLabel("<html>Tolerance (g)&#177;</html>");
+		massToleranceField = new JFormattedTextField(biometricFormat);
+
+		lengthCheckBox = new JCheckBox("Length (mm)");
+		lengthCheckBox.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				updateCheckBoxes();
+			}
+		});
+		lengthField = new JFormattedTextField(biometricFormat);
+		lengthToleranceLabel = new JLabel("<html>Tolerance (mm)&#177;</html>");
+		lengthToleranceField = new JFormattedTextField(biometricFormat);
+
+		//Discriminator list
+		JLabel discriminatorLabel = new JLabel("Discriminators");
+		discriminatorList.setModel(discriminatorModel);
+		updateDiscriminatorList();
+
+		JCheckBox latestSampleCheckbox = new JCheckBox("Latest surveys only");
+
+		searchProgress = new JProgressBar();
+
+		searchButton = new JButton("Search");
+		searchButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				//Gather discriminators
+				SearchPackage sp = new SearchPackage();
+				boolean hasOneCriteria = false;
+				if (currentSearchImage != null && searchImageCheckBox.isSelected()) {
+					sp.setImage(currentSearchImage);
+					hasOneCriteria = true;
+				}
 				
-				tabbedPane.addTab("Frog Matching", searchPanel);
+				if (genderCheckbox.isSelected()) {
+					sp.setGender((String) genderComboBox.getSelectedItem());
+					hasOneCriteria = true;
+				}
+
+				if (speciesCheckbox.isSelected() && !speciesField.getText().trim().equals("")) {
+					sp.setSpecies(speciesField.getText().trim());
+					hasOneCriteria = true;
+				} else {
+					speciesCheckbox.setSelected(false);
+					updateCheckBoxes();
+				}
+				
+				if (massCheckBox.isSelected() && !massField.getText().trim().equals("") && !massToleranceField.getText().trim().equals("")) {
+					try {
+						double mass = Double.parseDouble(massField.getText().trim());
+						double massTolerance = Double.parseDouble(massToleranceField.getText().trim());
+						sp.setMass(mass);
+						sp.setMassTolerance(massTolerance);
+						hasOneCriteria = true;
+					} catch (NumberFormatException nfe) {
+						massCheckBox.setSelected(false);
+						updateCheckBoxes();
+					}
+				} else {
+					massCheckBox.setSelected(false);
+					updateCheckBoxes();
+				}
+				
+				if (lengthCheckBox.isSelected() && !lengthField.getText().trim().equals("") && !lengthToleranceField.getText().trim().equals("")) {
+					try {
+						double length = Double.parseDouble(lengthField.getText().trim());
+						double lengthTolerance = Double.parseDouble(lengthToleranceField.getText().trim());
+						sp.setLength(length);
+						sp.setLengthTolerance(lengthTolerance);
+						hasOneCriteria = true;
+					} catch (NumberFormatException nfe) {
+						lengthCheckBox.setSelected(false);
+						updateCheckBoxes();
+					}
+				} else {
+					lengthCheckBox.setSelected(false);
+					updateCheckBoxes();
+				}
+				
+				//get discriminators
+				ArrayList<Discriminator> discriminators = new ArrayList<Discriminator>();
+				for (Map.Entry<JCheckBox, Discriminator> entry : searchDiscriminatorMap.entrySet()) {
+					JCheckBox key = entry.getKey();
+					Discriminator value = entry.getValue();
+					if (key.isSelected()) {
+						discriminators.add(value);
+					}
+				}
+				if (discriminators.size() > 0) {
+					sp.setDiscriminators(discriminators);
+					hasOneCriteria = true;
+				}
+				
+				if (latestSampleCheckbox.isSelected()) {
+					sp.setUseAllSurveys(false);
+				}
+
+				if (hasOneCriteria) {
+					searchButton.setEnabled(false);
+					searchProgress.setIndeterminate(true);
+					statusBar.setMessage("Searching...");
+
+					sw = new SearchWorker(sp, MainFrame.this);
+					sw.execute();
+				} else {
+					statusBar.setMessageWithIcon("At least one criteria must be specified", imageWarning16);
+				}
+
+			}
+		});
+
+		int row = 0;
+
+		//Title
+		c.fill = GridBagConstraints.NONE;
+		c.gridx = 0;
+		c.gridy = row;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.weightx = 0;
+		c.weighty = 0;
+		c.gridwidth = 2;
+		criteriaPanel.add(searchBoxTitle, c);
+
+		//Image
+		c.gridwidth = 1;
+		c.gridy = ++row;
+		criteriaPanel.add(searchImageCheckBox, c);
+		c.gridy = ++row;
+		c.gridwidth = 2;
+		c.anchor = GridBagConstraints.CENTER;
+		criteriaPanel.add(searchImageLabel, c);
+		c.anchor = GridBagConstraints.NORTHWEST;
+
+		//Species
+		c.gridwidth = 1;
+		c.gridy = ++row;
+		criteriaPanel.add(speciesCheckbox, c);
+		c.gridx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		criteriaPanel.add(speciesField, c);
+		c.fill = GridBagConstraints.NONE;
+
+		//Gender
+		c.gridy = ++row;
+		c.gridx = 0;
+		criteriaPanel.add(genderCheckbox, c);
+		c.gridx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		criteriaPanel.add(genderComboBox, c);
+		c.fill = GridBagConstraints.NONE;
+
+		//Mass
+		c.gridy = ++row;
+		c.gridx = 0;
+		criteriaPanel.add(massCheckBox, c);
+		c.gridx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		criteriaPanel.add(massField, c);
+		c.fill = GridBagConstraints.NONE;
+
+		c.gridy = ++row;
+		c.gridx = 0;
+		c.anchor = GridBagConstraints.EAST;
+		criteriaPanel.add(massToleranceLabel, c);
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.gridx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		criteriaPanel.add(massToleranceField, c);
+		c.fill = GridBagConstraints.NONE;
+
+		//Length
+		c.gridy = ++row;
+		c.gridx = 0;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		criteriaPanel.add(lengthCheckBox, c);
+		c.gridx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		criteriaPanel.add(lengthField, c);
+		c.fill = GridBagConstraints.NONE;
+
+		c.gridy = ++row;
+		c.gridx = 0;
+		c.anchor = GridBagConstraints.EAST;
+		criteriaPanel.add(lengthToleranceLabel, c);
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.gridx = 1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		criteriaPanel.add(lengthToleranceField, c);
+
+		//Discrmininators
+		c.gridy = ++row;
+		c.gridx = 0;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		criteriaPanel.add(discriminatorLabel, c);
+		c.gridy = ++row;
+		c.gridwidth = 2;
+		c.weighty = 1;
+		c.fill = GridBagConstraints.BOTH;
+		JScrollPane discriminatorScrollPane = new JScrollPane(discriminatorList);
+		discriminatorScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		criteriaPanel.add(discriminatorScrollPane, c);
+
+		//Surveys
+		c.gridy = ++row;
+		c.gridx = 0;
+		c.weighty = 0;
+		c.anchor = GridBagConstraints.NORTHWEST;
+		c.gridwidth = 2;
+		criteriaPanel.add(latestSampleCheckbox, c);
+
+		//Search and button
+		c.gridwidth = 1;
+		c.anchor = GridBagConstraints.EAST;
+		c.gridy = ++row;
+		c.weighty = 0;
+		c.gridx = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		criteriaPanel.add(searchProgress, c);
+		c.gridx = 1;
+		c.weighty = 0;
+		criteriaPanel.add(searchButton, c);
+
+		//surveys
+
+		//Frog list=====================
+		frogSearchList = new JList<FrogMatch>();
+		frogSearchModel = new DefaultListModel<FrogMatch>();
+		frogSearchList.setModel(frogSearchModel);
+		frogSearchList.setCellRenderer(new FrogSearchCellRenderer());
+		//...
+		frogSearchList.setVisibleRowCount(-1);
+		//frogList.setFixedCellHeight(160);
+		//frogList.setFixedCellWidth(150);
+		frogSearchList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+
+		// add buttons to the toolbar
+		searchBarButtons.setFloatable(false);
+		searchBarButtons.setMargin(new Insets(2, 4, 2, 4));
+		searchBarButtons.setMinimumSize(new Dimension(100000, 40));
+		//searchBarButtons.add(bNew);
+		//barButtons.add(new JToolBar.Separator(new Dimension(0, 8)), null);
+		/*
+		 * searchBarButtons.add(bEdit); searchBarButtons.add(bDelete);
+		 * searchBarButtons.add(Box.createHorizontalGlue());
+		 * searchBarButtons.add(bUsers); searchBarButtons.add(bTemplates);
+		 * searchBarButtons.add(bDiscriminators);
+		 */
+		//barButtons.add(new JToolBar.Separator(new Dimension(0, 8)), null);
+		// barButtons.add(btnPrevious);
+		//barButtons.add(new JToolBar.Separator(new Dimension(0, 8)), null);
+
+		JPanel searchPanel = new JPanel(new BorderLayout());
+		//GridBagConstraints cons = new GridBagConstraints();
+		/*
+		 * cons.fill = GridBagConstraints.HORIZONTAL; cons.weightx = 1;
+		 * cons.gridx = 0; cons.gridy = 0;
+		 */
+		searchPanel.add(searchBarButtons, BorderLayout.NORTH);
+		//cons.gridy = 1;
+		//cons.weighty = 1;
+		//cons.fill = GridBagConstraints.BOTH;
+		searchSplitPane.setLeftComponent(criteriaPanel);
+		searchSplitPane.setRightComponent(new JScrollPane(frogSearchList));
+		searchPanel.add(searchSplitPane, BorderLayout.CENTER);
+		updateCheckBoxes();
+		tabbedPane.addTab("Frog Matching", searchPanel);
+	}
+
+	protected void updateCheckBoxes() {
+		if (searchImageCheckBox.isSelected()) {
+			searchImageLabel.setEnabled(true);
+		} else {
+			searchImageLabel.setEnabled(false);
+		}
+		
+		if (genderCheckbox.isSelected()) {
+			genderComboBox.setEnabled(true);
+		} else {
+			genderComboBox.setEnabled(false);
+		}
+
+		if (speciesCheckbox.isSelected()) {
+			speciesField.setEnabled(true);
+		} else {
+			speciesField.setEnabled(false);
+		}
+
+		if (massCheckBox.isSelected()) {
+			massField.setEnabled(true);
+			massToleranceField.setEnabled(true);
+		} else {
+			massField.setEnabled(false);
+			massToleranceField.setEnabled(false);
+		}
+		
+		if (lengthCheckBox.isSelected()) {
+			lengthField.setEnabled(true);
+			lengthToleranceField.setEnabled(true);
+		} else {
+			lengthField.setEnabled(false);
+			lengthToleranceField.setEnabled(false);
+		}
+	}
+
+	/**
+	 * Called when SearchWorker finishes and publishes matches to the screen
+	 * @param matches
+	 */
+	public void setMatches(ArrayList<FrogMatch> matches) {
+		frogSearchModel.clear();
+		for (FrogMatch m : matches) {
+			frogSearchModel.addElement(m);
+		}
+		statusBar.setMessage("Search finished");
+		searchProgress.setIndeterminate(false);
+		searchButton.setEnabled(true);
+	}
+
+	private void updateDiscriminatorList() {
+		//Preserve state of checked boxes
+		ArrayList<Discriminator> selectedDiscrims = new ArrayList<Discriminator>();
+		for (Map.Entry<JCheckBox, Discriminator> entry : searchDiscriminatorMap.entrySet()) {
+			JCheckBox key = entry.getKey();
+			Discriminator value = entry.getValue();
+			if (key.isSelected()) {
+				selectedDiscrims.add(value);
+			}
+		}
+
+		discriminatorModel.clear();
+		ArrayList<Discriminator> newDiscriminators = XMLFrogDatabase.getDiscriminators();
+
+		for (Discriminator disc : newDiscriminators) {
+			JCheckBox cb = new JCheckBox(disc.getText());
+			searchDiscriminatorMap.put(cb, disc);
+			if (selectedDiscrims.contains(disc)) {
+				cb.setSelected(true);
+			}
+			discriminatorModel.addElement(cb);
+		}
 	}
 
 	private void setupBrowser() {
@@ -652,22 +945,18 @@ public class MainFrame extends JFrame {
 				if (e.getValueIsAdjusting()) {
 					if (frogList.getSelectedIndex() != -1) {
 						// icon states
-						bFind.setEnabled(true);
 						bEdit.setEnabled(true);
 						bDelete.setEnabled(true);
 						MenuItemDelete.setEnabled(true);
 						MenuItemEdit.setEnabled(true);
-						MenuItemSearch.setEnabled(true);
 
 					} else {
 						//empty selection
 						// icon states
-						bFind.setEnabled(false);
 						bEdit.setEnabled(false);
 						bDelete.setEnabled(false);
 						MenuItemDelete.setEnabled(false);
 						MenuItemEdit.setEnabled(false);
-						MenuItemSearch.setEnabled(false);
 					}
 				}
 			}
@@ -705,7 +994,6 @@ public class MainFrame extends JFrame {
 		browserBarButtons.setMinimumSize(new Dimension(100000, 36));
 		browserBarButtons.add(bNew);
 		//barButtons.add(new JToolBar.Separator(new Dimension(0, 8)), null);
-		browserBarButtons.add(bFind);
 		browserBarButtons.add(bEdit);
 		browserBarButtons.add(bDelete);
 		browserBarButtons.add(Box.createHorizontalGlue());
@@ -738,16 +1026,7 @@ public class MainFrame extends JFrame {
 
 		//codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
 		JPopupMenu popup = new JPopupMenu();
-		JMenuItem popupAddImage, popupEditInfo, popupDeleteFrog, popupSearch, popupAddSample;
-		popupAddImage = new JMenuItem("Add image to this frog", imageImage16);
-		popupAddImage.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				IdentiFrog.LOGGER.writeMessage("MainFrame: Right click > Add image to this frog on ID: " + f.getID());
-			}
-		});
+		JMenuItem popupEditInfo, popupDeleteFrog, popupSearch, popupAddSample;
 		popupEditInfo = new JMenuItem("Edit frog information", imageEdit16);
 		popupEditInfo.addActionListener(new ActionListener() {
 
@@ -780,7 +1059,6 @@ public class MainFrame extends JFrame {
 			}
 		});
 		popupSearch = new JMenuItem("Merge Frog...?");
-		popup.add(popupAddImage);
 		popup.add(popupAddSample);
 		popup.add(popupEditInfo);
 		popup.add(popupDeleteFrog);
@@ -846,7 +1124,7 @@ public class MainFrame extends JFrame {
 			XMLFrogDatabase.updateFrog(f.getID(), editedFrog);
 			frogModel.set(frogIndex, editedFrog);
 			XMLFrogDatabase.writeXMLFile();
-			statusBar.setMessage("Updated frog");
+			statusBar.setMessage("Updated frog in database");
 		}
 	}
 
@@ -871,21 +1149,7 @@ public class MainFrame extends JFrame {
 			frogModel.removeElement(f);
 			XMLFrogDatabase.removeFrog(f.getID());
 			XMLFrogDatabase.writeXMLFile();
-			//String localImageName = localFrog.getGenericImageName();
-			//String localSignatureName = localFrog.getPathSignature();
-			// check if exists then delete
-			/*
-			 * new File(XMLFrogDatabase.getImagesFolder() +
-			 * localImageName).delete(); new
-			 * File(XMLFrogDatabase.getDorsalFolder() +
-			 * localImageName).delete(); new
-			 * File(XMLFrogDatabase.getThumbnailFolder() +
-			 * localImageName).delete(); new
-			 * File(XMLFrogDatabase.getBinaryFolder() +
-			 * localImageName).delete(); new
-			 * File(XMLFrogDatabase.getSignaturesFolder() +
-			 * localSignatureName).delete();
-			 */
+			statusBar.setMessage("Deleted frog from database");
 		}
 	}
 
@@ -1014,37 +1278,6 @@ public class MainFrame extends JFrame {
 		}
 	}
 
-	protected void MenuItemParams_actionPerformed(ActionEvent e) {
-		OpenParametersDialog();
-	}
-
-	private void OpenParametersDialog() {
-		if (parametersDialog == null) {
-			parametersDialog = new ParametersDialog(MainFrame.this, "Database", false);
-			Dimension dlgSize = parametersDialog.getPreferredSize();
-			Dimension frmSize = getSize();
-			Point loc = getLocation();
-			parametersDialog.setLocation((frmSize.width - dlgSize.width) / 2 + loc.x, (frmSize.height - dlgSize.height) / 2 + loc.y);
-			parametersDialog.pack();
-		}
-		parametersDialog.setVisible(true);
-	}
-
-	protected void MenuItemSearchCriteria_actionPerformed(ActionEvent e) {
-		OpenSearchCriteriaDialog();
-	}
-
-	private void OpenSearchCriteriaDialog() {
-		if (searchCriteriaDialog == null) {
-			searchCriteriaDialog = new SearchCriteriaDialog(MainFrame.this, "Database", false);
-			Dimension dlgSize = searchCriteriaDialog.getPreferredSize();
-			Dimension frmSize = getSize();
-			Point loc = getLocation();
-			searchCriteriaDialog.setLocation((frmSize.width - dlgSize.width) / 2 + loc.x, (frmSize.height - dlgSize.height) / 2 + loc.y);
-			searchCriteriaDialog.pack();
-		}
-		searchCriteriaDialog.setVisible(true);
-	}
 
 	/*
 	 * public ThumbnailCreator getThumbnailCreator() { return thumbnailCreator;
@@ -1064,14 +1297,6 @@ public class MainFrame extends JFrame {
 	 * + imageFile.getAbsolutePath()); } }
 	 */
 
-	private void OpenMatchingDialog(File imageFile, int DbID) {
-		/*
-		 * workingAreaPanel.setLastFrogID(DbID); if (matchingDialog == null ||
-		 * !matchingDialog.isOpen()) { matchingDialog = new
-		 * MatchingDialog(MainFrame.this, imageFile, DbID); }
-		 */
-	}
-
 	/**
 	 * Turns buttons on or off. Does not apply to buttons that depend on a
 	 * selected item in the lists.
@@ -1087,7 +1312,6 @@ public class MainFrame extends JFrame {
 		MenuItemDelete.setEnabled(on);
 		MenuItemEdit.setEnabled(on);
 		MenuItemNew.setEnabled(on);
-		MenuItemSearch.setEnabled(on);
 	}
 
 	public JButton getButEdit() {
@@ -1098,12 +1322,26 @@ public class MainFrame extends JFrame {
 		return MenuItemEdit;
 	}
 
-	public void setChangesMade(boolean changesMade) {
-		this.changesMade = changesMade;
+	/**
+	 * Sets a SiteImage in the search field and switches to that interface
+	 * @param img Image to search
+	 */
+	public void setSearchImage(SiteImage img) {
+		currentSearchImage = img;
+		searchImageLabel.setIcon(new ImageIcon(img.getColorThumbnail()));
+		searchImageLabel.setText("");
+		searchImageLabel.setEnabled(true);
+		searchImageCheckBox.setSelected(true);
+		searchImageCheckBox.setEnabled(true);
+		searchImageLabel.setBorder(new EmptyBorder(3,0,3,0));
 	}
 
-	public boolean getChangesMade() {
-		return changesMade;
+	/**
+	 * Gets the tabbed pane so you can control the tab currently showing
+	 * @return tabbedPane
+	 */
+	public JTabbedPane getTabbedPane() {
+		return tabbedPane;
 	}
 }
 
@@ -1176,29 +1414,5 @@ class MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter implements java.awt.eve
 
 	public void actionPerformed(ActionEvent e) {
 		//	adaptee.CheckBoxMenuItemShowThumbs_actionPerformed(e);
-	}
-}
-
-class MainFrame_MenuItemParams_actionAdapter implements java.awt.event.ActionListener {
-	MainFrame adaptee;
-
-	MainFrame_MenuItemParams_actionAdapter(MainFrame adaptee) {
-		this.adaptee = adaptee;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		adaptee.MenuItemParams_actionPerformed(e);
-	}
-}
-
-class MainFrame_MenuItemSearchCriteria_actionAdapter implements java.awt.event.ActionListener {
-	MainFrame adaptee;
-
-	MainFrame_MenuItemSearchCriteria_actionAdapter(MainFrame adaptee) {
-		this.adaptee = adaptee;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		adaptee.MenuItemSearchCriteria_actionPerformed(e);
 	}
 }

@@ -98,7 +98,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	private ImageIcon imageImage16 = new ImageIcon(MainFrame.class.getResource("/resources/IconImage16.png"));
 	private ImageIcon imageDiscriminators16 = new ImageIcon(MainFrame.class.getResource("/resources/IconDiscriminator16.png"));
 
-
 	String surveyID;
 	//protected int frogID;
 	protected String entrydate, capturedate;
@@ -335,31 +334,39 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					imageList.setSelectedIndex(idx);
 					//codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
 					JPopupMenu popup = new JPopupMenu();
-					JMenuItem popupGenerateSignature, popupOriginalFilename;
-					popupGenerateSignature = new JMenuItem();
+					JMenuItem popupSignatureSearch, popupOriginalFilename;
+					
+					popupSignatureSearch = new JMenuItem();
 					if (img.isSignatureGenerated()) {
-						popupGenerateSignature.setEnabled(false);
-						popupGenerateSignature.setText("Signature already generated");
+						popupSignatureSearch.setText("Search for frog match");
 					} else {
-						popupGenerateSignature.setEnabled(true);
-						popupGenerateSignature.setText("Create signature");
+						popupSignatureSearch.setText("Create signature");
 					}
-					popupGenerateSignature.addActionListener(new ActionListener() {
+					popupSignatureSearch.addActionListener(new ActionListener() {
 						@Override
 						public void actionPerformed(ActionEvent e) {
-							IdentiFrog.LOGGER.writeMessage("User generating signature for siteimage " + img);
-							SiteImage newImg = openDigSigFrame(img);
-							IdentiFrog.LOGGER.writeMessage("Continuing execution of FrogEditor. Signature Generator has closed.");
-							newImg.createListThumbnail();
-							imageModel.set(idx, newImg); //update the SiteImage object.
+							if (img.isSignatureGenerated()){
+								//search for this frog via image
+								parentFrame.setSearchImage(img);
+								parentFrame.getTabbedPane().setSelectedIndex(1);
+								dispose();
+							} else {
+								IdentiFrog.LOGGER.writeMessage("User generating signature for siteimage " + img);
+								SiteImage newImg = openDigSigFrame(img);
+								IdentiFrog.LOGGER.writeMessage("Continuing execution of FrogEditor. Signature Generator has closed.");
+								newImg.createListThumbnail();
+								imageModel.set(idx, newImg); //update the SiteImage object.
+							}
 						}
 					});
+					popup.add(popupSignatureSearch);
 
-					popupOriginalFilename = new JMenuItem("Originally entered as "+img.getOriginalFilename(),imageImage16);
-					popupOriginalFilename.setEnabled(false);
-					
-					popup.add(popupGenerateSignature);
-					popup.add(popupOriginalFilename);
+					if (img.isProcessed()) {
+						popupOriginalFilename = new JMenuItem("Originally entered as " + img.getOriginalFilename(), imageImage16);
+						popupOriginalFilename.setEnabled(false);
+						popup.add(popupOriginalFilename);
+
+					}
 					popup.show(e.getComponent(), e.getX(), e.getY());
 				}
 			}
@@ -1466,24 +1473,33 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			SiteImage img = new SiteImage();
 			img.setSourceFilePath(imageChooser.getName());
 			img.setProcessed(false);
-			
+
 			img.generateHash();
 			Frog owner = XMLFrogDatabase.findImageOwnerByHash(img.getSourceImageHash());
-			
+
 			if (owner != null) {
-				JOptionPane.showMessageDialog(this, "The image '" + filename + "' has already been entered (part of frog "+owner.getID()+").\n"
+				JOptionPane.showMessageDialog(this, "The image '" + filename + "' has already been entered (part of frog " + owner.getID() + ").\n"
 						+ "To the image, first delete it from the database.", "Image already entered", JOptionPane.ERROR_MESSAGE);
 				return null;
 			}
-			
+
 			//we should also see if this frog has the image added since it's technically a copy and not in the DB
 			for (SiteImage copyImg : this.frog.getAllSiteImages()) {
-				if (copyImg.getSourceImageHash().equals(img.getSourceImageHash())) {
-					JOptionPane.showMessageDialog(this, "The image '" + filename + "' has already been entered as an image for this frog.", "Image already entered", JOptionPane.ERROR_MESSAGE);
+				if (copyImg.getSourceImageHash() != null && copyImg.getSourceImageHash().equals(img.getSourceImageHash())) {
+					JOptionPane.showMessageDialog(this, "The image '" + filename + "' has already been entered as an image for this frog.",
+							"Image already entered", JOptionPane.ERROR_MESSAGE);
 					return null;
 				}
+				//check for same file paths (images not processed)
+				if (copyImg.getSourceFilePath() != null && img.getSourceFilePath() != null) {
+					if (copyImg.getSourceFilePath().equals(img.getSourceFilePath())) {
+						JOptionPane.showMessageDialog(this, "The image '" + filename + "' has already been entered as an image for this frog.",
+								"Image already entered", JOptionPane.ERROR_MESSAGE);
+						return null;
+					}
+				}
 			}
-						
+
 			img.createListThumbnail();
 			return img;
 		}

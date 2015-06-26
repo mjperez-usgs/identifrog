@@ -12,11 +12,27 @@ import java.util.ArrayList;
  */
 public class FrogMatch implements Comparable<FrogMatch> {
 	private Frog frog;
+	private boolean searchOnly = false; 
 	private ArrayList<ImageMatch> images;
 
 	public FrogMatch() {
 		images = new ArrayList<ImageMatch>();
 	}
+	
+
+	public boolean isSearchOnly() {
+		return searchOnly;
+	}
+
+
+	/**
+	 * Sets this frogmatch object to indicate it does not include an image search
+	 * @param searchOnly
+	 */
+	public void setSearchOnly(boolean searchOnly) {
+		this.searchOnly = searchOnly;
+	}
+
 
 	/**
 	 * Associates a ImageMatch (image and score) object with this FrogMatch

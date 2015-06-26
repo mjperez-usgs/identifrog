@@ -1,7 +1,6 @@
 package gov.usgs.identifrog.cellrenderers;
 
 import gov.usgs.identifrog.IdentiFrog;
-import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.FrogMatch;
 import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
@@ -10,19 +9,13 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
-import java.awt.image.FilteredImageSource;
-import java.awt.image.ImageFilter;
-import java.awt.image.ImageProducer;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
-import javax.swing.GrayFilter;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -92,7 +85,7 @@ public class FrogSearchCellRenderer extends JPanel implements ListCellRenderer {
 		panel.add(topScore, c);
 		c.gridy = 5;
 		panel.add(averageScore, c);
-		panel.setMaximumSize(new Dimension(100,130));
+		panel.setMaximumSize(new Dimension(100, 130));
 	}
 
 	public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -107,17 +100,60 @@ public class FrogSearchCellRenderer extends JPanel implements ListCellRenderer {
 			border.setTitle("Frog " + match.getFrog().getID());
 			loadImage(match);
 			imageLabel.setIcon(idImageMap.get(match.getFrog().getID()));
-			
-			topScore.setText("Top Score: "+match.getTopScore());
-			averageScore.setText("Average Score: "+match.calculateAverageScore());
+
+			if (match.isSearchOnly()) {
+				topScore.setVisible(false);
+				averageScore.setVisible(false);
+				score2.setVisible(false);
+				score3.setVisible(false);
+				score4.setVisible(false);
+				score5.setVisible(false);
+			} else {
+				topScore.setText("Top Score: " + match.getTopScore());
+				averageScore.setText("Average Score: " + match.calculateAverageScore());
+				
+				if (match.getImages().size() > 1) {
+					score2.setVisible(true);
+					score2.setText("2nd Best: "+match.getImages().get(1).getScore());
+				} else {
+					score2.setVisible(false);
+					score3.setVisible(false);
+					score4.setVisible(false);
+					score5.setVisible(false);
+				}
+				
+				if (match.getImages().size() > 2) {
+					score3.setVisible(true);
+					score3.setText("3rd Best: "+match.getImages().get(2).getScore());
+				} else {
+					score3.setVisible(false);
+					score4.setVisible(false);
+					score5.setVisible(false);
+				}
+				
+				if (match.getImages().size() > 3) {
+					score4.setVisible(true);
+					score4.setText("4th Best: "+match.getImages().get(3).getScore());
+				} else {
+					score4.setVisible(false);
+					score5.setVisible(false);
+				}
+				
+				if (match.getImages().size() > 4) {
+					score5.setVisible(true);
+					score5.setText("5th Best: "+match.getImages().get(4).getScore());
+				} else {
+					score5.setVisible(false);
+				}
+			}
 			return panel;
 		}
 		return this;
 	}
 
 	/**
-	 * Loads the top frog image if the ID is not in the imagemap yet. Does nothing
-	 * if it already is.
+	 * Loads the top frog image if the ID is not in the imagemap yet. Does
+	 * nothing if it already is.
 	 * 
 	 * 
 	 * @param match
@@ -140,4 +176,3 @@ public class FrogSearchCellRenderer extends JPanel implements ListCellRenderer {
 		}
 	}
 }
-

@@ -45,6 +45,8 @@ public class IdentiFrog {
 	public static final String DB_FILENAME = "datafile.xml"; //filename for the DB, can possibly change.
 	public static final String HR_VERSION = "1.0 Alpha";
 	protected static final String THUMBNAIL_DIR = "Thumbnail";
+	public static final String SIGNATURE_EXTENSION = ".dsg";
+	public static final String BINARY_EXTENSION = ".jpg";
 	public static boolean LOGGING = true;
 	public static GSLogger LOGGER;
 	public static XMLFrogDatabase DB;

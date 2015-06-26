@@ -72,7 +72,7 @@ public class SiteImage {
 	public SiteImage(SiteImage img) {
 		this.imageFileName = img.getImageFileName();
 		this.sourceFilePath = img.getSourceFilePath();
-		this.colorFileThumbnail = IdentiFrog.copyImage(getColorThumbnail());
+		this.colorFileThumbnail = IdentiFrog.copyImage(img.getColorThumbnail());
 		this.greyScaleThumbnail = IdentiFrog.copyImage(img.getGreyScaleThumbnail());
 		this.signatureGenerated = img.isSignatureGenerated();
 		this.processed = img.isProcessed();
@@ -99,6 +99,10 @@ public class SiteImage {
 		}
 	}
 
+	/**
+	 * Gets the hash of the original image.
+	 * @return
+	 */
 	public String getSourceImageHash() {
 		return sourceImageHash;
 	}
@@ -107,6 +111,11 @@ public class SiteImage {
 		this.sourceImageHash = sourceImageHash;
 	}
 
+	/**
+	 * Gets the database image file name.
+	 * Appending this to a XMLDB folder will get you the respective image.
+	 * @return
+	 */
 	public String getImageFileName() {
 		return imageFileName;
 	}
@@ -275,7 +284,7 @@ public class SiteImage {
 		BufferedImage src;
 		try {
 			src = ImageIO.read(new File(XMLFrogDatabase.getDorsalFolder() + getImageFileName()));
-			BufferedImage thumbnail = Scalr.resize(src, Scalr.Method.QUALITY, Scalr.Mode.FIT_TO_WIDTH, 150, 113, Scalr.OP_ANTIALIAS);
+			BufferedImage thumbnail = Scalr.resize(src, Scalr.Method.QUALITY, Scalr.Mode.FIT_TO_WIDTH, 200, 150, Scalr.OP_ANTIALIAS);
 
 			//store thumbnail
 			File outputfile = new File(XMLFrogDatabase.getThumbnailFolder() + getImageFileName());
@@ -335,8 +344,6 @@ public class SiteImage {
 		base = base.substring(0, base.length()-hash.length()-1); //-1 for the _
 		base = base+"."+extension;
 		return base;
-		
-		
 	}
 
 	/**
@@ -344,7 +351,7 @@ public class SiteImage {
 	 * @return Signature file path
 	 */
 	public String getSignature() {
-		return XMLFrogDatabase.getSignaturesFolder() + getImageFileName();
+		return XMLFrogDatabase.getSignaturesFolder() + FilenameUtils.getBaseName(getImageFileName())+IdentiFrog.SIGNATURE_EXTENSION;
 	}
 
 	/**
@@ -352,7 +359,7 @@ public class SiteImage {
 	 * @return Binary image file path
 	 */
 	public String getBinary() {
-		return XMLFrogDatabase.getBinaryFolder() + getImageFileName();
+		return XMLFrogDatabase.getBinaryFolder() + FilenameUtils.getBaseName(getImageFileName())+IdentiFrog.BINARY_EXTENSION;
 
 	}
 }
