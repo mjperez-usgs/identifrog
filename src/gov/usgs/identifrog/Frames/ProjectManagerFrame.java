@@ -19,7 +19,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -34,6 +36,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
+
+import org.apache.commons.io.FilenameUtils;
 
 public class ProjectManagerFrame extends JDialog implements ActionListener {
 	public static final String RECENT_SITES_FILE = "recentsites.idf";
@@ -115,6 +119,11 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 		getRecentSites();
 		for (Site site : recentSites) {
 			JButton recentSite = createRecentSiteButton(site);
+			File recentDBFile = new File(site.getDatafilePath());
+			recentSite.setEnabled(recentDBFile.exists());
+			if (!recentDBFile.exists()) {
+				recentSite.setToolTipText("<html>This project no longer exists:<br>"+site.getDatafilePath()+"</html>");
+			}
 			recentSitesPanel.add(recentSite);
 			recentSitesPanel.add(Box.createHorizontalGlue());
 		}
@@ -149,6 +158,10 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 	        ObjectInputStream in = new ObjectInputStream(new FileInputStream(RECENT_SITES_FILE));
 	        recentSites = (ArrayList<Site>) in.readObject(); 
 	        in.close();
+	        IdentiFrog.LOGGER.writeMessage("Loaded recent sites file, contents:");
+	        for (Site s : recentSites) {
+		        IdentiFrog.LOGGER.writeMessage(s.toString());
+	        }
 	    }
 	    catch(Exception e) {
 	    	recentSites = new ArrayList<Site>(); //empty
@@ -183,11 +196,12 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 			xmlFilter.addExactFile(IdentiFrog.DB_FILENAME);
 			xmlFilter.setDescription("IdentiFrog Site Files ("+IdentiFrog.DB_FILENAME+")");
 	        f.setFileFilter(xmlFilter);
+	        f.setCurrentDirectory(new File(System.getProperty("user.home")));
 	        int result = f.showOpenDialog(this);
 	        if (result == JFileChooser.APPROVE_OPTION) {
 	        	if (f.getSelectedFile().getName().equals(IdentiFrog.DB_FILENAME)) {
 	        		//valid
-	        		loadSite(f.getCurrentDirectory().getAbsolutePath());
+	        		loadSite(f.getSelectedFile().getAbsolutePath());
 	        		dispose();
 	        	} else {
 	        		new ErrorDialog("The selected XML file is not an IdentiFrog site file.");
@@ -207,8 +221,12 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 	}
 	
 	public void loadSite(String dataFilePath){
-		IdentiFrog.LOGGER.writeMessage("Project manager is preparing to load sitefile: "+dataFilePath);
 		
+		IdentiFrog.LOGGER.writeMessage("Project manager is preparing to load sitefile: "+dataFilePath);
+		if (!dataFilePath.endsWith(IdentiFrog.DB_FILENAME)){
+			IdentiFrog.LOGGER.writeError("LOADING XML DB THAT IS NOT NAMED AS IDENTIFROG.DB_FILENAME: "+dataFilePath);
+			return;
+		}
 		File dfile = new File(dataFilePath);
 		if (!dfile.exists()) {
 			//does not exist
@@ -223,22 +241,14 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 		newSite.setDatafilePath(dataFilePath);
 		newSite.setLastModified(new Date());
 		//String siteName = dfile.getParent();
-		String siteName = dfile.getAbsolutePath();
-		//remove final slash if there is one for some reason.
-		if (Character.toString(siteName.charAt(siteName.length()-1)).equals(File.separator)) {
-			IdentiFrog.LOGGER.writeMessage("Sitename final char is a slash.");
-			siteName = siteName.substring(0, siteName.length() - 2);
-		}
-		//remove datafile from sitename
-		if (siteName.endsWith(File.separator + IdentiFrog.DB_FILENAME)) {
-		    siteName = siteName.substring(0, siteName.lastIndexOf(File.separator));
-		}
+		String siteName = dfile.getParent(); //datafile parent
 	    siteName = siteName.substring(siteName.lastIndexOf(File.separator) + 1, siteName.length());
 		newSite.setSiteName(siteName);
 		
 		IdentiFrog.LOGGER.writeMessage("Inject list with site: "+newSite);
 		
-		//update recents list
+		updateRecentlyOpened(dfile.getAbsolutePath());
+		/*//update recents list
 	    boolean updated = false;
 	    //update existing entry if it exists.
 		if (recentSites.contains(newSite)) {
@@ -275,7 +285,7 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			IdentiFrog.LOGGER.writeException(e);
-		}
+		}*/
 		
 		// create an instance of the MainFrame
 		MainFrame frame = new MainFrame();
@@ -303,5 +313,64 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 			mf.dispose();
 		}
 		frame.setVisible(true);
+	}
+	
+	/**
+	 * Updates the file of recently opened sites
+	 * 
+	 * @param fileNamePath
+	 */
+	public static void updateRecentlyOpened(String fileNamePath) {
+		IdentiFrog.LOGGER.writeMessage("Updating recent sites list with datapath" +fileNamePath);
+		// gather site info
+		Site newSite = new Site();
+		newSite.setDatafilePath(fileNamePath);
+		newSite.setLastModified(new Date());
+		
+		if (fileNamePath.endsWith(File.separator)) {
+			IdentiFrog.LOGGER.writeMessage("Sitename final char is a slash.");
+			fileNamePath = fileNamePath.substring(0, fileNamePath.length() - 2);
+		}
+		//remove \datafile from sitename
+		if (fileNamePath.endsWith(File.separator + IdentiFrog.DB_FILENAME)) {
+			fileNamePath = fileNamePath.substring(0, fileNamePath.lastIndexOf(File.separator));
+		}
+		String siteName = FilenameUtils.getBaseName(fileNamePath);
+
+		siteName = siteName.substring(siteName.lastIndexOf(File.separator) + 1, siteName.length());
+		newSite.setSiteName(siteName);
+
+		// load recent site info for parsing
+		ArrayList<Site> recentSites = null;
+		try {
+			ObjectInputStream in = new ObjectInputStream(new FileInputStream(ProjectManagerFrame.RECENT_SITES_FILE));
+			recentSites = (ArrayList<Site>) in.readObject();
+			in.close();
+		} catch (Exception e) {
+			IdentiFrog.LOGGER.writeExceptionWithMessage("Error reading recent sites list:", e);
+			recentSites = new ArrayList<Site>(); // empty
+		}
+
+		recentSites.add(newSite);
+		HashSet<Site> filters = new HashSet<Site>(recentSites); //removes duplicates
+		recentSites = new ArrayList<Site>(filters);
+		while (recentSites.size() > 3) {
+			recentSites.remove(3);
+		}
+
+		Collections.sort(recentSites);
+		ObjectOutputStream out;
+		try {
+			out = new ObjectOutputStream(new FileOutputStream(ProjectManagerFrame.RECENT_SITES_FILE));
+			out.writeObject(recentSites);
+			out.close();
+			out.flush();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			IdentiFrog.LOGGER.writeException(e);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			IdentiFrog.LOGGER.writeException(e);
+		}
 	}
 }

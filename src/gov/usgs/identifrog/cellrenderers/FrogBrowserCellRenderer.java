@@ -85,7 +85,7 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 		c.gridwidth = 2;
 		c.gridy = 3;
 		panel.add(lastCapture, c);
-		
+
 		//panel.setMaximumSize(new Dimension(100,130));
 	}
 
@@ -124,10 +124,13 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 			} else {
 				numImages.setText(numberOfImages + " images");
 			}
-			
-			String latestCapture = frog.getLatestSample().getDateCapture();
-			lastCapture.setText("Last captured on "+latestCapture);
 
+			if (frog.isFreshImport()) {
+				lastCapture.setText("Pending information entry");
+			} else {
+				String latestCapture = frog.getLatestSample().getDateCapture();
+				lastCapture.setText("Last captured on " + latestCapture);
+			}
 			if (!frog.isFullySearchable()) {
 				searchStatus.setText("Partially searchable");
 			} else {
@@ -154,6 +157,7 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 				Image returnImg = null;
 				//get latest frog image
 				SiteImage img = frog.getLatestImage();
+				System.out.println(img);
 				BufferedImage src = ImageIO.read(new File(XMLFrogDatabase.getThumbnailFolder() + img.getImageFileName()));
 				BufferedImage thumbnail = Scalr.resize(src, Scalr.Method.SPEED, Scalr.Mode.FIT_TO_WIDTH, 200, 150, Scalr.OP_ANTIALIAS);
 				if (!frog.isFullySearchable()) {
@@ -168,7 +172,7 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 				IdentiFrog.LOGGER.writeExceptionWithMessage("Unable to generate thumbnail for image (in memory).", e);
 				idImageMap.put(frog.getID(), new ImageIcon(this.getClass().getResource("/resources/IconError32.png")));
 			} catch (NullPointerException e) {
-				IdentiFrog.LOGGER.writeExceptionWithMessage("NullPointerException for image (in memory). Likely frog has no images", e);
+				IdentiFrog.LOGGER.writeExceptionWithMessage("NullPointerException for image (in memory). Likely frog has no images: ", e);
 				idImageMap.put(frog.getID(), new ImageIcon(this.getClass().getResource("/resources/IconError32.png")));
 			}
 		}

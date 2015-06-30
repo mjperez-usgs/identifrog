@@ -53,6 +53,7 @@ public class NewSiteDialog extends JDialog implements ActionListener {
 		setLocationRelativeTo(parent);
 		setMinimumSize(new Dimension(500,200));
 		setResizable(false);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
 		JPanel contentPanel = new JPanel();
 		try {

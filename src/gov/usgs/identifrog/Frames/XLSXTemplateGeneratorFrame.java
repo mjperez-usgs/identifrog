@@ -4,6 +4,7 @@ import gov.usgs.identifrog.DialogFileChooser;
 import gov.usgs.identifrog.ExtensionFileFilter;
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.DataObjects.Discriminator;
+import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.DataObjects.SiteSample;
 import gov.usgs.identifrog.DataObjects.User;
@@ -24,6 +25,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,8 +36,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -58,6 +59,7 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 
 	private ProgressStatusBar psb;
 	private JButton generateButton, exportBrowseButton, importBrowseButton, importButton;
+	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
 	public XLSXTemplateGeneratorFrame(MainFrame parent) {
 		setupUI();
@@ -70,17 +72,23 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 		setTitle("Batch Processing");
 		setModal(true);
 
-		JPanel generatePanel = new JPanel(new GridBagLayout());
-		generatePanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+		JPanel batchPanel = new JPanel(new GridBagLayout());
+		batchPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		GridBagConstraints c = new GridBagConstraints();
+		Insets topInsets = new Insets(5, 0, 0, 0);
+		
+		//Generate
 		JLabel generateInfo = new JLabel(
 				"<html><div style=\"width:250px;\">The batch generator will preprocess a folder of images and create a template .xlsx file that can be filled out and then batch processed to import frogs.</div></html>");
 
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.gridwidth = 2;
 		c.weighty = 0;
-		c.weightx = 1;
-		generatePanel.add(generateInfo, c);
+		c.weightx = 0;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		batchPanel.add(generateInfo, c);
 
 		exportFolderLocation = new JTextField();
 		exportBrowseButton = new JButton("Select Folder Directory");
@@ -111,12 +119,12 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 		});
 
 		c.gridwidth = 1;
+		c.gridx = 0;
 		c.gridy = 1;
-		c.insets = new Insets(5, 0, 0, 0);
-		generatePanel.add(exportFolderLocation, c);
+		c.insets = topInsets;
+		batchPanel.add(exportFolderLocation, c);
 		c.gridx = 1;
-		c.weighty = 1;
-		generatePanel.add(exportBrowseButton, c);
+		batchPanel.add(exportBrowseButton, c);
 
 		generateButton.setEnabled(false);
 		generateButton.addActionListener(new ActionListener() {
@@ -128,20 +136,16 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 		});
 		c.gridy = 2;
 		c.anchor = GridBagConstraints.EAST;
-		generatePanel.add(generateButton, c);
+		batchPanel.add(generateButton, c);
 
 		//==========import
-		JPanel importPanel = new JPanel(new GridBagLayout());
-		importPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-		c = new GridBagConstraints();
 		JLabel importInfo = new JLabel(
 				"<html><div style=\"width:250px;\">Importing a completed batch template will automatically import images into the database and create new frog entries as specified in the XLSX file.</div></html>");
 
-		c.anchor = GridBagConstraints.NORTHWEST;
+		c.gridx = 0;
+		c.gridy = 3;
 		c.gridwidth = 2;
-		c.weighty = 0;
-		c.weightx = 1;
-		importPanel.add(importInfo, c);
+		batchPanel.add(importInfo, c);
 
 		xlsxImportLocation = new JTextField();
 		importBrowseButton = new JButton("Select Template File");
@@ -175,11 +179,12 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 		});
 
 		c.gridwidth = 1;
-		c.gridy = 1;
-		c.insets = new Insets(5, 0, 0, 0);
-		importPanel.add(xlsxImportLocation, c);
+		c.gridx = 0;
+		c.gridy = 4;
+		c.insets = topInsets;
+		batchPanel.add(xlsxImportLocation, c);
 		c.gridx = 1;
-		importPanel.add(importBrowseButton, c);
+		batchPanel.add(importBrowseButton, c);
 
 		importButton.setEnabled(false);
 		importButton.addActionListener(new ActionListener() {
@@ -189,21 +194,32 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 				importXLSX();
 			}
 		});
-		c.gridy = 2;
-		c.weighty = 1;
+		c.gridy = 5;
+		c.gridx = 1;
 		c.anchor = GridBagConstraints.EAST;
-		importPanel.add(importButton, c);
+		batchPanel.add(importButton, c);
 
-		psb.setMessage("Select input folder");
+		JPanel contentPanel = new JPanel(new GridBagLayout());
+		c = new GridBagConstraints();
+		
+		psb.setMessage("");
 		psb.setIcon(imageGrayHeartbeat);
 		psb.getProgressBar().setVisible(false);
 
-		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
-
-		add(generatePanel);
-		add(importPanel);
-		add(Box.createVerticalGlue());
-		add(psb);
+		c.gridx = 0;
+		c.gridwidth = 2;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		contentPanel.add(batchPanel,c);
+		
+		
+		c.gridy = 50;
+		c.anchor = GridBagConstraints.SOUTH;
+		c.weighty = 1;
+		c.weightx = 1;
+		contentPanel.add(psb,c);
+		
+		
+		add(contentPanel);
 		setMinimumSize(new Dimension(420, 330));
 		//setResizable(false);
 	}
@@ -289,7 +305,7 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 			XSSFSheet discriminatorSheet = book.createSheet("Discriminators");
 
 			Map<Integer, Object[]> data = new HashMap<Integer, Object[]>();
-			data.put(0, new Object[] { "ID", "Discriminator Description" });
+			data.put(0, new Object[] { "Discriminator Description" });
 
 			// Set to Iterate and add rows into XLS file
 			Set<Integer> newRows = data.keySet();
@@ -323,7 +339,7 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 			XSSFSheet observerSheet = book.createSheet("Observers");
 
 			Map<Integer, Object[]> data = new HashMap<Integer, Object[]>();
-			data.put(0, new Object[] { "ID", "First Name", "Last Name" });
+			data.put(0, new Object[] { "First Name", "Last Name" });
 
 			// Set to Iterate and add rows into XLS file
 			Set<Integer> newRows = data.keySet();
@@ -396,7 +412,7 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 					try {
 						IdentiFrog.LOGGER.writeMessage("Reading image: " + f.toString());
 						publish("Verifying "+FilenameUtils.getName(f.toString()));
-						img = ImageIO.read(f);
+						img = ImageIO.read(f); //verifies file can load
 						data.put(rowNum, new Object[] { f.toString() });
 
 						//since rownum started at 1, and we have now completed a "new" image, we can use this as the number of completed
@@ -461,7 +477,7 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 		private JProgressBar progressBar;
 		private JLabel status;
 		private String inputFile;
-
+		private HashMap<Integer,SiteSample> idFrogMap;
 		public TemplateImportWorker(String inputFile, JLabel status, JProgressBar progressBar) {
 			this.progressBar = progressBar;
 			this.status = status;
@@ -531,7 +547,6 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 				Iterator<Cell> cellIterator = row.cellIterator();
 				//ID, Description, we dont use ID in this instance
 				Discriminator d = new Discriminator();
-				cellIterator.next();
 				d.setID(XMLFrogDatabase.getNextAvailableDiscriminatorID());
 				Cell cell = cellIterator.next();
 				d.setText(cell.getStringCellValue());
@@ -557,9 +572,8 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 				Iterator<Cell> cellIterator = row.cellIterator();
 				//ID, Description
 				User recorder = new User();
-				Cell cell = cellIterator.next();
 				recorder.setID(XMLFrogDatabase.getNextAvailableRecorderID());
-				cell = cellIterator.next();
+				Cell cell = cellIterator.next();
 				recorder.setFirstName(cell.getStringCellValue());
 				cell = cellIterator.next();
 				recorder.setLastName(cell.getStringCellValue());
@@ -580,9 +594,8 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 				Iterator<Cell> cellIterator = row.cellIterator();
 				//ID, Description
 				User observer = new User();
-				Cell cell = cellIterator.next();
 				observer.setID(XMLFrogDatabase.getNextAvailableObserverID());
-				cell = cellIterator.next();
+				Cell cell = cellIterator.next();
 				observer.setFirstName(cell.getStringCellValue());
 				cell = cellIterator.next();
 				observer.setLastName(cell.getStringCellValue());
@@ -592,7 +605,7 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 		}
 
 		/**
-		 * Generates the images sheet
+		 * Imports images into the DB
 		 * 
 		 * @param book
 		 */
@@ -606,12 +619,9 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 				numberIterator.next();
 				numToProcess++;
 			}
-			
-			
-			
 			Iterator<Row> imagesIterator = imageSheet.iterator();
 			imagesIterator.next(); //skip first row as it's descriptions
-			HashMap<Integer,SiteSample> idFrogMap = new HashMap<Integer,SiteSample>();
+			idFrogMap = new HashMap<Integer,SiteSample>();
 			//HashSet<SiteImage> observers = new HashSet<SiteImage>();
 			// Traversing over each row of XLSX file
 			int numProcessed = 0;
@@ -629,14 +639,14 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 				SiteSample sample = idFrogMap.get(xlsID);
 				if (sample == null) {
 					sample = new SiteSample();
+					sample.setDateEntry(df.format(new Date()));
 				}
 				SiteImage img = new SiteImage();
 				img.setSourceFilePath(filepath);
-				img.processImageIntoDB();
+				img.processImageIntoDB(false);
 				sample.addSiteImage(img);
 				idFrogMap.put(xlsID, sample);
 				numProcessed++;
-				System.out.println(numProcessed +"/"+numToProcess+"*100");
 				setProgress((int) (((double)numProcessed/numToProcess) * 100));
 				//int progress = (int) (((double) rowNum / numFiles) * 100); //love how it only takes ints. also int/int truncates when dividing.
 
@@ -652,8 +662,16 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 			setProgress(0);
 			psb.setIcon(imageGrayHeartbeat);
 			enableButtons();
-			//exportBrowseButton.setEnabled(false);
-			//generateButton.setEnabled(false);
+			for (Map.Entry<Integer, SiteSample> entry : idFrogMap.entrySet()) {
+			    int key = entry.getKey();
+			    SiteSample value = entry.getValue();
+			    Frog f = new Frog();
+			    f.setID(XMLFrogDatabase.getNextAvailableFrogID());
+			    f.addSiteSample(value);
+			    f.setFreshImport(true);
+			    XMLFrogDatabase.addFrog(f);
+			}
+			XMLFrogDatabase.writeXMLFile();
 			System.out.println("Import complete");
 		}
 	}

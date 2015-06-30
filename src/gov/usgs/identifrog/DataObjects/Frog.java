@@ -15,6 +15,7 @@ public class Frog {
 	private String gender;
 	private ArrayList<Discriminator> discriminators;
 	private ArrayList<SiteSample> siteSamples;
+	private boolean isFreshImport = false;
 
 	public Frog() {
 		siteSamples = new ArrayList<SiteSample>();
@@ -66,39 +67,52 @@ public class Frog {
 	}
 
 	/**
-	 * Creates an XML element representing this frog in the XML database using
-	 * the DB 2.0 styling (in progress) //TODO
+	 * Creates an XML element representing this frog in the XML database.
+	 * Calls the fresh version of createElement() in associated objects if this one is a fresh import.
 	 */
 	public Element createDBElement(Document document) {
+		
 		// CREATE FROG ELEMENT
 		Element element = document.createElement("frog");
 		// SET ID ATTRIBUTE OF FROG
 		element.setAttribute("id", Integer.toString(getID()));
 
-		// CREATE SPECIES ELEMENT
-		Element species = document.createElement("species");
-		species.appendChild(document.createTextNode(getSpecies()));
-		element.appendChild(species);
-		// CREATE GENDER ELEMENT
-		Element gender = document.createElement("gender");
-		gender.appendChild(document.createTextNode(getGender()));
-		element.appendChild(gender);
+		if (isFreshImport()) {
+			Element sites = document.createElement("sitesamples");
+			for (SiteSample sample : siteSamples) {
+				sites.appendChild(sample.createFreshElement(document));
+			}
+			element.appendChild(sites);
+			element.setAttribute("freshimport", "true");
+		} else {
+			element.setAttribute("freshimport", "false");
+			// CREATE SPECIES ELEMENT
+			Element species = document.createElement("species");
+			species.appendChild(document.createTextNode(getSpecies()));
+			element.appendChild(species);
+			// CREATE GENDER ELEMENT
+			Element gender = document.createElement("gender");
+			gender.appendChild(document.createTextNode(getGender()));
+			element.appendChild(gender);
 
-		// CREATE DISCRIMINATOR ELEMENT
-		Element discriminatorsElem = document.createElement("localdiscriminators");
-		for (Discriminator discriminator : discriminators) {
-			Element discrimElem = document.createElement("discriminator");
-			discrimElem.appendChild(document.createTextNode(Integer.toString(discriminator.getID())));
-			discriminatorsElem.appendChild(discrimElem);
+			// CREATE DISCRIMINATOR ELEMENT
+			Element discriminatorsElem = document.createElement("localdiscriminators");
+			for (Discriminator discriminator : discriminators) {
+				//Saving database - discriminator is in use
+				discriminator.setInUse(true);
+				Element discrimElem = document.createElement("discriminator");
+				discrimElem.appendChild(document.createTextNode(Integer.toString(discriminator.getID())));
+				discriminatorsElem.appendChild(discrimElem);
+			}
+
+			element.appendChild(discriminatorsElem);
+
+			Element sites = document.createElement("sitesamples");
+			for (SiteSample sample : siteSamples) {
+				sites.appendChild(sample.createElement(document));
+			}
+			element.appendChild(sites);
 		}
-
-		element.appendChild(discriminatorsElem);
-
-		Element sites = document.createElement("sitesamples");
-		for (SiteSample sample : siteSamples) {
-			sites.appendChild(sample.createElement(document));
-		}
-		element.appendChild(sites);
 		return element;
 	}
 
@@ -217,6 +231,10 @@ public class Frog {
 	 * @return
 	 */
 	public SiteSample getLatestSample() {
+		if (siteSamples.size() == 1) {
+			return siteSamples.get(0);
+		}
+		
 		DateLabelFormatter dlf = new DateLabelFormatter();
 		Date latestDate = new Date(0L);
 		SiteSample latestSample = null;
@@ -241,10 +259,15 @@ public class Frog {
 	}
 
 	/**
-	 * Gets the position in the list of sitesamples of the latest one based on capture date
+	 * Gets the position in the list of sitesamples of the latest one based on
+	 * capture date
+	 * 
 	 * @return
 	 */
 	public int getLatestSampleIndex() {
+		if (siteSamples.size() == 1) {
+			return 0;
+		}
 		DateLabelFormatter dlf = new DateLabelFormatter();
 		Date latestDate = new Date(0L);
 		SiteSample latestSample = null;
@@ -266,5 +289,36 @@ public class Frog {
 		} else {
 			return siteSamples.indexOf(latestSample);
 		}
+	}
+
+	/**
+	 * Processes a delete request on this frog. Deletes this frogs images.
+	 */
+	public void delete() {
+		for (SiteImage img : getAllSiteImages()) {
+			img.deleteImage();
+		}
+	}
+
+	/**
+	 * Returns if this frog has not been modified since import and is not fully
+	 * defined
+	 * 
+	 * @return true if frog has been imported but not modified. Defaults to
+	 *         false
+	 */
+	public boolean isFreshImport() {
+		return isFreshImport;
+	}
+
+	/**
+	 * Specifies this frog has not been modified since import and is not yet
+	 * fully defined
+	 * 
+	 * @param isFreshImport
+	 *            true for import status, false for completed
+	 */
+	public void setFreshImport(boolean isFreshImport) {
+		this.isFreshImport = isFreshImport;
 	}
 }

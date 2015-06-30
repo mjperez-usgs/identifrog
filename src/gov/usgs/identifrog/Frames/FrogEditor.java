@@ -88,6 +88,7 @@ import org.jdatepicker.impl.UtilDateModel;
 @SuppressWarnings("serial")
 public class FrogEditor extends JDialog implements ListSelectionListener {
 	protected MainFrame parentFrame;
+	private boolean shouldSave = false;
 
 	private Preferences root = Preferences.userRoot();
 	//private Preferences node = root.node("edu/isu/aadis/defaults");
@@ -319,7 +320,10 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	private void init() throws Exception {
 		setModal(true);
 		setIconImage(getToolkit().getImage(getClass().getResource("/resources/IconFrog.png")));
-
+		setLayout(new BorderLayout());
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		
+		
 		//start init
 		imageList = new JList<SiteImage>(imageModel);
 		imageList.addListSelectionListener(this);
@@ -354,6 +358,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 								IdentiFrog.LOGGER.writeMessage("User generating signature for siteimage " + img);
 								SiteImage newImg = openDigSigFrame(img);
 								IdentiFrog.LOGGER.writeMessage("Continuing execution of FrogEditor. Signature Generator has closed.");
+								parentFrame.updateSearchButton();
 								newImg.createListThumbnail();
 								imageModel.set(idx, newImg); //update the SiteImage object.
 							}
@@ -417,9 +422,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			recorderListModel.addElement(user);
 		}
 
-		setLayout(new BorderLayout());
 		panelAllInfo.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		panelAllInfo.setLayout(new BoxLayout(panelAllInfo, BoxLayout.PAGE_AXIS));
 
 		//Surveys Panel
@@ -758,7 +761,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 						img.processImageIntoDB(false);
 						images.add(img);
 					}
-
+					FrogEditor.this.frog.setFreshImport(false);
+					shouldSave = true;
 					dispose();
 					IdentiFrog.LOGGER.writeMessage("FrogEditor has closed");
 
@@ -926,7 +930,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 				// mass
 				// length
-				String locationName = (String) comboLocationName.getSelectedItem();
+				String locationName = (String) comboLocationName.getSelectedItem().toString();
 				String locationDescription = textLocDesc.getText().trim();
 
 				// longitude
@@ -1065,6 +1069,11 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				textLocDesc.setText(sample.getLocation().getDescription());
 				textDatum.setText(sample.getLocation().getDatum());
 			}
+			
+			for (Location l : XMLFrogDatabase.getAllLocations()) {
+				comboLocationName.addItem(l);
+			}
+			
 
 			textMass.setText(sample.getMass());
 			textLength.setText(sample.getLength());
@@ -1077,6 +1086,13 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 		} else {
 			labelActiveSurvey.setText("New Survey");
+		}
+		
+		if (!LatLongButton.isSelected() && !UTMButton.isSelected()) {
+			LatLongButton.setSelected(true);
+			labZone.setVisible(false);
+			textZone.setVisible(false);
+			
 		}
 	}
 
@@ -1263,7 +1279,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		} else if (isEmptyString(textSurveyID.getText())) {
 			textSurveyID.requestFocus(true);
 			errorMessage = "Survey ID cannot be empty";
-		} else if (isEmptyString((String) comboLocationName.getSelectedItem())) {
+		} else if (comboLocationName.getSelectedItem() == null || isEmptyString(comboLocationName.getSelectedItem().toString())) {
 			comboLocationName.requestFocus(true);
 			errorMessage = "Survey location name cannot be empty";
 		} else if (!LatLongButton.isSelected() && !UTMButton.isSelected()) {
@@ -1379,6 +1395,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		if (modifiedImg != null) {
 			//if its not modified, we just return the same image object
 			image = modifiedImg;
+			image.createListThumbnail();
 		}
 		return image;
 	}
@@ -1534,6 +1551,14 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		SiteSample sample = new SiteSample();
 		sample.setSurveyID("New Survey");
 		sampleModel.addElement(sample);
+	}
+
+	public boolean shouldSave() {
+		return shouldSave;
+	}
+
+	public void setShouldSave(boolean shouldSave) {
+		this.shouldSave = shouldSave;
 	}
 
 }

@@ -79,13 +79,6 @@ public class Site implements Serializable, Comparable<Site> {
 	}
 	@Override
 	public int compareTo(Site otherSite) {
-		//Returns with latest dates (being the nearest one to today) as the first element when sorting
-		if (getLastModified().after(otherSite.getLastModified())) {
-			return -1;
-		}
-		if (getLastModified().equals(otherSite.getLastModified())) {
-			return 0;
-		}
-		return 1;
+		return -getLastModified().compareTo(otherSite.getLastModified()); //negative flips order so its newest to oldest
 	}	
 }

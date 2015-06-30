@@ -28,11 +28,16 @@ public class WrappedStringListCellRenderer extends DefaultListCellRenderer {
     	  InUseFlag iuf = (InUseFlag) value;
     	  //get in use. if in use its not selected.
     	  boolean isInUse = iuf.isInUse();
-    	  JLabel element = (JLabel) super.getListCellRendererComponent(list, text, index, isInUse ? false : isSelected,
+    	  JLabel element = (JLabel) super.getListCellRendererComponent(list, text, index, isSelected,
   	            cellHasFocus);
-    	  if (isInUse){
-    		  element.setForeground( Color.GRAY );
+    	  if (isInUse) {
+    		  element.setEnabled(false);
+    	  } else {
+    		  element.setEnabled(true);
     	  }
+    	  /*if (isInUse){
+    		  element.setForeground( Color.GRAY );
+    	  }*/
     	  return element;
       }
       return super.getListCellRendererComponent(list, text, index, isSelected,

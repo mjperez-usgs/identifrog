@@ -3,6 +3,7 @@ package gov.usgs.identifrog;
 import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.Frames.ErrorDialog;
 import gov.usgs.identifrog.Frames.FrogEditor;
+import gov.usgs.identifrog.Frames.MainFrame;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 import java.awt.BorderLayout;
@@ -26,13 +27,13 @@ import java.io.File;
 import java.util.concurrent.ExecutionException;
 import java.util.prefs.Preferences;
 
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -143,13 +144,18 @@ public class ImageManipFrame extends JDialog {
 	private JTextField TextFieldNoise_radius = new JTextField();
 	@SuppressWarnings("unused")
 	private boolean noise_radius_active = false;
-	private boolean searchDB; // this is currently unutilized
-	//	private int DbId = -1;
 	JButton butDustFrame = new JButton();
 	FlowLayout flowLayout1 = new FlowLayout();
 	private Color sliderToolBoxColor = new Color(224, 223, 227);
 	public int imageInEllipse_width = 0;
 	public int imageInEllipse_heigth = 0;
+
+	private ImageIcon imageSave32 =  new ImageIcon(MainFrame.class.getResource("/resources/IconFloppy32.png"));
+	private Icon imagePrevious32 = new ImageIcon(MainFrame.class.getResource("/resources/IconPrevious32.png"));
+	private Icon imageNext32 = new ImageIcon(MainFrame.class.getResource("/resources/IconNext32.png"));
+	private Icon imageUndo32 =  new ImageIcon(MainFrame.class.getResource("/resources/IconUndo32.png"));
+	private Icon iamgeRestart32 =  new ImageIcon(MainFrame.class.getResource("/resources/IconRefresh32.png"));
+
 
 	/**
 	 * Creates a new Digital Signature Window using the specified parent and
@@ -192,7 +198,7 @@ public class ImageManipFrame extends JDialog {
 		butPencil.setToolTipText("Pencil");
 		butPencil.addActionListener(new ImageManipFrame_butPencil_actionAdapter(this));
 		butUndoPencil.setPreferredSize(new Dimension(41, 41));
-		butUndoPencil.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconUndo32.png")));
+		butUndoPencil.setIcon(new ImageIcon(ImageManipFrame.class.getResource("/resources/IconUndo32.png")));
 		//butUndoPencil.setText("");
 		butUndoPencil.addActionListener(new ImageManipFrame_butUndoPencil_actionAdapter(this));
 		butUndoPencil.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
@@ -203,7 +209,7 @@ public class ImageManipFrame extends JDialog {
 		butFillSpot.setToolTipText("Spot Filler");
 		butFillSpot.addActionListener(new ImageManipFrame_butFillSpot_actionAdapter(this));
 		butUndoFillSpot.setPreferredSize(new Dimension(41, 41));
-		butUndoFillSpot.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconUndo32.png")));
+		butUndoFillSpot.setIcon(imageUndo32);
 		//butUndoFillSpot.setText("");
 		butUndoFillSpot.setToolTipText("Clear All");
 		butUndoFillSpot.addActionListener(new ImageManipFrame_butUndoFillSpot_actionAdapter(this));
@@ -234,17 +240,17 @@ public class ImageManipFrame extends JDialog {
 		TextAreaTools.setMargin(new Insets(0, 10, 0, 0));
 		TextAreaTools.setLineWrap(true);
 		TextAreaTools.setLocation(1, 1);
-		butStartOver.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconRestart32.png")));
+		butStartOver.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconRefresh32.png")));
 		butStartOver.setText("Restart");
 		butStartOver.addActionListener(new ImageManipFrame_butStartOver_actionAdapter(this));
 		butQuit.setIcon(new ImageIcon(ImageManipFrame.class.getResource("/resources/IconCancel32.png")));
 		butQuit.setText("Quit");
 		butQuit.addActionListener(new ImageManipFrame_butQuit_actionAdapter(this));
 		butBack.setEnabled(false);
-		butBack.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconButtonPrevious32.png")));
+		butBack.setIcon(imagePrevious32);
 		butBack.setText("Back");
 		butBack.addActionListener(new ImageManipFrame_butBack_actionAdapter(this));
-		butNext.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconButtonNext32.png")));
+		butNext.setIcon(imageNext32);
 		butNext.setText("Next");
 		butNext.addActionListener(new ImageManipFrame_butNext_actionAdapter(this));
 		// button Extract shape
@@ -734,6 +740,7 @@ public class ImageManipFrame extends JDialog {
 			imagePanel.setRidgeRect(false);
 			butStartOver.setEnabled(true);
 			butNext.setText("Save");
+			butNext.setIcon(imageSave32);
 			// imagePanel.setNoise_slider_Active(false);
 			increaseStep();
 			imagePanel.newOperationStep();
@@ -804,6 +811,8 @@ public class ImageManipFrame extends JDialog {
 			imagePanel.setUndoPencilOn(false);
 			imagePanel.setUndoFillSpotOn(false);
 			butNext.setText("Next");
+			butNext.setIcon(imageNext32);
+
 			//IdentiFrog.LOGGER.writeMessage("case 1 before back " + step);
 			decreaseStep();
 			//IdentiFrog.LOGGER.writeMessage("case 1 afer back " + step);
@@ -840,6 +849,7 @@ public class ImageManipFrame extends JDialog {
 			butBack.setEnabled(true);
 			butNext.setEnabled(false);
 			butNext.setText("Next");
+			butNext.setIcon(imageNext32);
 			butStartOver.setEnabled(true);
 			//IdentiFrog.LOGGER.writeMessage("case 2 before back " + step);
 			decreaseStep();

@@ -35,7 +35,6 @@ import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -54,6 +53,7 @@ public class XMLFrogDatabase {
 	private static ArrayList<User> recorders, observers;
 	private static ArrayList<Discriminator> discriminators;
 	private static boolean DISCRIMINATORS_LOADED = false;
+	private static int highestSessionDiscriminatorID = 0; //used when adding items to the discriminator list but not yet commited
 
 	/*
 	 * public XMLFrogDatabase() { XMLFrogDatabase.frogs = new ArrayList<Frog>();
@@ -134,7 +134,8 @@ public class XMLFrogDatabase {
 	}
 
 	/**
-	 * Writes this Frog DB to disk.
+	 * Writes this Frog DB to disk. Additionally updates the status of
+	 * Discriminators in-use flags (since we are updating DB)
 	 * 
 	 * @return true if successful, false otherwise.
 	 */
@@ -156,6 +157,11 @@ public class XMLFrogDatabase {
 		doc.appendChild(root);
 
 		IdentiFrog.LOGGER.writeMessage("Writing frogs to DB");
+
+		for (Discriminator d : discriminators) {
+			d.setInUse(false); //reset inuse flag for setting when parsing frogs attached discriminators (will set to true again)
+		}
+
 		for (Frog frog : frogs) {
 			IdentiFrog.LOGGER.writeMessage(frog.toString());
 			frogsElement.appendChild(frog.createDBElement(doc));
@@ -303,20 +309,27 @@ public class XMLFrogDatabase {
 				// Load frog object data
 				IdentiFrog.LOGGER.writeMessage("--Loading frog data--");
 				frog.setID(Integer.parseInt(frogAttributes.getNamedItem("id").getTextContent()));
-				frog.setGender(frogElement.getElementsByTagName("gender").item(0).getTextContent());
-				frog.setSpecies(frogElement.getElementsByTagName("species").item(0).getTextContent());
+				String importStatus = frogAttributes.getNamedItem("freshimport").getTextContent();
+				if (importStatus.equals("true")) {
+					IdentiFrog.LOGGER.writeMessage("Short-circuit loading fresh imported frog with Frog ID " + frog.getID());
+					frog.setFreshImport(true);
+				} else {
+					frog.setGender(frogElement.getElementsByTagName("gender").item(0).getTextContent());
+					frog.setSpecies(frogElement.getElementsByTagName("species").item(0).getTextContent());
 
-				//load discriminators
-				NodeList discList = ((Element) frogElement.getElementsByTagName("localdiscriminators").item(0)).getElementsByTagName("discriminator");
-				IdentiFrog.LOGGER.writeMessage("Parsing XML for Discriminators associated with Frog ID " + frog.getID());
-				for (int d = 0; d < discList.getLength(); d++) {
-					Element discElement = (Element) discList.item(d);
-					int discID = Integer.parseInt(discElement.getTextContent());
-					Discriminator discriminator = getDiscrmininatorByID(discID);
-					discriminator.setInUse(true);
-					frog.addDiscriminator(discriminator);
+					//load discriminators
+					NodeList discList = ((Element) frogElement.getElementsByTagName("localdiscriminators").item(0))
+							.getElementsByTagName("discriminator");
+					IdentiFrog.LOGGER.writeMessage("Parsing XML for Discriminators associated with Frog ID " + frog.getID());
+					for (int d = 0; d < discList.getLength(); d++) {
+						Element discElement = (Element) discList.item(d);
+						int discID = Integer.parseInt(discElement.getTextContent());
+						Discriminator discriminator = getDiscrmininatorByID(discID);
+						discriminator.setInUse(true);
+						frog.addDiscriminator(discriminator);
+					}
+					IdentiFrog.LOGGER.writeMessage("Associated " + discList.getLength() + " discriminators with Frog ID " + frog.getID());
 				}
-				IdentiFrog.LOGGER.writeMessage("Associated " + discList.getLength() + " discriminators with Frog ID " + frog.getID());
 
 				// load sitesamples
 				Element siteSamples = (Element) frogElement.getElementsByTagName("sitesamples").item(0);
@@ -330,23 +343,24 @@ public class XMLFrogDatabase {
 					// Date
 					IdentiFrog.LOGGER.writeMessage("Loading -date- for SiteSample #" + s + " on frog with ID " + frog.getID());
 					NamedNodeMap dateAttributes = sampleElement.getElementsByTagName("date").item(0).getAttributes();
-					sample.setDateCapture(dateAttributes.getNamedItem("capture").getTextContent());
 					sample.setDateEntry(dateAttributes.getNamedItem("entry").getTextContent());
 
-					// Biometrics
-					IdentiFrog.LOGGER.writeMessage("Loading -biometrics- for SiteSample #" + s + " on frog with ID " + frog.getID());
-					NamedNodeMap bm = sampleElement.getElementsByTagName("biometrics").item(0).getAttributes();
-					if (bm.getNamedItem("mass") != null) {
-						sample.setMass(bm.getNamedItem("mass").getNodeValue());
-					}
-					if (bm.getNamedItem("length") != null) {
-						sample.setLength(bm.getNamedItem("length").getNodeValue());
-					}
+					if (importStatus.equals("false")) { //has this item
+						sample.setDateCapture(dateAttributes.getNamedItem("capture").getTextContent());
+						// Biometrics
+						IdentiFrog.LOGGER.writeMessage("Loading -biometrics- for SiteSample #" + s + " on frog with ID " + frog.getID());
+						NamedNodeMap bm = sampleElement.getElementsByTagName("biometrics").item(0).getAttributes();
+						if (bm.getNamedItem("mass") != null) {
+							sample.setMass(bm.getNamedItem("mass").getNodeValue());
+						}
+						if (bm.getNamedItem("length") != null) {
+							sample.setLength(bm.getNamedItem("length").getNodeValue());
+						}
 
-					// Comments
-					IdentiFrog.LOGGER.writeMessage("Loading -comments- for SiteSample #" + s + " on frog with ID " + frog.getID());
-					sample.setComments(sampleElement.getElementsByTagName("comments").item(0).getTextContent());
-
+						// Comments
+						IdentiFrog.LOGGER.writeMessage("Loading -comments- for SiteSample #" + s + " on frog with ID " + frog.getID());
+						sample.setComments(sampleElement.getElementsByTagName("comments").item(0).getTextContent());
+					}
 					// Images
 					IdentiFrog.LOGGER.writeMessage("Loading -images- for SiteSample #" + s + " on frog with ID " + frog.getID());
 					Element imagesElement = (Element) sampleElement.getElementsByTagName("images").item(0);
@@ -364,64 +378,71 @@ public class XMLFrogDatabase {
 					}
 					sample.setSiteImages(siteImages);
 
-					// Location
-					IdentiFrog.LOGGER.writeMessage("Loading -location- for SiteSample #" + s + " on frog with ID " + frog.getID());
-					Location location = new Location();
-					Element locationElement = (Element) frogElement.getElementsByTagName("location").item(0);
-					// Location - name
-					location.setName(locationElement.getElementsByTagName("name").item(0).getTextContent());
-					// Location - description
-					location.setDescription(locationElement.getElementsByTagName("description").item(0).getTextContent());
-					// Location - coordinate
-					NodeList coordinate = locationElement.getElementsByTagName("coordinate");
-					if (coordinate.getLength() < 1) {
-						// no coordinate was set
-						IdentiFrog.LOGGER.writeMessage("No coordinate data in -location- for SiteSample #" + s + " on frog with ID " + frog.getID());
-						location.setCoordinateType(null);
-					} else {
-						Element coordinateElement = (Element) coordinate.item(0);
-						//Node ct = coordinateElement.getAttributes().("type");
-						if (coordinateElement != null && coordinateElement.getAttributes().getNamedItem("type") != null) {
-							location.setCoordinateType(coordinate.item(0).getAttributes().getNamedItem("type").getTextContent());
-							// Element coordinateElement = ((Element)
-							// nn.item(0)).getElementsByTagName("coordinate");
-							if (location.getCoordinateType().equals("Lat/Long")) {
-								IdentiFrog.LOGGER
-										.writeMessage("Loading LatLong -location- for SiteSample #" + s + " on frog with ID " + frog.getID());
-								location.setLongitude(coordinateElement.getElementsByTagName("longitude").item(0).getTextContent());
-								location.setLatitude(coordinateElement.getElementsByTagName("latitude").item(0).getTextContent());
-								location.setDatum(coordinateElement.getElementsByTagName("datum").item(0).getTextContent());
-							} else if (location.getCoordinateType().equals("UTM")) {
-								IdentiFrog.LOGGER.writeMessage("Loading UTM -location- for SiteSample #" + s + " on frog with ID " + frog.getID());
-								location.setLongitude(coordinateElement.getElementsByTagName("easting").item(0).getTextContent());
-								location.setLatitude(coordinateElement.getElementsByTagName("northing").item(0).getTextContent());
-								location.setDatum(coordinateElement.getElementsByTagName("datum").item(0).getTextContent());
-								location.setZone(Integer.parseInt(coordinateElement.getElementsByTagName("zone").item(0).getTextContent()));
-							} else {
-								IdentiFrog.LOGGER.writeError("Error: Unknown coordinate type (" + location.getCoordinateType()
-										+ ")for -location- in SiteSample #" + s + " on frog with ID " + frog.getID() + ", skipping coordinate data.");
-							}
+					if (importStatus.equals("false")) { //has this item
+						// Location
+						IdentiFrog.LOGGER.writeMessage("Loading -location- for SiteSample #" + s + " on frog with ID " + frog.getID());
+						Location location = new Location();
+						Element locationElement = (Element) frogElement.getElementsByTagName("location").item(0);
+						// Location - name
+						location.setName(locationElement.getElementsByTagName("name").item(0).getTextContent());
+						// Location - description
+						location.setDescription(locationElement.getElementsByTagName("description").item(0).getTextContent());
+						// Location - coordinate
+						NodeList coordinate = locationElement.getElementsByTagName("coordinate");
+						if (coordinate.getLength() < 1) {
+							// no coordinate was set
+							IdentiFrog.LOGGER.writeMessage("No coordinate data in -location- for SiteSample #" + s + " on frog with ID "
+									+ frog.getID());
+							location.setCoordinateType(null);
 						} else {
-							IdentiFrog.LOGGER.writeError("Frog has sample in DB that has a location without a TYPE attribute on the LOCATION node.");
+							Element coordinateElement = (Element) coordinate.item(0);
+							//Node ct = coordinateElement.getAttributes().("type");
+							if (coordinateElement != null && coordinateElement.getAttributes().getNamedItem("type") != null) {
+								location.setCoordinateType(coordinate.item(0).getAttributes().getNamedItem("type").getTextContent());
+								// Element coordinateElement = ((Element)
+								// nn.item(0)).getElementsByTagName("coordinate");
+								if (location.getCoordinateType().equals("Lat/Long")) {
+									IdentiFrog.LOGGER.writeMessage("Loading LatLong -location- for SiteSample #" + s + " on frog with ID "
+											+ frog.getID());
+									location.setLongitude(coordinateElement.getElementsByTagName("longitude").item(0).getTextContent());
+									location.setLatitude(coordinateElement.getElementsByTagName("latitude").item(0).getTextContent());
+									location.setDatum(coordinateElement.getElementsByTagName("datum").item(0).getTextContent());
+								} else if (location.getCoordinateType().equals("UTM")) {
+									IdentiFrog.LOGGER
+											.writeMessage("Loading UTM -location- for SiteSample #" + s + " on frog with ID " + frog.getID());
+									location.setLongitude(coordinateElement.getElementsByTagName("easting").item(0).getTextContent());
+									location.setLatitude(coordinateElement.getElementsByTagName("northing").item(0).getTextContent());
+									location.setDatum(coordinateElement.getElementsByTagName("datum").item(0).getTextContent());
+									location.setZone(Integer.parseInt(coordinateElement.getElementsByTagName("zone").item(0).getTextContent()));
+								} else {
+									IdentiFrog.LOGGER.writeError("Error: Unknown coordinate type (" + location.getCoordinateType()
+											+ ")for -location- in SiteSample #" + s + " on frog with ID " + frog.getID()
+											+ ", skipping coordinate data.");
+								}
+							} else {
+								IdentiFrog.LOGGER
+										.writeError("Frog has sample in DB that has a location without a TYPE attribute on the LOCATION node.");
+							}
 						}
+						sample.setLocation(location);
+
+						// Personel
+						IdentiFrog.LOGGER.writeMessage("Loading -userids(s)- for SiteSample #" + s + " on frog with ID " + frog.getID());
+						//User observer = new User();
+						//User recorder = new User();
+						Element observerElem = (Element) sampleElement.getElementsByTagName("observer").item(0);
+						sample.setObserver(XMLFrogDatabase.getObserverByID(Integer.parseInt(observerElem.getTextContent())));
+
+						Element recorderElem = (Element) sampleElement.getElementsByTagName("recorder").item(0);
+						sample.setRecorder(XMLFrogDatabase.getRecorderByID(Integer.parseInt(recorderElem.getTextContent())));
+
+						// SurveyID
+						IdentiFrog.LOGGER.writeMessage("Loading -surveyid- for SiteSample #" + s + " on frog with ID " + frog.getID());
+						sample.setSurveyID(sampleElement.getElementsByTagName("surveyid").item(0).getTextContent());
 					}
-					sample.setLocation(location);
-
-					// Personel
-					IdentiFrog.LOGGER.writeMessage("Loading -userids(s)- for SiteSample #" + s + " on frog with ID " + frog.getID());
-					//User observer = new User();
-					//User recorder = new User();
-					Element observerElem = (Element) sampleElement.getElementsByTagName("observer").item(0);
-					sample.setObserver(XMLFrogDatabase.getObserverByID(Integer.parseInt(observerElem.getTextContent())));
-
-					Element recorderElem = (Element) sampleElement.getElementsByTagName("recorder").item(0);
-					sample.setRecorder(XMLFrogDatabase.getRecorderByID(Integer.parseInt(recorderElem.getTextContent())));
-
-					// SurveyID
-					IdentiFrog.LOGGER.writeMessage("Loading -surveyid- for SiteSample #" + s + " on frog with ID " + frog.getID());
-					sample.setSurveyID(sampleElement.getElementsByTagName("surveyid").item(0).getTextContent());
 					frog.addSiteSample(sample);
 				}
+
 				frogs.add(frog);
 			}
 			IdentiFrog.LOGGER.writeMessage("Loaded XML DB, loaded data for " + frogs.size() + " frogs.");
@@ -836,7 +857,6 @@ public class XMLFrogDatabase {
 	 */
 	public static void addFrog(Frog newFrog) {
 		frogs.add(newFrog);
-
 	}
 
 	/**
@@ -913,17 +933,21 @@ public class XMLFrogDatabase {
 	}
 
 	public static int getNextAvailableDiscriminatorID() {
-		int highestID = 0;
+		int highestID = highestSessionDiscriminatorID++; //increment so we don't hand this ID out again
 		for (Discriminator discriminator : discriminators) {
 			if (discriminator.getID() > highestID) {
 				highestID = discriminator.getID();
 			}
+		}
+		if (highestSessionDiscriminatorID <= highestID + 1) {
+			highestSessionDiscriminatorID = highestID + 1;
 		}
 		return highestID + 1;
 	}
 
 	/**
 	 * Gets the list of all available discriminators for use
+	 * 
 	 * @return
 	 */
 	public static ArrayList<Discriminator> getDiscriminators() {
@@ -932,6 +956,7 @@ public class XMLFrogDatabase {
 
 	/**
 	 * Sets the list of all discriminators that can be used
+	 * 
 	 * @param discriminators
 	 */
 	public static void setDiscriminators(ArrayList<Discriminator> discriminators) {
@@ -959,12 +984,14 @@ public class XMLFrogDatabase {
 			return;
 		}
 		frogs.set(index, newFrog);
-		IdentiFrog.LOGGER.writeMessage("Updated frog with ID "+id+" in the DB.");
+		IdentiFrog.LOGGER.writeMessage("Updated frog with ID " + id + " in the DB.");
 	}
 
 	/**
 	 * Searches all frog images in the database for one with the matching hash.
-	 * @param sourceImageHash Hash to search for
+	 * 
+	 * @param sourceImageHash
+	 *            Hash to search for
 	 * @return siteimage with same hash
 	 */
 	public static SiteImage searchImageByHash(String sourceImageHash) {
@@ -977,9 +1004,12 @@ public class XMLFrogDatabase {
 		}
 		return null;
 	}
+
 	/**
 	 * Searches all frog images in the database for one with the matching hash.
-	 * @param sourceImageHash Hash to search for
+	 * 
+	 * @param sourceImageHash
+	 *            Hash to search for
 	 * @return Frog frog that has this image
 	 */
 	public static Frog findImageOwnerByHash(String sourceImageHash) {
@@ -991,5 +1021,53 @@ public class XMLFrogDatabase {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Gets a sorted (by location name) list of all locations of samples in the
+	 * DB
+	 * 
+	 * @return list of unique sorted locations
+	 */
+	public static ArrayList<Location> getAllLocations() {
+		HashSet<Location> locs = new HashSet<Location>();
+		for (Frog f : frogs) {
+			for (SiteSample s : f.getSiteSamples()) {
+				locs.add(s.getLocation());
+			}
+		}
+		ArrayList<Location> sortedList = new ArrayList<Location>(locs);
+		Collections.sort(sortedList);
+		return sortedList;
+	}
+
+	/**
+	 * Gets a sorted (by species name) list of all species of frogs in the DB
+	 * 
+	 * @return list of unique sorted species strings
+	 */
+	public static ArrayList<String> getSpecies() {
+		HashSet<String> species = new HashSet<String>();
+		for (Frog f : frogs) {
+			species.add(f.getSpecies());
+		}
+		ArrayList<String> sortedList = new ArrayList<String>(species);
+		Collections.sort(sortedList);
+		return sortedList;
+	}
+
+	/**
+	 * Checks if all frogs in the DB have signatures generated
+	 * 
+	 * @return true if all frogs in DB are searchable. Still true even if no
+	 *         frogs exist. False otherwise
+	 */
+	public static boolean isFullySearchable() {
+		for (Frog f : frogs) {
+			if (!f.isFullySearchable()) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

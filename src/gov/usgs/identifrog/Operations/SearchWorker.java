@@ -3,6 +3,7 @@ package gov.usgs.identifrog.Operations;
 import gov.usgs.identifrog.Angle;
 import gov.usgs.identifrog.HammingDistance;
 import gov.usgs.identifrog.HausdorffDistance;
+import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.SpotDifferencePass;
 import gov.usgs.identifrog.DataObjects.Discriminator;
 import gov.usgs.identifrog.DataObjects.Frog;
@@ -40,7 +41,7 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 	 */
 	private ArrayList<FrogMatch> getMatches(SearchPackage sp) {
 		//items are passed from arraylist to arraylist as each one filters down more and more 
-
+		IdentiFrog.LOGGER.writeMessage("Performing frog search with search package: "+sp);
 		ArrayList<ImageMatch> candidates = new ArrayList<ImageMatch>();
 
 		double manhatDistance1 = -1.0;
@@ -62,9 +63,21 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 		//We start with all frogs.
 
 		//************************* NARROW SCOPE OF SEARCH ***************************
+		//Remove surveys if latest only is selected
+		for (Frog f : searchableFrogs) {
+			if (!sp.useAllSurveys()) {
+				//latest only
+				IdentiFrog.LOGGER.writeMessage("Searching using latest survey only");
+				ArrayList<SiteSample> latestSample = new ArrayList<SiteSample>();
+				latestSample.add(f.getLatestSample());
+				f.setSiteSamples(latestSample);
+			}
+		}
+
 		//***********FILTER BY SEX AND SPECIES*****************
 		ArrayList<Frog> frogsToRemove = new ArrayList<Frog>(); // Have to do this to prevent concurrent exception with iterator
 		if (sp.getGender() != null) {
+			IdentiFrog.LOGGER.writeMessage("Filtering frogs by gender");
 			for (Frog f : searchableFrogs) {
 				//Filter out frogs that don't have the correct sex
 				if (!sp.getGender().equalsIgnoreCase(f.getGender())) {
@@ -79,6 +92,7 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 		}
 
 		if (sp.getSpecies() != null) {
+			IdentiFrog.LOGGER.writeMessage("Filtering frogs by species");
 			for (Frog f : searchableFrogs) {
 				//Filter species
 				if (!sp.getSpecies().equalsIgnoreCase(f.getSpecies())) {
@@ -93,13 +107,14 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 		}
 
 		if (searchableFrogs.size() <= 0) {
-			JOptionPane.showMessageDialog(null, "There are no matches according to Search Criteria.");
 			return new ArrayList<FrogMatch>();
 		}
 
 		//***********FILTER BY DISCRIMINATORS*****************
 		frogsToRemove.clear();
 		if (sp.getDiscriminators() != null) {
+			IdentiFrog.LOGGER.writeMessage("Filtering frogs by discriminators");
+
 			for (Frog f : searchableFrogs) {
 				for (Discriminator d : sp.getDiscriminators()) {
 					if (!f.getDiscriminators().contains(d)) {
@@ -117,7 +132,63 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 		}
 
 		if (searchableFrogs.size() <= 0) {
-			JOptionPane.showMessageDialog(null, "There are no matches according to Search Criteria.");
+			return new ArrayList<FrogMatch>();
+		}
+
+		//************************FILTER ON MASS, LENGTH TOLERANCES******************
+		//length
+		if (sp.getLength() >= 0 && sp.getLengthTolerance() >= 0) {
+			IdentiFrog.LOGGER.writeMessage("Filtering frogs by length");
+			for (Frog f : searchableFrogs) {
+				for (SiteSample s : f.getSiteSamples()) {
+					double length = Double.parseDouble(s.getLength());
+					double minVal = sp.getLength() - sp.getLengthTolerance();
+					double maxVal = sp.getLength() + sp.getLengthTolerance();
+					if (minVal < 0) {
+						minVal = 0;
+					}
+					if (length > maxVal || length < minVal) {
+						frogsToRemove.add(f);
+						continue;
+					}
+				}
+			}
+		}
+		
+		//Remove frogs from scope
+		for (Frog f : frogsToRemove) {
+			searchableFrogs.remove(f);
+		}
+
+		if (searchableFrogs.size() <= 0) {
+			return new ArrayList<FrogMatch>();
+		}
+		
+		//mass
+		if (sp.getMass() >= 0 && sp.getMassTolerance() >= 0) {
+			IdentiFrog.LOGGER.writeMessage("Filtering frogs by mass");
+			for (Frog f : searchableFrogs) {
+				for (SiteSample s : f.getSiteSamples()) {
+					double mass = Double.parseDouble(s.getMass());
+					double minVal = sp.getMass() - sp.getMassTolerance();
+					double maxVal = sp.getMass() + sp.getMassTolerance();
+					if (minVal < 0) {
+						minVal = 0;
+					}
+					if (mass > maxVal || mass < minVal) {
+						frogsToRemove.add(f);
+						continue;
+					}
+				}
+			}
+		}
+		
+		//Remove frogs from scope
+		for (Frog f : frogsToRemove) {
+			searchableFrogs.remove(f);
+		}
+
+		if (searchableFrogs.size() <= 0) {
 			return new ArrayList<FrogMatch>();
 		}
 
@@ -130,12 +201,6 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 			fm.setFrog(f); //copyfrog so we don't get side effects
 			if (sp.getImage() == null) {
 				fm.setSearchOnly(true);
-			}
-			if (!sp.isUseAllSurveys()) {
-				//latest only
-				ArrayList<SiteSample> latestSample = new ArrayList<SiteSample>();
-				latestSample.add(f.getLatestSample());
-				f.setSiteSamples(latestSample);
 			}
 
 			for (SiteImage img : f.getAllSiteImages()) {

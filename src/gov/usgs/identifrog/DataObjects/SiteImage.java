@@ -7,6 +7,7 @@ import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
 import java.awt.image.FilteredImageSource;
 import java.awt.image.ImageFilter;
 import java.awt.image.ImageProducer;
@@ -31,6 +32,10 @@ import org.w3c.dom.Element;
  *
  */
 public class SiteImage {
+	private static final int THUMBFILE_HEIGHT = 150;
+	private static final int THUMBFILE_WIDTH = 200;
+	private static final int THUMBLIST_WIDTH = 100;
+	private static final int THUMBLIST_HEIGHT = 75;
 	private String imageFileName, sourceFilePath;
 	private BufferedImage colorFileThumbnail;
 	private BufferedImage greyScaleThumbnail;
@@ -101,6 +106,7 @@ public class SiteImage {
 
 	/**
 	 * Gets the hash of the original image.
+	 * 
 	 * @return
 	 */
 	public String getSourceImageHash() {
@@ -112,8 +118,9 @@ public class SiteImage {
 	}
 
 	/**
-	 * Gets the database image file name.
-	 * Appending this to a XMLDB folder will get you the respective image.
+	 * Gets the database image file name. Appending this to a XMLDB folder will
+	 * get you the respective image.
+	 * 
 	 * @return
 	 */
 	public String getImageFileName() {
@@ -233,7 +240,10 @@ public class SiteImage {
 	 * directory. Sets this image status to processed. Does nothing if this is
 	 * already done.
 	 * 
-	 * @param useSignatureThumbnail Setting this to true will use the signature (dorsal) thumbnail, otherwise a thumbnail of the full-res will be generated.
+	 * @param useSignatureThumbnail
+	 *            Setting this to true will use the signature (dorsal)
+	 *            thumbnail, otherwise a thumbnail of the full-res will be
+	 *            generated.
 	 */
 	public void processImageIntoDB(boolean useSignatureThumbnail) {
 		// TODO Auto-generated method stub
@@ -261,7 +271,11 @@ public class SiteImage {
 				//store thumbnail
 				File outputfile = new File(XMLFrogDatabase.getThumbnailFolder() + getImageFileName());
 				try {
-					ImageIO.write(getColorThumbnail(), "jpg", outputfile);
+					IdentiFrog.LOGGER.writeMessage("Creating thumbnail file from source: " + getSourceFilePath());
+					BufferedImage src = ImageIO.read(new File(getSourceFilePath()));
+					BufferedImage thumbnail = Scalr.resize(src, Scalr.Method.QUALITY, Scalr.Mode.FIT_TO_WIDTH, THUMBFILE_WIDTH, THUMBFILE_HEIGHT,
+							Scalr.OP_ANTIALIAS);
+					ImageIO.write(thumbnail, "jpg", outputfile);
 					IdentiFrog.LOGGER.writeMessage("Copied thumbnail into thumbnail directory.");
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -284,7 +298,8 @@ public class SiteImage {
 		BufferedImage src;
 		try {
 			src = ImageIO.read(new File(XMLFrogDatabase.getDorsalFolder() + getImageFileName()));
-			BufferedImage thumbnail = Scalr.resize(src, Scalr.Method.QUALITY, Scalr.Mode.FIT_TO_WIDTH, 200, 150, Scalr.OP_ANTIALIAS);
+			BufferedImage thumbnail = Scalr.resize(src, Scalr.Method.QUALITY, Scalr.Mode.FIT_TO_WIDTH, THUMBFILE_WIDTH, THUMBFILE_HEIGHT,
+					Scalr.OP_ANTIALIAS);
 
 			//store thumbnail
 			File outputfile = new File(XMLFrogDatabase.getThumbnailFolder() + getImageFileName());
@@ -299,7 +314,7 @@ public class SiteImage {
 	/**
 	 * Creates a thumbnail for viewing in the left hand side of the FrogEditor
 	 * window. Will load greyscale if necessary. Will additionally update the
-	 * existing thumbnails.
+	 * existing thumbnails in memory
 	 * 
 	 * @param image
 	 *            SiteImage to create thumbnail for
@@ -317,7 +332,8 @@ public class SiteImage {
 				IdentiFrog.LOGGER.writeMessage("Generating thumbnail from full size image: " + getSourceFilePath());
 				src = ImageIO.read(new File(getSourceFilePath()));
 			}
-			BufferedImage thumbnail = Scalr.resize(src, Scalr.Method.QUALITY, Scalr.Mode.FIT_TO_WIDTH, 100, 75, Scalr.OP_ANTIALIAS);
+			BufferedImage thumbnail = Scalr.resize(src, Scalr.Method.QUALITY, Scalr.Mode.FIT_TO_WIDTH, THUMBLIST_WIDTH, THUMBLIST_HEIGHT,
+					Scalr.OP_ANTIALIAS);
 			setColorThumbnail(thumbnail);
 			if (!isSignatureGenerated()) {
 				IdentiFrog.LOGGER.writeMessage("Generating greyscale thumbnail.");
@@ -330,36 +346,60 @@ public class SiteImage {
 			IdentiFrog.LOGGER.writeExceptionWithMessage("Unable to generate thumbnail for image (in memory): " + toString(), e);
 		}
 	}
-	
+
 	/**
-	 * Returns the original filename that was passed before processing into the DB + .jpg (even though entry may not be jpg...)
+	 * Returns the original filename that was passed before processing into the
+	 * DB + .jpg (even though entry may not be jpg...)
+	 * 
 	 * @return Original filename
 	 */
 	public String getOriginalFilename() {
 		String filename = getImageFileName();
 		String extension = FilenameUtils.getExtension(filename);
 		String hash = getSourceImageHash();
-		
+
 		String base = FilenameUtils.getBaseName(filename);
-		base = base.substring(0, base.length()-hash.length()-1); //-1 for the _
-		base = base+"."+extension;
+		base = base.substring(0, base.length() - hash.length() - 1); //-1 for the _
+		base = base + "." + extension;
 		return base;
 	}
 
 	/**
 	 * Gets the filepath of this image's signature
+	 * 
 	 * @return Signature file path
 	 */
 	public String getSignature() {
-		return XMLFrogDatabase.getSignaturesFolder() + FilenameUtils.getBaseName(getImageFileName())+IdentiFrog.SIGNATURE_EXTENSION;
+		return XMLFrogDatabase.getSignaturesFolder() + FilenameUtils.getBaseName(getImageFileName()) + IdentiFrog.SIGNATURE_EXTENSION;
 	}
 
 	/**
 	 * Gets the binary image tied to this image
+	 * 
 	 * @return Binary image file path
 	 */
 	public String getBinary() {
-		return XMLFrogDatabase.getBinaryFolder() + FilenameUtils.getBaseName(getImageFileName())+IdentiFrog.BINARY_EXTENSION;
+		return XMLFrogDatabase.getBinaryFolder() + FilenameUtils.getBaseName(getImageFileName()) + IdentiFrog.BINARY_EXTENSION;
+	}
+	
+	/**
+	 * Removes this site image from the database.
+	 * Removes all images associated with this object.
+	 */
+	public void deleteImage(){
+		File dorsal, binary, signature, thumbnail, fullres;
+		dorsal = new File(XMLFrogDatabase.getDorsalFolder() + getImageFileName());
+		binary = new File(XMLFrogDatabase.getBinaryFolder() + getImageFileName());
+		signature = new File(XMLFrogDatabase.getSignaturesFolder() + getImageFileName());
+		thumbnail = new File(XMLFrogDatabase.getThumbnailFolder() + getImageFileName());
+		fullres = new File(XMLFrogDatabase.getImagesFolder() + getImageFileName());
 
+		dorsal.delete();
+		binary.delete();
+		signature.delete();
+		thumbnail.delete();
+		fullres.delete();
+		
+		IdentiFrog.LOGGER.writeMessage("Frog image deleted: "+this);
 	}
 }

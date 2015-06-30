@@ -16,26 +16,22 @@ public class Location implements Comparable<Location> {
 	private String datum;
 	private int zone;
 
-/*	private enum ListItem {
-		NAME(1), DESCRIPTION(2), LATITUDE(3), LONGITUDE(4), TYPE(5), DATUM(6), ZONE(7);
-		private int value;
-
-		private ListItem(int value) {
-			this.value = value;
-		}
-
-		public int getValue() {
-			return value;
-		}
-
-		public static int getSize() {
-			return 7 + 1;
-		}
-	}*/
-
+	/**
+	 * Empty constructor
+	 */
 	public Location() {
 	}
-
+	
+	
+	/**
+	 * Constructor for creating a Lat/Long value. Sets zone to EMPTY_ZONE
+	 * @param name
+	 * @param description
+	 * @param coordinateType
+	 * @param longitude
+	 * @param latitude
+	 * @param datum
+	 */
 	public Location(String name, String description, String coordinateType, String longitude, String latitude, String datum) {
 		this.name = name;
 		this.description = description;
@@ -46,6 +42,16 @@ public class Location implements Comparable<Location> {
 		zone = EMPTY_ZONE;
 	}
 
+	/**
+	 * Constructor for creating a UTM location, includes a zone.
+	 * @param name
+	 * @param description
+	 * @param coordinateType
+	 * @param longitude
+	 * @param latitude
+	 * @param datum
+	 * @param zone
+	 */
 	public Location(String name, String description, String coordinateType, String longitude, String latitude, String datum, int zone) {
 		this.name = name;
 		this.description = description;
@@ -67,6 +73,11 @@ public class Location implements Comparable<Location> {
 	 * @param location object to be copied
 	 */
 	public Location(Location location) {
+		if (location == null) {
+			//likely was imported and has no existing location
+			coordinateType = COORDINATE_LATLONG;
+			return;
+		}
 		name = location.getName();
 		description = location.getDescription();
 		coordinateType = location.getCoordinateType();
@@ -138,8 +149,12 @@ public class Location implements Comparable<Location> {
 		element.appendChild(elementCoordinate);
 		return element;
 	}
+	
+	public String toString(){
+		return name;
+	}
 
-	public String toString() {
+	public String toDebugString() {
 		String str = "\t" + "Name: " + name + "\n";
 		str += "\t" + "Description: " + description + "\n";
 		str += "\t" + "Type: " + coordinateType + "\n";
@@ -149,19 +164,6 @@ public class Location implements Comparable<Location> {
 		str += "\t" + "Zone: " + zone + "\n";
 		return str;
 	}
-
-	/*
-	public Object[] toArray() {
-		Object fo[] = new Object[ListItem.getSize()];
-		fo[ListItem.NAME.getValue()] = name;
-		fo[ListItem.DESCRIPTION.getValue()] = description;
-		fo[ListItem.LATITUDE.getValue()] = latitude;
-		fo[ListItem.LONGITUDE.getValue()] = longitude;
-		fo[ListItem.TYPE.getValue()] = coordinateType;
-		fo[ListItem.DATUM.getValue()] = datum;
-		fo[ListItem.ZONE.getValue()] = zone;
-		return fo;
-	}*/
 
 	public String getName() {
 		return name;

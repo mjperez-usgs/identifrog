@@ -17,7 +17,7 @@ import org.w3c.dom.Element;
  * @author mjperez
  *
  */
-public class Discriminator implements InUseFlag {
+public class Discriminator implements InUseFlag, Comparable<Discriminator> {
 
 	private String text;
 	private boolean inUse;
@@ -31,7 +31,7 @@ public class Discriminator implements InUseFlag {
 	public Discriminator(int id, String discriminator) {
 		this.id = id;
 		this.text = discriminator;
-		inUse = new Random().nextBoolean();
+		inUse = false;
 	}
 
 	/**
@@ -103,6 +103,7 @@ public class Discriminator implements InUseFlag {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + (inUse ? 1231 : 1237);
 		result = prime * result + ((text == null) ? 0 : text.hashCode());
 		return result;
 	}
@@ -116,6 +117,8 @@ public class Discriminator implements InUseFlag {
 		if (getClass() != obj.getClass())
 			return false;
 		Discriminator other = (Discriminator) obj;
+		if (inUse != other.inUse)
+			return false;
 		if (text == null) {
 			if (other.text != null)
 				return false;
@@ -123,6 +126,9 @@ public class Discriminator implements InUseFlag {
 			return false;
 		return true;
 	}
-	
-	
+
+	@Override
+	public int compareTo(Discriminator otherDiscriminator) {
+		return toString().compareTo(otherDiscriminator.toString());
+	}
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * The sitesample class defines a data object representing a "data collection"
@@ -35,15 +36,14 @@ public class SiteSample {
 	/**
 	 * Creates an element <SiteSample> for attaching to an XML document.
 	 * 
-	 * @param document Document to use when creating this element
+	 * @param document
+	 *            Document to use when creating this element
 	 */
 	public Element createElement(Document document) {
+
 		// CREATE FROG ELEMENT
 		Element element = document.createElement("sitesample");
-		// SET ID ATTRIBUTE OF FROG
-		// element.setAttribute("id", getID().toString());
-		// SET FORMER ID ATTRIBUTE OF FROG
-		// element.setAttribute("formerid", getFormerID());
+
 		// CREATE SURVEY ID ELEMENT
 		Element surveyid = document.createElement("surveyid");
 		surveyid.appendChild(document.createTextNode(getSurveyID()));
@@ -79,14 +79,12 @@ public class SiteSample {
 		Element observerElem = document.createElement("observer");
 		recorderElem.setTextContent(Integer.toString(recorder.getID()));
 		observerElem.setTextContent(Integer.toString(observer.getID()));
-		
+
 		// CREATE COMMENTS ELEMENT
 		Element comments = document.createElement("comments");
 		comments.appendChild(document.createTextNode(getComments()));
-
 		//
 		Element locationElem = getLocation().createElement(document);
-
 		//
 		// element.appendChild(setupImage(document, "image",
 		// getGenericImageName()));
@@ -115,10 +113,12 @@ public class SiteSample {
 	public SiteSample() {
 		siteImages = new ArrayList<SiteImage>();
 	}
-	
+
 	/**
 	 * Copy constructor
-	 * @param s object to copy
+	 * 
+	 * @param s
+	 *            object to copy
 	 */
 	public SiteSample(SiteSample s) {
 		siteImages = new ArrayList<SiteImage>();
@@ -224,23 +224,31 @@ public class SiteSample {
 	public void setFrogID(int i) {
 		this.frogID = i;
 	}
-	
+
 	public String toString() {
 		String str = "----SiteSample--\n";
-		str += "--Entry Date: "+dateEntry+"\n";
-		str += "--Capture Date: "+dateCapture+"\n";
-		str += "--Survey ID: "+surveyID+"\n";
-		str += "--Recorder: ("+recorder.getID()+")"+recorder.getName()+"\n";
-		str += "--Observer: ("+observer.getID()+")"+observer.getName()+"\n";
-		str += "--Mass: "+mass+"\n";
-		str += "--Length: "+mass+"\n";
-		str += "--Comments: "+comments+"\n";
+		str += "--Entry Date: " + dateEntry + "\n";
+		str += "--Capture Date: " + dateCapture + "\n";
+		str += "--Survey ID: " + surveyID + "\n";
+		if (recorder != null) {
+			str += "--Recorder: (" + recorder.getID() + ")" + recorder.getName() + "\n";
+		} else {
+			str += "--Recorder: null\n";
+		}
+		if (observer != null) {
+			str += "--Observer: (" + observer.getID() + ")" + observer.getName() + "\n";
+		} else {
+			str += "--Observer: null\n";
+		}
+		str += "--Mass: " + mass + "\n";
+		str += "--Length: " + mass + "\n";
+		str += "--Comments: " + comments + "\n";
 		str += "--Location: \n";
 		str += location;
-		str += "--SiteImages: \n";
-		
-		
+		str += "--SiteImages:";
+
 		for (SiteImage image : siteImages) {
+			str += "\n";
 			str += image.toString();
 		}
 		return str;
@@ -248,11 +256,36 @@ public class SiteSample {
 
 	/**
 	 * Adds a site image to this samples list of site images.
-	 * @param img Image to add to this sample
+	 * 
+	 * @param img
+	 *            Image to add to this sample
 	 */
 	public void addSiteImage(SiteImage img) {
 		siteImages.add(img);
 	}
-	
-	
+
+	/**
+	 * Creates an element for attaching to a frog that has been imported but not-yet edited
+	 * @param document Document to create XML with
+	 * @return "Fresh" XML version of this object
+	 */
+	public Element createFreshElement(Document document) {
+		Element element = document.createElement("sitesample");
+
+
+		// CREATE DATE ELEMENT
+		Element date = document.createElement("date");
+		// SET ENTRY ATTRIBUTE OF DATE
+		date.setAttribute("entry", getDateEntry());
+		
+		Element images = document.createElement("images");
+		for (SiteImage image : siteImages) {
+			images.appendChild(image.createElement(document));
+		}
+		element.appendChild(date);
+		element.appendChild(images);
+
+		return element;
+	}
+
 }

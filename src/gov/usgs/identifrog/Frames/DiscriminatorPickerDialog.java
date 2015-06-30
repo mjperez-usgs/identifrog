@@ -36,6 +36,8 @@ public class DiscriminatorPickerDialog extends JDialog {
 		setTitle("Select discriminators");
 		setIconImage(getToolkit().getImage(getClass().getResource("/resources/IconFrog.png")));
 		setModal(true);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
 		
 		ArrayList<Discriminator> dL = XMLFrogDatabase.getDiscriminators();
 		discriminatorList = new JCheckBoxList(model);
