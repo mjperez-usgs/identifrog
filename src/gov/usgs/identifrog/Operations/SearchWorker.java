@@ -41,7 +41,8 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 	 */
 	private ArrayList<FrogMatch> getMatches(SearchPackage sp) {
 		//items are passed from arraylist to arraylist as each one filters down more and more 
-		IdentiFrog.LOGGER.writeMessage("Performing frog search with search package: "+sp);
+		MainFrame.ACTIVE_SEARCH_PACKAGE = sp;
+		IdentiFrog.LOGGER.writeMessage("Performing frog search with search package: " + sp);
 		ArrayList<ImageMatch> candidates = new ArrayList<ImageMatch>();
 
 		double manhatDistance1 = -1.0;
@@ -63,6 +64,19 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 		//We start with all frogs.
 
 		//************************* NARROW SCOPE OF SEARCH ***************************
+		ArrayList<Frog> frogsToRemove = new ArrayList<Frog>(); // Have to do this to prevent concurrent exception with iterator
+		//remove fresh frogs
+		for (Frog f : searchableFrogs) {
+			if (f.isFreshImport()) {
+				frogsToRemove.add(f);
+			}
+		}
+
+		//Remove frogs from scope
+		for (Frog f : frogsToRemove) {
+			searchableFrogs.remove(f);
+		}
+
 		//Remove surveys if latest only is selected
 		for (Frog f : searchableFrogs) {
 			if (!sp.useAllSurveys()) {
@@ -75,7 +89,6 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 		}
 
 		//***********FILTER BY SEX AND SPECIES*****************
-		ArrayList<Frog> frogsToRemove = new ArrayList<Frog>(); // Have to do this to prevent concurrent exception with iterator
 		if (sp.getGender() != null) {
 			IdentiFrog.LOGGER.writeMessage("Filtering frogs by gender");
 			for (Frog f : searchableFrogs) {
@@ -154,7 +167,7 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 				}
 			}
 		}
-		
+
 		//Remove frogs from scope
 		for (Frog f : frogsToRemove) {
 			searchableFrogs.remove(f);
@@ -163,7 +176,7 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 		if (searchableFrogs.size() <= 0) {
 			return new ArrayList<FrogMatch>();
 		}
-		
+
 		//mass
 		if (sp.getMass() >= 0 && sp.getMassTolerance() >= 0) {
 			IdentiFrog.LOGGER.writeMessage("Filtering frogs by mass");
@@ -182,7 +195,7 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 				}
 			}
 		}
-		
+
 		//Remove frogs from scope
 		for (Frog f : frogsToRemove) {
 			searchableFrogs.remove(f);
@@ -229,6 +242,10 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 		String userSearchDigitalSignature = image.getSignature();
 		String userSearchBinaryImage = image.getBinary();
 
+		if (candidates.size() <= 0) {
+			return new ArrayList<FrogMatch>();
+		}
+
 		//IMAGE SEARCH=====================================================================
 		// PATTERN RECOGNITION ALGORITHM: MULTI-STEP REDUCTION
 		// STEP 1: DIFFERENCE IN NUMBER OF RELEVANT SPOTS
@@ -255,42 +272,35 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 		Collections.sort(candidates);
 
 		// keep candidates whose spot difference <= defaultSpotDifferencePass1
-		if (candidates.get(0).getScore() <= DEFAULT_SPOT_DIFFERENCE_PASS1) { //since its sorted the first one will be the lowest (ascending).
-			//This if statement means that the lowest score is UNDER the spot difference threshold, but not all of them will be. We need to weed out ones that don't pass this test
-
-			for (ImageMatch m : candidates) {
-				if (m.getScore() > DEFAULT_SPOT_DIFFERENCE_PASS1) {
-					//remove candidates with a bigger spot difference than the tolerance
-					badCandidates.add(m);
-				}
+		for (ImageMatch im : candidates) {
+			if (im.getScore() > DEFAULT_SPOT_DIFFERENCE_PASS1) {
+				badCandidates.add(im);
 			}
+		}
+		candidates.removeAll(badCandidates);
+		badCandidates.clear();
 
-			candidates.removeAll(badCandidates);
-			badCandidates.clear();
-
-			/*
-			 * while (myind < candidates.size()) { if
-			 * (candidates.get(myind).getScore() <=
-			 * DEFAULT_SPOT_DIFFERENCE_PASS1) { // keep track of the number of
-			 * unique frogids go the next step if
-			 * (isUnique(candidates.get(myind).frogid, Candidates_forPass2)) {
-			 * ++mycount; stopind0 = myind; } // adding each image to the next
-			 * step Candidates_forPass2.add(Pass1_distances.get(myind)); }
-			 * ++myind; } // end while
-			 * 
-			 * // if the number of remaining unique candidates < 10 ++stopind0;
-			 * while (mycount < topTen & stopind0 < Pass1_distances.size()) { //
-			 * check if this image already entered the next step // needed in
-			 * case last time two or more images of the same frog entered if
-			 * (!isEntered(Pass1_distances.get(stopind0).signature,
-			 * Candidates_forPass2)) { // check if it is a unique frog addition
-			 * to the next step if
-			 * (isUnique(Pass1_distances.get(stopind0).frogid,
-			 * Candidates_forPass2)) { ++mycount; }
-			 * Candidates_forPass2.add(Pass1_distances.get(stopind0)); }
-			 * ++stopind0; } // end while
-			 */
-		}/*
+		/*
+		 * while (myind < candidates.size()) { if
+		 * (candidates.get(myind).getScore() <= DEFAULT_SPOT_DIFFERENCE_PASS1) {
+		 * // keep track of the number of unique frogids go the next step if
+		 * (isUnique(candidates.get(myind).frogid, Candidates_forPass2)) {
+		 * ++mycount; stopind0 = myind; } // adding each image to the next step
+		 * Candidates_forPass2.add(Pass1_distances.get(myind)); } ++myind; } //
+		 * end while
+		 * 
+		 * // if the number of remaining unique candidates < 10 ++stopind0;
+		 * while (mycount < topTen & stopind0 < Pass1_distances.size()) { //
+		 * check if this image already entered the next step // needed in case
+		 * last time two or more images of the same frog entered if
+		 * (!isEntered(Pass1_distances.get(stopind0).signature,
+		 * Candidates_forPass2)) { // check if it is a unique frog addition to
+		 * the next step if (isUnique(Pass1_distances.get(stopind0).frogid,
+		 * Candidates_forPass2)) { ++mycount; }
+		 * Candidates_forPass2.add(Pass1_distances.get(stopind0)); } ++stopind0;
+		 * } // end while
+		 */
+		/*
 		 * else { //All images have a spot difference >
 		 * DEFAULT_SPOT_DIFFERENCE_PASS1 int ind0 = 0, count = 0; while (count <
 		 * topTen & ind0 < Pass1_distances.size()) { if
@@ -318,51 +328,41 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 		// STEP 2: RESULTS
 		Collections.sort(candidates);
 
-		if (candidates.get(0).getScore() <= DEFAULT_SPOT_DIFFERENCE_PASS2) { //since its sorted the first one will be the lowest (ascending).
-			//This if statement means that the lowest score is UNDER the spot difference threshold, but not all of them will be. We need to weed out ones that don't pass this test
-
-			for (ImageMatch m : candidates) {
-				if (m.getScore() > DEFAULT_SPOT_DIFFERENCE_PASS2) {
-					//remove candidates with a bigger spot difference than the tolerance
-					badCandidates.add(m);
-				}
+		for (ImageMatch im : candidates) {
+			if (im.getScore() > DEFAULT_SPOT_DIFFERENCE_PASS2) {
+				badCandidates.add(im);
 			}
-
-			candidates.removeAll(badCandidates);
-			badCandidates.clear();
-
-			// keep candidates whose spot difference <= defaultSpotDifferencePass2
-			/*
-			 * if (candidates.get(0).getScore() <=
-			 * DEFAULT_SPOT_DIFFERENCE_PASS2) { int myind = 0, mycount = 0,
-			 * stopind1 = 0; while (myind < Pass2_distances.size()) { if
-			 * (Pass2_distances.get(myind).getScore() <=
-			 * DEFAULT_SPOT_DIFFERENCE_PASS2) { if
-			 * (isUnique(Pass2_distances.get(myind).frogid,
-			 * Candidates_forHausdorff)) { ++mycount; stopind1 = myind; }
-			 * Candidates_forHausdorff.add(Pass2_distances.get(myind)); }
-			 * ++myind; } // end while // if the number of remaining unique
-			 * candidates < 10 if (mycount < topTen) { ++stopind1; while
-			 * (mycount < topTen & stopind1 < Pass2_distances.size()) { // check
-			 * if this image already entered the next step if
-			 * (!isEntered(Pass2_distances.get(stopind1).signature,
-			 * Candidates_forHausdorff)) { // check if it is a unique frog
-			 * addition to the next step if
-			 * (isUnique(Pass2_distances.get(stopind1).frogid,
-			 * Candidates_forHausdorff)) { ++mycount; }
-			 * Candidates_forHausdorff.add(Pass2_distances.get(stopind1)); }
-			 * ++stopind1; } // end while } // end if } else { /* if pass #2 has
-			 * spot differences > defaultSpotDifferencePass2 select closest
-			 * images of 10 candidates with unique frog_id
-			 * 
-			 * int ind1 = 0, count = 0; while (count < topTen & ind1 <
-			 * Pass2_distances.size()) { if
-			 * (isUnique(Pass2_distances.get(ind1).frogid,
-			 * Candidates_forHausdorff)) { ++count; }
-			 * Candidates_forHausdorff.add(Pass2_distances.get(ind1)); ++ind1; }
-			 * }
-			 */
 		}
+		candidates.removeAll(badCandidates);
+		badCandidates.clear();
+
+		// keep candidates whose spot difference <= defaultSpotDifferencePass2
+		/*
+		 * if (candidates.get(0).getScore() <= DEFAULT_SPOT_DIFFERENCE_PASS2) {
+		 * int myind = 0, mycount = 0, stopind1 = 0; while (myind <
+		 * Pass2_distances.size()) { if (Pass2_distances.get(myind).getScore()
+		 * <= DEFAULT_SPOT_DIFFERENCE_PASS2) { if
+		 * (isUnique(Pass2_distances.get(myind).frogid,
+		 * Candidates_forHausdorff)) { ++mycount; stopind1 = myind; }
+		 * Candidates_forHausdorff.add(Pass2_distances.get(myind)); } ++myind; }
+		 * // end while // if the number of remaining unique candidates < 10 if
+		 * (mycount < topTen) { ++stopind1; while (mycount < topTen & stopind1 <
+		 * Pass2_distances.size()) { // check if this image already entered the
+		 * next step if (!isEntered(Pass2_distances.get(stopind1).signature,
+		 * Candidates_forHausdorff)) { // check if it is a unique frog addition
+		 * to the next step if (isUnique(Pass2_distances.get(stopind1).frogid,
+		 * Candidates_forHausdorff)) { ++mycount; }
+		 * Candidates_forHausdorff.add(Pass2_distances.get(stopind1)); }
+		 * ++stopind1; } // end while } // end if } else { /* if pass #2 has
+		 * spot differences > defaultSpotDifferencePass2 select closest images
+		 * of 10 candidates with unique frog_id
+		 * 
+		 * int ind1 = 0, count = 0; while (count < topTen & ind1 <
+		 * Pass2_distances.size()) { if
+		 * (isUnique(Pass2_distances.get(ind1).frogid, Candidates_forHausdorff))
+		 * { ++count; } Candidates_forHausdorff.add(Pass2_distances.get(ind1));
+		 * ++ind1; } }
+		 */
 		// STEP 3: HAUSDORFF DISTANCE
 		for (ImageMatch m : candidates) {
 			//HausdorffDistance oneWayHausdorff = new HausdorffDistance();
@@ -403,9 +403,7 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 		 * { ++count; } Candidates_forAngle.add(Hausdorff_distances.get(ind));
 		 * ++ind; } }
 		 */
-		if (queryHasOneSpot) {
-			//Candidates_forHamming = Candidates_forAngle;
-		} else {
+		if (!queryHasOneSpot) {
 			// STEP 4: ANGLE BETWEEN VECTORS
 			for (ImageMatch m : candidates) {
 				Angle AnglewithQuery = new Angle();
@@ -475,8 +473,25 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 			if (m.getScore() > HAMMING_DISTANCE_THRESHOLD) {
 				m.setOverThreshhold(true);
 			}
-
 		}
+
+		//remove frog matches that have no images in the list of candidates
+		ArrayList<FrogMatch> badFrogs = new ArrayList<FrogMatch>();
+		for (FrogMatch fm : frogMatches) {
+			boolean hasOneImage = false;
+			for (ImageMatch im : fm.getImages()) {
+				if (candidates.contains(im)) {
+					hasOneImage = true;
+					break;
+				}
+			}
+			if (!hasOneImage) {
+				badFrogs.add(fm);
+			}
+		}
+		
+		frogMatches.removeAll(badFrogs);
+		badFrogs.clear();
 		return frogMatches;
 
 		/*

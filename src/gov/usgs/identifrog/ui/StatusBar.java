@@ -85,7 +85,7 @@ public class StatusBar extends JPanel {
     	this.icon.setIcon(icon);
     }
     
-    public void setRightStatus(String message){ 
+    public void setRightMessage(String message){ 
     	rightStatus.setText(message);
     }
     

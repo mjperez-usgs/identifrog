@@ -1,6 +1,7 @@
 package gov.usgs.identifrog.DataObjects;
 
 import gov.usgs.identifrog.IdentiFrog;
+import gov.usgs.identifrog.Frames.MainFrame;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ import java.util.Date;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-public class Frog {
+public class Frog implements Comparable<Frog> {
 	private int ID;
 	private String species;
 	private String gender;
@@ -181,6 +182,11 @@ public class Frog {
 	public SiteImage getLatestImage() {
 		SiteSample sample = getLatestSample();
 		if (sample != null) {
+			for (SiteImage img : sample.getSiteImages()) {
+				if (img.isSignatureGenerated()) {
+					return img; //return image with dorsal view
+				}
+			}
 			return sample.getSiteImages().get(0);
 		} else {
 			return null;
@@ -320,5 +326,76 @@ public class Frog {
 	 */
 	public void setFreshImport(boolean isFreshImport) {
 		this.isFreshImport = isFreshImport;
+	}
+
+	@Override
+	public int compareTo(Frog otherFrog) {
+		//SORT ASCENDING - can reverse if necessary
+		switch (MainFrame.SORTING_METHOD) {
+		case MainFrame.SORT_BY_LATEST_CAPTURE:
+			SiteSample localLatest = getLatestSample();
+			SiteSample otherLatest = otherFrog.getLatestSample();
+			if (localLatest.getDateCapture() == null && otherLatest.getDateCapture() == null) {
+				return 0;
+			} else if (localLatest.getDateCapture() == null) {
+				return -1;
+			} else if (otherLatest.getDateCapture() == null){
+				return 1;
+			}
+
+			try {
+				Date local = IdentiFrog.dateFormat.parse(localLatest.getDateCapture());
+				Date other = IdentiFrog.dateFormat.parse(otherLatest.getDateCapture());
+				return local.compareTo(other);
+			} catch (ParseException e) {
+				return 0;
+			}
+		case MainFrame.SORT_BY_NUM_SURVEYS:
+			if (getSiteSamples().size() > otherFrog.getSiteSamples().size()) {
+				return 1;
+			}
+			if (getSiteSamples().size() < otherFrog.getSiteSamples().size()) {
+				return -1;
+			}
+			return 0;
+		case MainFrame.SORT_BY_NUM_IMAGES:
+			if (getAllSiteImages().size() > otherFrog.getAllSiteImages().size()) {
+				return 1;
+			}
+			if (getAllSiteImages().size() < otherFrog.getAllSiteImages().size()) {
+				return -1;
+			}
+			return 0;
+		case MainFrame.SORT_BY_SEARCHABILITY:
+			if (!isFreshImport() && otherFrog.isFreshImport()){
+				//this is new, other is not
+				return 1;
+			}
+			if (isFreshImport() && !otherFrog.isFreshImport()){
+				//this is new, other is not
+				return -1;
+			}
+			if (isFullySearchable() && !otherFrog.isFullySearchable()) {
+				return 1;
+			}
+			if (!isFullySearchable() && otherFrog.isFullySearchable()) {
+				return -1;
+			}
+			return 0;
+		default: 
+			//Sort By ID
+			return getID() - otherFrog.getID();
+		}
+	}
+	
+	/**
+	 * Merges the other frog into this one.
+	 * This object is modified during this procedure.
+	 * @param other Other frog to merge into this one
+	 */
+	public void mergeWith(Frog other){ 
+		for (SiteSample s : other.getSiteSamples()) {
+			addSiteSample(s);
+		}
 	}
 }

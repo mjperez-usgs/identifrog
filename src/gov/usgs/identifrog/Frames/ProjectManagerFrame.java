@@ -4,6 +4,7 @@ import gov.usgs.identifrog.ExtensionFileFilter;
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.Site;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
+import gov.usgs.identifrog.ui.StatusBar;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
@@ -44,6 +45,7 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 	private JButton openSite, createSite;
 	private ArrayList<Site> recentSites;
 	private MainFrame mf;
+	private StatusBar statusBar;
 	
 	public ProjectManagerFrame(){
 		setupFrame();
@@ -138,16 +140,11 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 		recentSitesPanel.add(Box.createHorizontalGlue());
 		verticalPanel.add(recentSitesPanel);
 		
-		//version
-		JPanel versionPanel = new JPanel();
-		versionPanel.setLayout(new BoxLayout(versionPanel,BoxLayout.LINE_AXIS));
-		versionPanel.add(Box.createHorizontalGlue());
-		JLabel versionInfo = new JLabel("IdentiFrog "+IdentiFrog.HR_VERSION);
-		versionInfo.setEnabled(false);
-		versionPanel.add(versionInfo);
-		versionPanel.add(Box.createHorizontalGlue());
 		
-		verticalPanel.add(versionPanel);
+		statusBar = new StatusBar();
+		statusBar.setRightMessage("IdentiFrog "+IdentiFrog.HR_VERSION);
+		
+		verticalPanel.add(statusBar);
 		add(verticalPanel);
 		pack();
 	}
@@ -289,6 +286,7 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 		
 		// create an instance of the MainFrame
 		MainFrame frame = new MainFrame();
+		IdentiFrog.activeMainFrame = frame;
 		frame.setPreferredSize(new Dimension(600,450));
 		frame.pack();
 

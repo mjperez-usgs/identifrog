@@ -7,6 +7,7 @@ import gov.usgs.identifrog.DataObjects.Location;
 import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.DataObjects.SiteSample;
 import gov.usgs.identifrog.DataObjects.User;
+import gov.usgs.identifrog.Frames.MainFrame;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,8 +19,10 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingWorker;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -52,8 +55,8 @@ public class XMLFrogDatabase {
 	private static ArrayList<Frog> frogs = new ArrayList<Frog>();
 	private static ArrayList<User> recorders, observers;
 	private static ArrayList<Discriminator> discriminators;
-	private static boolean DISCRIMINATORS_LOADED = false;
 	private static int highestSessionDiscriminatorID = 0; //used when adding items to the discriminator list but not yet commited
+	private static SwingWorker<Boolean, Integer> thread;
 
 	/*
 	 * public XMLFrogDatabase() { XMLFrogDatabase.frogs = new ArrayList<Frog>();
@@ -137,87 +140,10 @@ public class XMLFrogDatabase {
 	 * Writes this Frog DB to disk. Additionally updates the status of
 	 * Discriminators in-use flags (since we are updating DB)
 	 * 
-	 * @return true if successful, false otherwise.
 	 */
-	public static boolean writeXMLFile() {
-		IdentiFrog.LOGGER.writeMessage("Synchronizing memory-database to disk...");
-		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder docBuilder;
-		try {
-			docBuilder = docFactory.newDocumentBuilder();
-		} catch (ParserConfigurationException e) {
-			IdentiFrog.LOGGER.writeException(e);
-			return false;
-		}
-		// CREATE ROOT ELEMENT
-		Document doc = docBuilder.newDocument();
-		Element root = doc.createElement("frogdatabase");
-		Element frogsElement = doc.createElement("frogs");
-		root.appendChild(frogsElement);
-		doc.appendChild(root);
-
-		IdentiFrog.LOGGER.writeMessage("Writing frogs to DB");
-
-		for (Discriminator d : discriminators) {
-			d.setInUse(false); //reset inuse flag for setting when parsing frogs attached discriminators (will set to true again)
-		}
-
-		for (Frog frog : frogs) {
-			IdentiFrog.LOGGER.writeMessage(frog.toString());
-			frogsElement.appendChild(frog.createDBElement(doc));
-		}
-
-		Element users = doc.createElement("users");
-		IdentiFrog.LOGGER.writeMessage("Writing users to DB");
-		Element recordersElement = doc.createElement("recorders");
-		Element observersElement = doc.createElement("observers");
-
-		for (User user : recorders) {
-			recordersElement.appendChild(user.createElement(doc));
-		}
-		for (User user : observers) {
-			observersElement.appendChild(user.createElement(doc));
-		}
-
-		users.appendChild(recordersElement);
-		users.appendChild(observersElement);
-
-		root.appendChild(users);
-
-		//Discriminators
-		IdentiFrog.LOGGER.writeMessage("Writing discriminators to DB");
-		Element discrimsElement = doc.createElement("discriminators");
-
-		for (Discriminator discriminator : discriminators) {
-			discrimsElement.appendChild(discriminator.createElement(doc));
-		}
-		root.appendChild(discrimsElement);
-
-		/*
-		 * System.out.println("Dumping frogs tostrg"); for (Frog frog : frogs) {
-		 * System.out.println(frog); }
-		 */
-
-		// WRITE XML FILE
-		TransformerFactory transformerFactory = TransformerFactory.newInstance();
-		Transformer transformer = null;
-		try {
-			transformer = transformerFactory.newTransformer();
-		} catch (TransformerConfigurationException e) {
-			IdentiFrog.LOGGER.writeException(e);
-			return false;
-		}
-		DOMSource source = new DOMSource(doc);
-		StreamResult result = new StreamResult(dbfile);
-		try {
-			IdentiFrog.LOGGER.writeMessage("Saving DB to disk");
-			transformer.transform(source, result);
-			IdentiFrog.LOGGER.writeMessage("Saved DB to disk");
-		} catch (TransformerException e) {
-			IdentiFrog.LOGGER.writeException(e);
-			return false;
-		}
-		return true;
+	public static void writeXMLFile() {
+		thread = new XMLFrogDatabase.CommitWorker(IdentiFrog.activeMainFrame);
+		thread.execute();
 	}
 
 	/**
@@ -229,7 +155,6 @@ public class XMLFrogDatabase {
 	public static void loadXMLFile() {
 		IdentiFrog.LOGGER.writeMessage("Loading XML DB: " + dbfile.toString() + " Size: " + dbfile.length() + " bytes");
 		USERS_LOADED = false;
-		DISCRIMINATORS_LOADED = false;
 		frogs = new ArrayList<Frog>();
 		recorders = new ArrayList<User>();
 		observers = new ArrayList<User>();
@@ -293,7 +218,6 @@ public class XMLFrogDatabase {
 				discriminators.add(discriminator);
 				IdentiFrog.LOGGER.writeMessage("Loaded discriminator: " + discriminator.debugToString());
 			}
-			DISCRIMINATORS_LOADED = true;
 
 			//Load frogs (depends on users)
 			IdentiFrog.LOGGER.writeMessage("Parsing XML for Frogs...");
@@ -588,7 +512,7 @@ public class XMLFrogDatabase {
 	 *            ID of the frog in the DB.
 	 * @return Frog object containing info about frog with the ID.
 	 */
-	public static Frog searchFrogByID(int ID) {
+	public static Frog getFrogByID(int ID) {
 		for (Frog frog : frogs) {
 			if (frog.getID() == ID) {
 				return frog;
@@ -597,8 +521,15 @@ public class XMLFrogDatabase {
 		return null;
 	}
 
+	/**
+	 * Removes a frog from the database. Does not commit to disk or delete
+	 * images/signatures.
+	 * 
+	 * @param ID
+	 *            Frog ID to remove
+	 */
 	public static void removeFrog(int ID) {
-		frogs.remove(searchFrogByID(ID));
+		frogs.remove(getFrogByID(ID));
 	}
 
 	/*
@@ -706,13 +637,10 @@ public class XMLFrogDatabase {
 	//=================Migrated from FolderHandler
 	private static String PROJECT_FOLDER;
 	private static String SITE_NAME;
-	private static final String DEFAULT_PROJECT_FOLDER = System.getProperty("user.home");
-	private static final String DEFAULT_PROJECT_NAME = "IdentiFrog Data";
 	//private static final String filename = "datafile.xml";
 	private static final String IMAGES = "Images", SIGNATURES = "Signatures", BINARY = "Binary", DORSAL = "Dorsal";
 	public static final String THUMB = "Thumbnail";
-	private static final String PENDING = "Pending";
-	private static final String[] PROJECT_FOLDERS = { IMAGES, SIGNATURES, BINARY, DORSAL, THUMB, PENDING };
+	private static final String[] PROJECT_FOLDERS = { IMAGES, SIGNATURES, BINARY, DORSAL, THUMB };
 
 	/**
 	 * Creates a new "Folder Handler", an object that handles folder creation
@@ -828,15 +756,6 @@ public class XMLFrogDatabase {
 	 */
 	public static String getThumbnailFolder() {
 		return getMainFolder() + THUMB + File.separator;
-	}
-
-	/**
-	 * Gets folder path that contains full resolution images pending a signature
-	 * 
-	 * @return
-	 */
-	public static String getPendingFolder() {
-		return getMainFolder() + PENDING + File.separator;
 	}
 
 	public String getSiteName() {
@@ -1033,7 +952,9 @@ public class XMLFrogDatabase {
 		HashSet<Location> locs = new HashSet<Location>();
 		for (Frog f : frogs) {
 			for (SiteSample s : f.getSiteSamples()) {
-				locs.add(s.getLocation());
+				if (s.getLocation() != null) {
+					locs.add(s.getLocation());
+				}
 			}
 		}
 		ArrayList<Location> sortedList = new ArrayList<Location>(locs);
@@ -1049,7 +970,9 @@ public class XMLFrogDatabase {
 	public static ArrayList<String> getSpecies() {
 		HashSet<String> species = new HashSet<String>();
 		for (Frog f : frogs) {
-			species.add(f.getSpecies());
+			if (f.getSpecies() != null) {
+				species.add(f.getSpecies());
+			}
 		}
 		ArrayList<String> sortedList = new ArrayList<String>(species);
 		Collections.sort(sortedList);
@@ -1062,7 +985,7 @@ public class XMLFrogDatabase {
 	 * @return true if all frogs in DB are searchable. Still true even if no
 	 *         frogs exist. False otherwise
 	 */
-	public static boolean isFullySearchable() {
+	public static boolean isFullyImageSearchable() {
 		for (Frog f : frogs) {
 			if (!f.isFullySearchable()) {
 				return false;
@@ -1070,4 +993,124 @@ public class XMLFrogDatabase {
 		}
 		return true;
 	}
+
+	static class CommitWorker extends SwingWorker<Boolean, Integer> {
+
+		private MainFrame attachedFrame;
+		private int numToProcess = 0;
+		private int numProcessed = 0;
+
+		public CommitWorker(MainFrame attachedFrame) {
+			this.attachedFrame = attachedFrame;
+			numToProcess += discriminators.size();
+			numToProcess += frogs.size();
+			numToProcess += recorders.size();
+			numToProcess += observers.size();
+		}
+		
+		@Override
+		protected Boolean doInBackground() throws Exception {
+			IdentiFrog.LOGGER.writeMessage("Synchronizing memory-database to disk...");
+			DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder docBuilder;
+			try {
+				docBuilder = docFactory.newDocumentBuilder();
+			} catch (ParserConfigurationException e) {
+				IdentiFrog.LOGGER.writeException(e);
+				return false;
+			}
+			// CREATE ROOT ELEMENT
+			Document doc = docBuilder.newDocument();
+			Element root = doc.createElement("frogdatabase");
+			Element frogsElement = doc.createElement("frogs");
+			root.appendChild(frogsElement);
+			doc.appendChild(root);
+
+			IdentiFrog.LOGGER.writeMessage("Writing frogs to DB");
+
+			for (Discriminator d : discriminators) {
+				d.setInUse(false); //reset inuse flag for setting when parsing frogs attached discriminators (will set to true again)
+			}
+
+			for (Frog frog : frogs) {
+				frogsElement.appendChild(frog.createDBElement(doc));
+				numProcessed++;
+				publish(numProcessed);
+			}
+
+			Element users = doc.createElement("users");
+			IdentiFrog.LOGGER.writeMessage("Writing users to DB");
+			Element recordersElement = doc.createElement("recorders");
+			Element observersElement = doc.createElement("observers");
+
+			for (User user : recorders) {
+				recordersElement.appendChild(user.createElement(doc));
+				numProcessed++;
+				publish(numProcessed);
+			}
+			for (User user : observers) {
+				observersElement.appendChild(user.createElement(doc));
+				numProcessed++;
+				publish(numProcessed);
+			}
+
+			users.appendChild(recordersElement);
+			users.appendChild(observersElement);
+
+			root.appendChild(users);
+
+			//Discriminators
+			IdentiFrog.LOGGER.writeMessage("Writing discriminators to DB");
+			Element discrimsElement = doc.createElement("discriminators");
+
+			for (Discriminator discriminator : discriminators) {
+				discrimsElement.appendChild(discriminator.createElement(doc));
+				numProcessed++;
+				publish(numProcessed);
+			}
+			root.appendChild(discrimsElement);
+
+			/*
+			 * System.out.println("Dumping frogs tostrg"); for (Frog frog :
+			 * frogs) { System.out.println(frog); }
+			 */
+
+			// WRITE XML FILE
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = null;
+			try {
+				transformer = transformerFactory.newTransformer();
+			} catch (TransformerConfigurationException e) {
+				IdentiFrog.LOGGER.writeException(e);
+				return false;
+			}
+			DOMSource source = new DOMSource(doc);
+			StreamResult result = new StreamResult(dbfile);
+			try {
+				IdentiFrog.LOGGER.writeMessage("Saving DB to disk");
+				transformer.transform(source, result);
+				IdentiFrog.LOGGER.writeMessage("Saved DB to disk");
+			} catch (TransformerException e) {
+				IdentiFrog.LOGGER.writeException(e);
+				return false;
+			}
+			return true;
+		}
+
+		@Override
+		protected void process(List<Integer> chunks) {
+			// Messages received from the doInBackground() (when invoking the publish() method)
+			int latestUpdate = chunks.get(chunks.size() - 1);
+			if (attachedFrame != null) {
+				attachedFrame.getStatusBar().setMessage("Saving database... " + calcPercent(latestUpdate) + "%");
+			} else {
+				System.out.println("AF IS NULL");
+			}
+		}
+
+		private int calcPercent(int latestUpdate) {
+			return (int) (((double) numProcessed / numToProcess) * 100);
+		}
+	}
+
 }

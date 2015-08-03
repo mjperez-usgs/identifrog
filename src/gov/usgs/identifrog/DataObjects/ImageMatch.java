@@ -1,6 +1,5 @@
 package gov.usgs.identifrog.DataObjects;
 
-import java.util.Comparator;
 
 /**
  * Image Match contains a SiteIMage object as well as stats related to how
@@ -13,6 +12,14 @@ public class ImageMatch implements Comparable<ImageMatch>{
 	private SiteImage image;
 	private double score = Double.MIN_VALUE;
 	private boolean overThreshhold = false;
+	private boolean failedPass = false;
+	
+	public boolean isFailedPass() {
+		return failedPass;
+	}
+	public void setFailedPass(boolean failedPass) {
+		this.failedPass = failedPass;
+	}
 	
 	public SiteImage getImage() {
 		return image;
@@ -56,7 +63,4 @@ public class ImageMatch implements Comparable<ImageMatch>{
 	public String getBinary() {
 		return image.getBinary();
 	}
-	
-	
-
 }

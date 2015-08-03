@@ -73,13 +73,13 @@ import org.jdatepicker.impl.UtilDateModel;
 
 /**
  * <p>
- * Title: AddFrog.java
+ * Title: FrogEditor.java
  * <p>
  * Description: displays window 'Frog Information' for the user to fill out the
  * fields, adds filled entries to table Frog, Observer, EntryPerson,
  * CaptureLocation
  * 
- * @author Michael J. Perez 2015
+ * @author Michael J. Perez 2015 (significant rewrite)
  * @author Hidayatullah Ahsan 2012
  * @author Oksana V. Kelly 2008
  * @author Oksana V. Kelly modified the code written by Mike Ramshaw from
@@ -272,9 +272,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JRadioButton additDiscrYes = new JRadioButton("Yes", false);
 	//JCheckBox checkAdditionalDescriptor = new JCheckBox("Additional Discriminator");
 	JButton butDiscriminators = new JButton("Discriminators", imageDiscriminators16);
-	DecimalFormat decimalFormat = new DecimalFormat("#.00");
 	DecimalFormat integerFormat = new DecimalFormat("#");
-	JFormattedTextField textMass = new JFormattedTextField(decimalFormat);
+	JFormattedTextField textMass = new JFormattedTextField(IdentiFrog.decimalFormat);
 	JLabel labFrogComments = new JLabel();
 	JTextField textComments = new JTextField();
 	JLabel labCoorType = new JLabel();
@@ -303,7 +302,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JLabel labMass = new JLabel();
 	JLabel labLocDesc = new JLabel();
 	JLabel labCoordinates = new JLabel();
-	JFormattedTextField textLength = new JFormattedTextField(decimalFormat);
+	JFormattedTextField textLength = new JFormattedTextField(IdentiFrog.decimalFormat);
 	JLabel labLength = new JLabel();
 	JButton butCancel = new JButton();
 	JLabel labMassUnit = new JLabel();
@@ -398,6 +397,15 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		JButton changeSurveyButton = new JButton("Switch Surveys");
 		changeSurveyButton
 				.setToolTipText("<html>Change editor to the selected site survey.<br>Saves the current data in this editor window but does not commit it unless this frog is saved.</html>");
+		changeSurveyButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (sampleList.getSelectedIndex() >= 0 && commitChanges()) {
+					loadSiteSample(sampleList.getSelectedIndex());
+				}
+			}
+		});
 		changeSurveyPanel.add(labelActiveSurvey);
 		changeSurveyPanel.add(changeSurveyButton);
 
@@ -916,14 +924,16 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	private boolean commitChanges() {
 		if (validateData()) {
 			try {
-				Date eDate = (Date) entryDatePicker.getModel().getValue();
-				entrydate = df.format(eDate);
+				Date eDate = addMonthToDate((Date) entryDatePicker.getModel().getValue());
+				entrydate = IdentiFrog.dateFormat.format(eDate);
 				String species = textSpecies.getText().trim();
 				String gender = (String) sexComboBox.getSelectedItem();
 				// Additional Discriminator
 				//String discriminator = (checkAdditionalDescriptor.isSelected()) ? "true": "false";
 				//int m = monthComboBox.getSelectedIndex() + 1;
-				String capturedate = df.format(captureDatePicker.getModel().getValue());
+
+				Date d = addMonthToDate((Date) captureDatePicker.getModel().getValue());
+				String capturedate = IdentiFrog.dateFormat.format(d);
 
 				//yearComboBox.getSelectedItem() + "-" + m + "-"
 				//+ dayComboBox.getSelectedItem();
@@ -952,7 +962,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					//not a zone
 				}
 				String datum = textDatum.getText();
-				Location lc = new Location(locationName, locationDescription, locCoorType, textX.getText().trim(), textY.getText().trim(), datum,
+				Location lc = new Location(locationName, locationDescription, locCoorType, textY.getText().trim(), textX.getText().trim(), datum,
 						zone);
 
 				//Generate sitesample
@@ -995,6 +1005,13 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			return false;
 		}
 	}
+	
+	private Date addMonthToDate(Date d) {
+		Calendar c = Calendar.getInstance();
+		c.setTime(d);
+		c.add(Calendar.MONTH, 1);  // number of days to add
+		return c.getTime();
+	}
 
 	/**
 	 * Loads a sitesample into the interface overriding any existing values
@@ -1016,7 +1033,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			try {
 				if (sample.getDateEntry() != null) {
 					Date entryDate;
-					entryDate = df.parse(sample.getDateEntry());
+					entryDate = IdentiFrog.dateFormat.parse(sample.getDateEntry());
 					//ridiculous... thanks oracle
 					Calendar cal = Calendar.getInstance();
 					cal.setTime(entryDate);
@@ -1033,7 +1050,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			try {
 				if (sample.getDateCapture() != null) {
 					Date captureDate;
-					captureDate = df.parse(sample.getDateCapture());
+					captureDate = IdentiFrog.dateFormat.parse(sample.getDateCapture());
 					//ridiculous... thanks oracle
 					Calendar cal = Calendar.getInstance();
 					cal.setTime(captureDate);

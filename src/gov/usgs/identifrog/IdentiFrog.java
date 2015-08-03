@@ -1,5 +1,6 @@
 package gov.usgs.identifrog;
 
+import gov.usgs.identifrog.Frames.MainFrame;
 import gov.usgs.identifrog.Frames.ProjectManagerFrame;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 import gov.usgs.identifrog.logger.GSLogger;
@@ -12,9 +13,13 @@ import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.prefs.Preferences;
 
+import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -40,7 +45,7 @@ import org.w3c.dom.Element;
 public class IdentiFrog {
 	boolean packFrame = false;
 	private Preferences root = Preferences.userRoot();
-	private final Preferences node = root.node("edu/isu/aadis/defaults");
+	//private final Preferences node = root.node("edu/isu/aadis/defaults");
 	public final static boolean DEBUGGING_BUILD = true; //when building the app, change this to false and debugging items will be hidden
 	public static final String DB_FILENAME = "datafile.xml"; //filename for the DB, can possibly change.
 	public static final String HR_VERSION = "1.0 Alpha";
@@ -50,6 +55,10 @@ public class IdentiFrog {
 	public static boolean LOGGING = true;
 	public static GSLogger LOGGER;
 	public static XMLFrogDatabase DB;
+	public static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	public static DecimalFormat decimalFormat = new DecimalFormat("#.00");
+	public static MainFrame activeMainFrame;
+
 
 	// construct the application
 	public IdentiFrog() throws FileNotFoundException, ParseException, IOException {
@@ -58,11 +67,11 @@ public class IdentiFrog {
 		//removes the weird padding aroudn tab contents
 		Insets insets = (Insets) UIManager.getDefaults().get("TabbedPane.contentBorderInsets");
 		UIManager.getDefaults().put("TabbedPane.contentBorderInsets", new Insets(0,insets.left,0,insets.right));
-		//UIManager.getDefaults().put("TabbedPane.tabsOverlapBorder", true);
+		ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE); //tooltip timeout
 
 		LOGGER = new GSLogger();
 		// if the application is already open, then verify that the user wants to open another instance of the application
-		boolean alreadyOpen = node.getBoolean("alreadyOpen", false);
+		//boolean alreadyOpen = node.getBoolean("alreadyOpen", false);
 
 		/*
 		 * if (alreadyOpen) { if (ChoiceDialog.choiceMessage(

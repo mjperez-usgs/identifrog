@@ -226,9 +226,9 @@ public class ImageViewer extends JDialog {
 		// parentFrame.getFrogData().searchFrog(parentFrame.getMatchForg().getFormerID()).setID(new Integer(frogIDTemp).toString());
 		
 		if (frogIDList < frogIDImage) {
-			XMLFrogDatabase.searchFrogByID(frogIDImage).setID(frogIDList);
+			XMLFrogDatabase.getFrogByID(frogIDImage).setID(frogIDList);
 		} else {
-			XMLFrogDatabase.searchFrogByID(frogIDList).setID(frogIDList);
+			XMLFrogDatabase.getFrogByID(frogIDList).setID(frogIDList);
 		}
 		
 		if (parentFrame.getChangesMade()) {

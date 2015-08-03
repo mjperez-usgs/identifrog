@@ -5,8 +5,8 @@ import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
+import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
@@ -27,13 +27,14 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.ListCellRenderer;
+import javax.swing.UIManager;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.imgscalr.Scalr;
 
 public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer {
-	private Map<Integer, ImageIcon> idImageMap;
+	public static Map<Integer, ImageIcon> idImageMap;
 	private JLabel imageLabel;
 	private JLabel numSamples = new JLabel("Number of samples");
 	private JLabel searchStatus = new JLabel("Search status");
@@ -41,6 +42,9 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 	private JLabel numDiscriminators = new JLabel("Num Discriminators");
 	private JLabel lastCapture = new JLabel("Last capture date");
 	private TitledBorder border;
+	private static Color full = UIManager.getDefaults().getColor("List.background");
+	private static Color partial = new Color(211,211,211);
+	private static Color none = new Color(147,147,147);
 	JPanel panel;
 
 	public FrogBrowserCellRenderer() {
@@ -93,10 +97,6 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 		//Component comp = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 		//System.out.println(comp.getClass());
 		if (value instanceof Frog) {
-			panel.setForeground(isSelected ? list.getSelectionForeground() : list.getForeground());
-			panel.setBackground(isSelected ? list.getSelectionBackground() : list.getBackground());
-			//border.setTitleColor(isSelected ?  : list.getForeground());
-
 			Frog frog = (Frog) value;
 			border.setTitle("Frog " + frog.getID());
 			loadImage(frog);
@@ -131,11 +131,21 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 				String latestCapture = frog.getLatestSample().getDateCapture();
 				lastCapture.setText("Last captured on " + latestCapture);
 			}
-			if (!frog.isFullySearchable()) {
+			if (frog.isFreshImport()) {
+				searchStatus.setText("Not searchable");
+				panel.setBackground(none);
+			} else if (!frog.isFullySearchable()) {
 				searchStatus.setText("Partially searchable");
+				panel.setBackground(partial);
 			} else {
 				searchStatus.setText("Fully searchable");
+				panel.setBackground(full);
 			}
+			if (isSelected) {
+				panel.setForeground(list.getSelectionForeground());
+				panel.setBackground(list.getSelectionBackground());				
+			}
+
 			return panel;
 		}
 		return this;
@@ -157,7 +167,6 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 				Image returnImg = null;
 				//get latest frog image
 				SiteImage img = frog.getLatestImage();
-				System.out.println(img);
 				BufferedImage src = ImageIO.read(new File(XMLFrogDatabase.getThumbnailFolder() + img.getImageFileName()));
 				BufferedImage thumbnail = Scalr.resize(src, Scalr.Method.SPEED, Scalr.Mode.FIT_TO_WIDTH, 200, 150, Scalr.OP_ANTIALIAS);
 				if (!frog.isFullySearchable()) {
@@ -178,32 +187,3 @@ public class FrogBrowserCellRenderer extends JPanel implements ListCellRenderer 
 		}
 	}
 }
-
-/**
- * Sets up the user interface.
- */
-/*
- * public void init(){ JPanel cardPanel = new JPanel(new BorderLayout()); JLabel
- * image = new JLabel(); image.setIcon(new ImageIcon(createListThumbnail()));
- * image.setHorizontalAlignment(JLabel.CENTER);
- * image.setVerticalAlignment(JLabel.CENTER); cardPanel.add(image,
- * BorderLayout.CENTER);
- * 
- * 
- * JPanel statsPanel = new JPanel(new GridBagLayout()); JLabel numSamples = new
- * JLabel("Number of samples"); JLabel searchStatus = new
- * JLabel("Search status");
- * 
- * //load frog text int numberOfSamples = frog.getSiteSamples().size(); if
- * (numberOfSamples == 1) { numSamples.setText(numberOfSamples +
- * " site survey"); } else { numSamples.setText(numberOfSamples +
- * " site surveys"); } if (frog.isFullySearchable()) {
- * searchStatus.setText("Partially searchable"); } else {
- * searchStatus.setText("Fully searchable"); }
- * 
- * GridBagConstraints c = new GridBagConstraints(); c.gridx = 0; c.gridy = 0;
- * c.fill = GridBagConstraints.HORIZONTAL; statsPanel.add(numSamples,c); c.gridx
- * = 1; statsPanel.add(searchStatus, c); cardPanel.add(statsPanel,
- * BorderLayout.SOUTH); add(cardPanel); pack(); }
- */
-

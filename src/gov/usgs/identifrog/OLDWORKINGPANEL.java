@@ -164,7 +164,7 @@ public class OLDWORKINGPANEL extends JPanel {
 				   			IdentiFrog.LOGGER.writeError("Locally selected ID is null when right click, but one should be selected already!");
 				   			return;
 				   		}
-				   		Frog localFrog = XMLFrogDatabase.searchFrogByID(localID);
+				   		Frog localFrog = XMLFrogDatabase.getFrogByID(localID);
 			           
 			           
 			            //codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
@@ -279,7 +279,7 @@ public class OLDWORKINGPANEL extends JPanel {
 				// "\nInclude Query Images = " + includeQueryImg);
 				// cells = topTenMatches.getMatches(lastFrogDBID, sortType, ascending,
 				// includeQueryImg, discriminatorSex, additDiscriminator);
-				Frog myFrog = XMLFrogDatabase.searchFrogByID(this.getSelectedFrog_Id());
+				Frog myFrog = XMLFrogDatabase.getFrogByID(this.getSelectedFrog_Id());
 				// if (allImagesDisp) {
 				//cells = topTenMatches.getMatches(frogsData, myFrog, sortType, ascending, includeQueryImg, discriminatorSex, additDiscriminator);
 				if (cells == null) {

@@ -4,13 +4,13 @@ import gov.usgs.identifrog.DialogFileChooser;
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.MarkExport;
 import gov.usgs.identifrog.SaveAsDialog;
-import gov.usgs.identifrog.Site;
 import gov.usgs.identifrog.DataObjects.Discriminator;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.FrogMatch;
 import gov.usgs.identifrog.DataObjects.SearchPackage;
 import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.DataObjects.SiteSample;
+import gov.usgs.identifrog.Handlers.FrogListModel;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 import gov.usgs.identifrog.Operations.SearchWorker;
 import gov.usgs.identifrog.cellrenderers.FrogBrowserCellRenderer;
@@ -35,20 +35,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 import javax.swing.Box;
@@ -74,10 +67,12 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
 import javax.swing.JToolBar;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -95,6 +90,16 @@ import javax.swing.event.ListSelectionListener;
 @SuppressWarnings("serial")
 public class MainFrame extends JFrame {
 	//private boolean changesMade = false;
+	public static SearchPackage ACTIVE_SEARCH_PACKAGE;
+	public static FrogMatch ACTIVE_COMPARISON_IMAGE;
+
+	public final static int SORT_BY_ID = 0;
+	public final static int SORT_BY_NUM_SURVEYS = 1;
+	public final static int SORT_BY_LATEST_CAPTURE = 2;
+	public final static int SORT_BY_NUM_IMAGES = 3;
+	public final static int SORT_BY_SEARCHABILITY = 4;
+
+	public static int SORTING_METHOD = SORT_BY_ID;
 
 	private String workingFolder;
 	private SearchWorker sw;
@@ -117,6 +122,9 @@ public class MainFrame extends JFrame {
 	private ImageIcon imageDelete16 = new ImageIcon(MainFrame.class.getResource("/resources/IconDelete16.png"));
 	private ImageIcon imageEdit16 = new ImageIcon(MainFrame.class.getResource("/resources/IconEdit16.png"));
 	private ImageIcon imageWarning16 = new ImageIcon(MainFrame.class.getResource("/resources/IconWarning16.png"));
+	private ImageIcon imageMerge16 = new ImageIcon(MainFrame.class.getResource("/resources/IconMerge16.png"));
+	private ImageIcon imageLink16 = new ImageIcon(MainFrame.class.getResource("/resources/IconLink16.png"));
+	private ImageIcon imageMark16 = new ImageIcon(MainFrame.class.getResource("/resources/IconMark16.png"));
 
 	private JTabbedPane tabbedPane = new JTabbedPane();
 
@@ -127,16 +135,17 @@ public class MainFrame extends JFrame {
 	private JButton bTemplates = new JButton("", imageTemplates);
 	private JButton bDiscriminators = new JButton("", imageDiscriminators);
 	private JButton bHelp = new JButton("", imageHelp);
-	private JToolBar browserBarButtons = new JToolBar(), searchBarButtons = new JToolBar();
+	private JToolBar browserBarButtons = new JToolBar();//, searchBarButtons = new JToolBar();
 	private StatusBar statusBar = new StatusBar();
 	private MarkExport markExport = new MarkExport();
 	private SaveAsDialog saveAsDialog;
+	private JComboBox<String> sortingMethodComboBox;
 
 	private JMenuBar mainMenu = new JMenuBar();
 	private JMenu menuFile = new JMenu("File");
 	private JMenuItem menuItemCreateXLSX = new JMenuItem("Batch Processing", new ImageIcon(MainFrame.class.getResource("/resources/IconXLS16.png")));
 	private JMenuItem MenuItemNew = new JMenuItem("New Frog Image", imageNew16);
-	private JMenuItem MenuItemMarkExport = new JMenuItem("Export to MARK");
+	private JMenuItem MenuItemMarkExport = new JMenuItem("Export to MARK", imageMark16);
 	private JMenuItem menuItemFileExit = new JMenuItem("Exit");
 	private JMenu menuHelp = new JMenu("Help");
 	private JMenuItem menuItemHelpAbout = new JMenuItem("About");
@@ -144,6 +153,7 @@ public class MainFrame extends JFrame {
 	private JMenuItem menuItemProjectManager = new JMenuItem("Project Manager");
 	private JMenuItem menuItemSaveSiteAs = new JMenuItem("Save Site As", imageSaveAs16);
 	private JMenuItem MenuItemEdit = new JMenuItem("Edit Frog", imageEdit16);
+	private JMenuItem MenuItemAllFrogVerify = new JMenuItem("Signature Strength Test", imageLink16);
 	private JMenuItem MenuItemDelete = new JMenuItem("Delete Frog", imageDelete16);
 	private JMenuItem MenuItemHelp = new JMenuItem("User Manual", new ImageIcon(MainFrame.class.getResource("/resources/IconHelp16.png")));
 	private JMenuItem MenuItemUsers = new JMenuItem("Users", new ImageIcon(MainFrame.class.getResource("/resources/IconUsers16.png")));
@@ -163,7 +173,7 @@ public class MainFrame extends JFrame {
 	//private int viewerY = 0;
 
 	private JList<Frog> frogList;
-	private DefaultListModel<Frog> frogModel;
+	private FrogListModel frogModel;
 	private JList<FrogMatch> frogSearchList;
 	private DefaultListModel<FrogMatch> frogSearchModel;
 	private JFormattedTextField massToleranceField;
@@ -183,6 +193,13 @@ public class MainFrame extends JFrame {
 	private JButton searchButton;
 	private JProgressBar searchProgress;
 
+	private JSplitPane searchTBSplitPane;
+
+	private JLabel comparisonImageLabel;
+
+	private JPanel comparePanel;
+	private JButton dorsalCompareButton;
+
 	/**
 	 * MainFrame Constructor
 	 */
@@ -194,7 +211,6 @@ public class MainFrame extends JFrame {
 		this.setTitle("IdentiFrog - " + XMLFrogDatabase.getFileNamePath());
 		try {
 			init();
-			statusBar.setRightStatus(XMLFrogDatabase.getFrogs().size() + " Frogs");
 			statusBar.setMessage("Loaded project");
 		} catch (Exception e) {
 			IdentiFrog.LOGGER.writeMessage("MainFrame.MainFrame() Exception");
@@ -346,23 +362,22 @@ public class MainFrame extends JFrame {
 		MenuItemDelete.setAccelerator(javax.swing.KeyStroke.getKeyStroke('D', InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
 		//
 		MenuItemEdit.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				editFrog(frogList.getSelectedIndex());
 			}
 		});
-		MenuItemDelete.addActionListener(new ActionListener() {
 
+		MenuItemDelete.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				deleteFrog(frogList.getSelectedValue());
 			}
 		});
-		MenuItemHelp.addActionListener(new ActionListener() {
 
+		MenuItemHelp.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
@@ -419,6 +434,7 @@ public class MainFrame extends JFrame {
 		menuHelp.add(menuItemHelpAbout);
 		mainMenu.add(menuFile);
 
+		menuProject.add(MenuItemAllFrogVerify);
 		menuProject.addSeparator();
 		menuProject.add(MenuItemNew);
 		menuProject.add(MenuItemEdit);
@@ -456,13 +472,16 @@ public class MainFrame extends JFrame {
 		cons.weighty = 0;
 		cons.fill = GridBagConstraints.HORIZONTAL;
 		add(statusBar, cons);
+		updateFrogCount();
+		pack();
+		searchTBSplitPane.setDividerLocation(.5);
+		searchTBSplitPane.setResizeWeight(0.5);
 	}
 
 	private void setupSearch() {
 		DecimalFormat biometricFormat = new DecimalFormat("#.00");
-
-		JSplitPane searchSplitPane = new JSplitPane();
-		searchSplitPane.setDividerLocation(180);
+		JSplitPane searchLRSplitPane = new JSplitPane();
+		searchLRSplitPane.setDividerLocation(200);
 		JPanel criteriaPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 
@@ -481,6 +500,7 @@ public class MainFrame extends JFrame {
 			}
 		});
 		searchImageLabel = new JLabel("No image selected");
+		searchImageLabel.setBorder(new TitledBorder(new EtchedBorder(),"Query Image"));
 		searchImageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		searchImageLabel.setEnabled(false);
 
@@ -644,10 +664,10 @@ public class MainFrame extends JFrame {
 		c.gridwidth = 1;
 		c.gridy = ++row;
 		criteriaPanel.add(searchImageCheckBox, c);
-		c.gridy = ++row;
-		c.gridwidth = 2;
-		c.anchor = GridBagConstraints.CENTER;
-		criteriaPanel.add(searchImageLabel, c);
+		//c.gridy = ++row;
+		//c.gridwidth = 2;
+		//c.anchor = GridBagConstraints.CENTER;
+		//criteriaPanel.add(searchImageLabel, c);
 		c.anchor = GridBagConstraints.NORTHWEST;
 
 		//Species
@@ -746,17 +766,96 @@ public class MainFrame extends JFrame {
 		frogSearchList = new JList<FrogMatch>();
 		frogSearchModel = new DefaultListModel<FrogMatch>();
 		frogSearchList.setModel(frogSearchModel);
+		frogSearchList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		frogSearchList.setCellRenderer(new FrogSearchCellRenderer());
 		//...
 		frogSearchList.setVisibleRowCount(-1);
-		//frogList.setFixedCellHeight(160);
-		//frogList.setFixedCellWidth(150);
 		frogSearchList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+		frogSearchList.addMouseListener(new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				if (SwingUtilities.isRightMouseButton(e)) {
+					frogSearchList.setSelectedIndex(frogSearchList.locationToIndex(e.getPoint()));
+				}
+				if (e.isPopupTrigger()) {
+					createSearchPopup(e);
+				}
+			}
+
+			public void mouseReleased(MouseEvent e) {
+				if (SwingUtilities.isRightMouseButton(e)) {
+					frogSearchList.setSelectedIndex(frogSearchList.locationToIndex(e.getPoint()));
+				}
+				if (e.isPopupTrigger()) {
+					createSearchPopup(e);
+				}
+			}
+		});
+		frogSearchList.addListSelectionListener(new ListSelectionListener() {
+
+			@Override
+			public void valueChanged(ListSelectionEvent arg0) {
+				if (!arg0.getValueIsAdjusting()) {
+					int newval = frogSearchList.getSelectedIndex();
+					if (newval < 0) {
+						ACTIVE_COMPARISON_IMAGE = null;
+					} else {
+						ACTIVE_COMPARISON_IMAGE = frogSearchModel.get(newval);
+					}
+					if (ACTIVE_COMPARISON_IMAGE == null) {
+						comparisonImageLabel.setIcon(null);
+						comparisonImageLabel.setText("Select an image in the search results to compare");
+						dorsalCompareButton.setEnabled(false);
+					} else {
+						if (searchTBSplitPane.getBottomComponent().isVisible()) {
+							comparisonImageLabel.setIcon(new ImageIcon(ACTIVE_COMPARISON_IMAGE.getTopImage().getImage().getDorsalImage()));
+							comparisonImageLabel.setText(null);
+							dorsalCompareButton.setEnabled(true);
+						}
+					}
+				}
+			}
+		});
+
+		comparePanel = new JPanel(new GridBagLayout());
+		c = new GridBagConstraints();
+
+		JLabel comparisonLabel = new JLabel("Image Comparison");
+		Font level1TitleFont = new Font("MS Sans Serif", Font.BOLD, 14);
+		comparisonLabel.setFont(level1TitleFont);
+		int crow = 0; //compare row
+
+		comparisonImageLabel = new JLabel("Perform a search to find images to compare");
+		comparisonImageLabel.setBorder(new TitledBorder(new EtchedBorder(),"Comparison Image"));
+		dorsalCompareButton = new JButton("Compare Dorsals");
+		dorsalCompareButton.setEnabled(false);
+		dorsalCompareButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new ImageOverlayFrame(MainFrame.this,ACTIVE_SEARCH_PACKAGE.getImage(), ACTIVE_COMPARISON_IMAGE.getTopImage().getImage());
+			}
+		});
+
+		c.gridx = 0;
+		c.weightx = 0;
+		c.gridwidth = 2;
+		comparePanel.add(comparisonLabel, c);
+
+		c.gridy = ++crow;
+
+		//JLabel selectFrogLabel = new JLabel("Select a frog to compare");
+		c.gridwidth = 1;
+		comparePanel.add(searchImageLabel, c);
+		c.gridx = 1;
+		comparePanel.add(comparisonImageLabel, c);
+
+		c.gridy = 3;
+		comparePanel.add(dorsalCompareButton, c);
 
 		// add buttons to the toolbar
-		searchBarButtons.setFloatable(false);
-		searchBarButtons.setMargin(new Insets(2, 4, 2, 4));
-		searchBarButtons.setMinimumSize(new Dimension(100000, 40));
+		//searchBarButtons.setFloatable(false);
+		//searchBarButtons.setMargin(new Insets(2, 4, 2, 4));
+		//searchBarButtons.setMinimumSize(new Dimension(100000, 40));
 		//searchBarButtons.add(bNew);
 		//barButtons.add(new JToolBar.Separator(new Dimension(0, 8)), null);
 		/*
@@ -769,30 +868,36 @@ public class MainFrame extends JFrame {
 		// barButtons.add(btnPrevious);
 		//barButtons.add(new JToolBar.Separator(new Dimension(0, 8)), null);
 
-		JPanel searchPanel = new JPanel(new BorderLayout());
+		searchTBSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		searchTBSplitPane.setTopComponent(new JScrollPane(frogSearchList));
+		searchTBSplitPane.setBottomComponent(comparePanel);
+		searchTBSplitPane.setDividerLocation(0.5);
+
 		//GridBagConstraints cons = new GridBagConstraints();
 		/*
 		 * cons.fill = GridBagConstraints.HORIZONTAL; cons.weightx = 1;
 		 * cons.gridx = 0; cons.gridy = 0;
 		 */
-		searchPanel.add(searchBarButtons, BorderLayout.NORTH);
+		//searchPanel.add(searchBarButtons, BorderLayout.NORTH);
 		//cons.gridy = 1;
 		//cons.weighty = 1;
 		//cons.fill = GridBagConstraints.BOTH;
-		searchSplitPane.setLeftComponent(criteriaPanel);
-		searchSplitPane.setRightComponent(new JScrollPane(frogSearchList));
-		searchPanel.add(searchSplitPane, BorderLayout.CENTER);
+		searchLRSplitPane.setLeftComponent(criteriaPanel);
+		searchLRSplitPane.setRightComponent(searchTBSplitPane);
 		updateCheckBoxes();
 		updateSearchButton();
-		tabbedPane.addTab("Frog Matching", searchPanel);
+		tabbedPane.addTab("Frog Matching", searchLRSplitPane);
 	}
 
 	protected void updateCheckBoxes() {
 		if (searchImageCheckBox.isSelected()) {
 			searchImageLabel.setEnabled(true);
+			searchTBSplitPane.setBottomComponent(comparePanel);
 		} else {
+			searchTBSplitPane.setBottomComponent(null);
 			searchImageLabel.setEnabled(false);
 		}
+		updateSearchButton();
 
 		if (genderCheckbox.isSelected()) {
 			genderComboBox.setEnabled(true);
@@ -830,6 +935,7 @@ public class MainFrame extends JFrame {
 	 */
 	public void setMatches(ArrayList<FrogMatch> matches) {
 		frogSearchModel.clear();
+		Collections.sort(matches);
 		for (FrogMatch m : matches) {
 			frogSearchModel.addElement(m);
 		}
@@ -838,7 +944,12 @@ public class MainFrame extends JFrame {
 		searchButton.setEnabled(true);
 
 		if (matches.size() <= 0) {
-			JOptionPane.showMessageDialog(null, "There are no matches according to Search Criteria.");
+			if (ACTIVE_SEARCH_PACKAGE.getImage() == null) {
+				JOptionPane.showMessageDialog(null, "There are no matches according to Search Criteria.", "No Matches", JOptionPane.WARNING_MESSAGE);
+			} else {
+				//has image
+				JOptionPane.showMessageDialog(null, "There are no close matches according to Search Criteria.", "No Matches", JOptionPane.WARNING_MESSAGE);
+			}
 		}
 	}
 
@@ -884,6 +995,13 @@ public class MainFrame extends JFrame {
 			int idx = speciesModel.getIndexOf(selectedSpecies);
 			speciesCombobox.setSelectedIndex(idx);
 		}
+
+		if (newSpecies.size() <= 0) {
+			speciesCheckbox.setSelected(false);
+			speciesCheckbox.setEnabled(false);
+		} else {
+			speciesCheckbox.setEnabled(true);
+		}
 	}
 
 	/**
@@ -891,25 +1009,21 @@ public class MainFrame extends JFrame {
 	 * signature is missing or not
 	 */
 	public void updateSearchButton() {
-		if (XMLFrogDatabase.isFullySearchable()) {
-			searchButton.setIcon(null);
-			searchButton.setToolTipText(null);
-		} else {
+		if (searchImageCheckBox.isSelected() && !XMLFrogDatabase.isFullyImageSearchable()) {
 			searchButton.setIcon(imageWarning16);
-			searchButton.setToolTipText("Some frogs are missing signatures and will not be searched if using an image search");
+			searchButton.setToolTipText("Some frogs are missing signatures and will not be searched if using an image search.");
 		}
 	}
 
 	private void setupBrowser() {
 		//Frog list=====================
 		frogList = new JList<Frog>();
-		frogModel = new DefaultListModel<Frog>();
+		frogModel = new FrogListModel();
 		frogList.setModel(frogModel);
 		frogList.setCellRenderer(new FrogBrowserCellRenderer());
 		//...
 		frogList.setVisibleRowCount(-1);
-		//frogList.setFixedCellHeight(160);
-		//frogList.setFixedCellWidth(150);
+		frogList.setFixedCellHeight(-1);
 		frogList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
 
 		frogList.addListSelectionListener(new ListSelectionListener() {
@@ -960,6 +1074,20 @@ public class MainFrame extends JFrame {
 		for (Frog frog : XMLFrogDatabase.getFrogs()) {
 			frogModel.addElement(frog);
 		}
+		String[] sortMethods = { "Sort by ID", "Sort by survey count", "Sort by latest capture", "Sort by number of images", "Sort by searchability" };
+		sortingMethodComboBox = new JComboBox<String>(sortMethods);
+		sortingMethodComboBox.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (SORTING_METHOD == sortingMethodComboBox.getSelectedIndex()) {
+					return;
+				}
+				SORTING_METHOD = sortingMethodComboBox.getSelectedIndex();
+				frogModel.sort();
+				IdentiFrog.LOGGER.writeMessage("Sorted frogs with alg " + SORTING_METHOD);
+			}
+		});
 
 		// add buttons to the toolbar
 		browserBarButtons.setFloatable(false);
@@ -970,6 +1098,8 @@ public class MainFrame extends JFrame {
 		browserBarButtons.add(bEdit);
 		browserBarButtons.add(bDelete);
 		browserBarButtons.add(Box.createHorizontalGlue());
+
+		browserBarButtons.add(sortingMethodComboBox);
 		browserBarButtons.add(bUsers);
 		browserBarButtons.add(bTemplates);
 		browserBarButtons.add(bDiscriminators);
@@ -993,7 +1123,6 @@ public class MainFrame extends JFrame {
 	}
 
 	private void createFrogPopup(MouseEvent e) {
-		System.out.println("IS POPUP TRIG");
 		int frogIndex = frogList.locationToIndex(e.getPoint());
 		final Frog f = frogModel.get(frogIndex);
 
@@ -1032,11 +1161,50 @@ public class MainFrame extends JFrame {
 				deleteFrog(f);
 			}
 		});
-		popupSearch = new JMenuItem("Merge Frog...?");
 		popup.add(popupAddSample);
 		popup.add(popupEditInfo);
 		popup.add(popupDeleteFrog);
-		popup.add(popupSearch);
+		popup.show(e.getComponent(), e.getX(), e.getY());
+	}
+
+	private void createSearchPopup(MouseEvent e) {
+		int frogIndex = frogSearchList.locationToIndex(e.getPoint());
+		if (frogIndex < 0) {
+			return;
+		}
+		final FrogMatch f = frogSearchModel.get(frogIndex);
+
+		//codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
+		JPopupMenu popup = new JPopupMenu();
+		JMenuItem popupMerge;
+
+		popupMerge = new JMenuItem("Merge Search & Match", imageMerge16);
+		popupMerge.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Frog otherFrog = XMLFrogDatabase.getFrogByID(f.getFrog().getID()); //searchmatch
+				Frog sourceFrog = XMLFrogDatabase.findImageOwnerByHash(currentSearchImage.getSourceImageHash());
+				int result = JOptionPane.showConfirmDialog(MainFrame.this, "Merge Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID()
+						+ "?", "Confirm Frog Merge", JOptionPane.YES_NO_OPTION);
+				if (result == JOptionPane.YES_OPTION) {
+					IdentiFrog.LOGGER.writeMessage("Merging Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID());
+					sourceFrog.mergeWith(otherFrog);
+					//XMLFrogDatabase.updateFrog(sourceFrog.getID(), sourceFrog); //this is the copyfrog
+					XMLFrogDatabase.removeFrog(otherFrog.getID());
+					frogModel.removeElement(otherFrog);
+					//clear search results
+					frogSearchModel.clear();
+					IdentiFrog.LOGGER.writeMessage("Merged Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID() + ".");
+					statusBar.setMessage("Frogs merged");
+					JOptionPane.showMessageDialog(MainFrame.this, "Merged Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID() + ".",
+							"Frogs Merged", JOptionPane.INFORMATION_MESSAGE);
+				}
+			}
+		});
+		if (ACTIVE_SEARCH_PACKAGE.getImage() != null) {
+			popup.add(popupMerge);
+		}
 		popup.show(e.getComponent(), e.getX(), e.getY());
 	}
 
@@ -1081,9 +1249,32 @@ public class MainFrame extends JFrame {
 			XMLFrogDatabase.addFrog(newFrog);
 			XMLFrogDatabase.writeXMLFile();
 			frogModel.addElement(newFrog);
+			updateFrogCount();
 			updateSearchButton();
 			updateSpeciesList();
 		}
+	}
+
+	/**
+	 * Updates the frog count on the right side of the status bar
+	 */
+	private void updateFrogCount() {
+		if (XMLFrogDatabase.getFrogs().size() == 1) {
+			statusBar.setRightMessage("1 frog");
+		} else {
+			statusBar.setRightMessage(XMLFrogDatabase.getFrogs().size() + " frogs");
+		}
+	}
+
+	/**
+	 * Adds a frog to the jlist showing the frogs. Does not commit to disk.
+	 * 
+	 * @param f
+	 *            Frog to add
+	 */
+	public void addFrog(Frog f) {
+		frogModel.addElement(f);
+		updateFrogCount();
 	}
 
 	/**
@@ -1098,10 +1289,12 @@ public class MainFrame extends JFrame {
 		Frog editedFrog = editFrogWindow.getFrog();
 		if (editFrogWindow.shouldSave() && editedFrog != null) {
 			XMLFrogDatabase.updateFrog(f.getID(), editedFrog);
+			FrogBrowserCellRenderer.idImageMap.remove(editedFrog.getID()); //force thumbnail to update
 			frogModel.set(frogIndex, editedFrog);
 			XMLFrogDatabase.writeXMLFile();
 			updateSpeciesList();
 			statusBar.setMessage("Updated frog in database");
+			frogList.repaint();
 		}
 	}
 
@@ -1125,6 +1318,8 @@ public class MainFrame extends JFrame {
 			f.delete();
 			frogModel.removeElement(f);
 			XMLFrogDatabase.removeFrog(f.getID());
+			updateFrogCount();
+			updateSpeciesList();
 			XMLFrogDatabase.writeXMLFile();
 			statusBar.setMessage("Deleted frog from database");
 		}
@@ -1306,12 +1501,13 @@ public class MainFrame extends JFrame {
 	 */
 	public void setSearchImage(SiteImage img) {
 		currentSearchImage = img;
-		searchImageLabel.setIcon(new ImageIcon(img.getColorThumbnail()));
+		searchImageLabel.setIcon(new ImageIcon(img.getDorsalImage()));
 		searchImageLabel.setText("");
 		searchImageLabel.setEnabled(true);
 		searchImageCheckBox.setSelected(true);
 		searchImageCheckBox.setEnabled(true);
-		searchImageLabel.setBorder(new EmptyBorder(3, 0, 3, 0));
+		//searchImageLabel.setBorder(new EmptyBorder(3, 0, 3, 0));
+		updateCheckBoxes();
 	}
 
 	/**
@@ -1321,6 +1517,10 @@ public class MainFrame extends JFrame {
 	 */
 	public JTabbedPane getTabbedPane() {
 		return tabbedPane;
+	}
+
+	public StatusBar getStatusBar() {
+		return statusBar;
 	}
 }
 

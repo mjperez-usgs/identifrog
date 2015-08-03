@@ -375,7 +375,7 @@ public class TopTenMatches {
 			if (Matches.get(i).dist > HammingDistanceThreshold) {
 				myscore = myscore + "*";
 			}
-			Frog f = XMLFrogDatabase.searchFrogByID(Matches.get(i).frogid);
+			Frog f = XMLFrogDatabase.getFrogByID(Matches.get(i).frogid);
 			retArray[row][MROW] = f.getID();
 			retArray[row][FILENAME] = XMLFrogDatabase.getThumbnailFolder() + f.getGenericImageName();
 			retArray[row][MFROG_ID] = f.getID();

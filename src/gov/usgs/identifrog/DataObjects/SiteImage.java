@@ -250,6 +250,12 @@ public class SiteImage {
 		//copy image to Images/ if it doesn't already exist
 		IdentiFrog.LOGGER.writeMessage("Preparing to process image into DB: " + this);
 
+		if (processed && useSignatureThumbnail) {
+			//updating frog image that was previously saved but not yet signature generated. updated thumbnail
+			processSignatureThumbnail();
+			return;
+		}
+		
 		if (!processed) {
 			generateHash();
 			//store full res
@@ -401,5 +407,9 @@ public class SiteImage {
 		fullres.delete();
 		
 		IdentiFrog.LOGGER.writeMessage("Frog image deleted: "+this);
+	}
+
+	public String getDorsalImage() {
+		return XMLFrogDatabase.getDorsalFolder() + getImageFileName();
 	}
 }

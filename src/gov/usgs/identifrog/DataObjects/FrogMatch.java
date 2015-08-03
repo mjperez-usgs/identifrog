@@ -1,6 +1,6 @@
 package gov.usgs.identifrog.DataObjects;
 
-import java.awt.Component;
+import java.awt.Color;
 import java.util.ArrayList;
 
 /**
@@ -13,7 +13,9 @@ import java.util.ArrayList;
 public class FrogMatch implements Comparable<FrogMatch> {
 	private Frog frog;
 	private boolean searchOnly = false; 
+	private boolean hasOverThreshImage = false;
 	private ArrayList<ImageMatch> images;
+	
 
 	public FrogMatch() {
 		images = new ArrayList<ImageMatch>();
@@ -22,6 +24,19 @@ public class FrogMatch implements Comparable<FrogMatch> {
 
 	public boolean isSearchOnly() {
 		return searchOnly;
+	}
+
+	public void calculateIfContainsOverThresh() {
+		for (ImageMatch img : images) {
+			if (img.isOverThreshhold()) {
+				hasOverThreshImage = true;
+				return;
+			}
+		}
+	}
+	
+	public boolean hasOverThreshImage() {
+		return hasOverThreshImage;
 	}
 
 
@@ -55,14 +70,20 @@ public class FrogMatch implements Comparable<FrogMatch> {
 		if (images.size() <= 0) {
 			return 0;
 		}
-
+		System.out.println("Calculating average score.");
 		double totalScore = 0;
 		for (ImageMatch img : images) {
+			System.out.println("Score: "+img.getScore());
 			totalScore += img.getScore();
 		}
+		System.out.println(frog.getID()+" Total score: "+totalScore+" Average: "+(totalScore / images.size()));
 		return totalScore / images.size();
 	}
 
+	/**
+	 * Gets the image with the top score
+	 * @return top scoring image
+	 */
 	public ImageMatch getTopImage() {
 		ImageMatch topImage = null;
 		for (ImageMatch img : images) {
@@ -84,9 +105,10 @@ public class FrogMatch implements Comparable<FrogMatch> {
 	 * @return top score
 	 */
 	public double getTopScore() {
-		double highestScore = Double.MIN_VALUE;
+		//BEST SCORES ARE LOWEST, NOT HIGHEST (hamming is better if lower)
+		double highestScore = Double.MAX_VALUE;
 		for (ImageMatch img : images) {
-			if (img.getScore() > highestScore) {
+			if (img.getScore() < highestScore) {
 				highestScore = img.getScore();
 			}
 		}
@@ -117,6 +139,14 @@ public class FrogMatch implements Comparable<FrogMatch> {
 		}
 
 		return 0;
+	}
+	
+	/**
+	 * Converts a Hamming score (lower is better) to a likelyness percentage (higher is better).
+	 * @return 100-(score*100)
+	 */
+	public static double convertHammingToPercent(double score){
+		return 100-(score*100);
 	}
 
 }
