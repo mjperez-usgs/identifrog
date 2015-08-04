@@ -2,6 +2,7 @@ package gov.usgs.identifrog.DataObjects;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Frog Match contains a frog object (that it represents) as well as a list of
@@ -59,6 +60,8 @@ public class FrogMatch implements Comparable<FrogMatch> {
 	public void addImage(ImageMatch img) {
 		// TODO Auto-generated method stub
 		images.add(img);
+		Collections.sort(images);
+		Collections.reverse(images);
 	}
 
 	/**

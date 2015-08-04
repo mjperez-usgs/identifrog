@@ -7,6 +7,7 @@ import gov.usgs.identifrog.SaveAsDialog;
 import gov.usgs.identifrog.DataObjects.Discriminator;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.FrogMatch;
+import gov.usgs.identifrog.DataObjects.ImageMatch;
 import gov.usgs.identifrog.DataObjects.SearchPackage;
 import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.DataObjects.SiteSample;
@@ -91,7 +92,7 @@ import javax.swing.event.ListSelectionListener;
 public class MainFrame extends JFrame {
 	//private boolean changesMade = false;
 	public static SearchPackage ACTIVE_SEARCH_PACKAGE;
-	public static FrogMatch ACTIVE_COMPARISON_IMAGE;
+	public static FrogMatch ACTIVE_FROGMATCH;
 
 	public final static int SORT_BY_ID = 0;
 	public final static int SORT_BY_NUM_SURVEYS = 1;
@@ -199,6 +200,9 @@ public class MainFrame extends JFrame {
 
 	private JPanel comparePanel;
 	private JButton dorsalCompareButton;
+	private JButton comparisonNextImageButton;
+	private JButton comparisonPreviousImageButton;
+	protected ImageMatch ACTIVE_COMPARISON_IMAGE;
 
 	/**
 	 * MainFrame Constructor
@@ -500,7 +504,7 @@ public class MainFrame extends JFrame {
 			}
 		});
 		searchImageLabel = new JLabel("No image selected");
-		searchImageLabel.setBorder(new TitledBorder(new EtchedBorder(),"Query Image"));
+		searchImageLabel.setBorder(new TitledBorder(new EtchedBorder(), "Query Image"));
 		searchImageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		searchImageLabel.setEnabled(false);
 
@@ -797,19 +801,32 @@ public class MainFrame extends JFrame {
 				if (!arg0.getValueIsAdjusting()) {
 					int newval = frogSearchList.getSelectedIndex();
 					if (newval < 0) {
-						ACTIVE_COMPARISON_IMAGE = null;
+						ACTIVE_FROGMATCH = null;
 					} else {
-						ACTIVE_COMPARISON_IMAGE = frogSearchModel.get(newval);
+						ACTIVE_FROGMATCH = frogSearchModel.get(newval);
 					}
-					if (ACTIVE_COMPARISON_IMAGE == null) {
+					if (ACTIVE_FROGMATCH == null) {
 						comparisonImageLabel.setIcon(null);
 						comparisonImageLabel.setText("Select an image in the search results to compare");
 						dorsalCompareButton.setEnabled(false);
+						comparisonNextImageButton.setEnabled(false);
+						comparisonPreviousImageButton.setEnabled(false);
+						((TitledBorder) comparisonImageLabel.getBorder()).setTitle("Comparison Image");
+
 					} else {
 						if (searchTBSplitPane.getBottomComponent().isVisible()) {
-							comparisonImageLabel.setIcon(new ImageIcon(ACTIVE_COMPARISON_IMAGE.getTopImage().getImage().getDorsalImage()));
+							ACTIVE_COMPARISON_IMAGE = ACTIVE_FROGMATCH.getTopImage();
+							comparisonImageLabel.setIcon(new ImageIcon(ACTIVE_COMPARISON_IMAGE.getImage().getDorsalImage()));
 							comparisonImageLabel.setText(null);
+							((TitledBorder) comparisonImageLabel.getBorder()).setTitle("Comparison Image (Frog " + ACTIVE_FROGMATCH.getFrog().getID()
+									+ ")");
 							dorsalCompareButton.setEnabled(true);
+							if (ACTIVE_FROGMATCH.getImages().size() > 1) {
+								comparisonNextImageButton.setEnabled(true);
+							} else {
+								comparisonNextImageButton.setEnabled(false);
+							}
+							comparisonPreviousImageButton.setEnabled(false);
 						}
 					}
 				}
@@ -825,33 +842,88 @@ public class MainFrame extends JFrame {
 		int crow = 0; //compare row
 
 		comparisonImageLabel = new JLabel("Perform a search to find images to compare");
-		comparisonImageLabel.setBorder(new TitledBorder(new EtchedBorder(),"Comparison Image"));
+		comparisonImageLabel.setBorder(new TitledBorder(new EtchedBorder(), "Comparison Image"));
 		dorsalCompareButton = new JButton("Compare Dorsals");
 		dorsalCompareButton.setEnabled(false);
 		dorsalCompareButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new ImageOverlayFrame(MainFrame.this,ACTIVE_SEARCH_PACKAGE.getImage(), ACTIVE_COMPARISON_IMAGE.getTopImage().getImage());
+				new ImageOverlayFrame(MainFrame.this, ACTIVE_SEARCH_PACKAGE.getImage(), ACTIVE_COMPARISON_IMAGE.getImage());
 			}
 		});
 
 		c.gridx = 0;
 		c.weightx = 0;
-		c.gridwidth = 2;
+		c.gridwidth = 6;
 		comparePanel.add(comparisonLabel, c);
 
 		c.gridy = ++crow;
 
 		//JLabel selectFrogLabel = new JLabel("Select a frog to compare");
-		c.gridwidth = 1;
+		c.gridwidth = 3;
 		comparePanel.add(searchImageLabel, c);
-		c.gridx = 1;
+		c.gridx = 3;
 		comparePanel.add(comparisonImageLabel, c);
 
+		JPanel compareButtonsPanels = new JPanel();
+		JPanel leftStatsPanel = new JPanel();
+		JPanel rightStatsPanel = new JPanel();
+		JButton mergeFrogsButton = new JButton("Merge Frogs");
+		mergeFrogsButton.setEnabled(false);
+
+		comparisonNextImageButton = new JButton("Next Image");
+		comparisonNextImageButton.setEnabled(false);
+		comparisonNextImageButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int index = ACTIVE_FROGMATCH.getImages().indexOf(ACTIVE_COMPARISON_IMAGE);
+				ACTIVE_COMPARISON_IMAGE = ACTIVE_FROGMATCH.getImages().get(index + 1);
+				comparisonImageLabel.setIcon(new ImageIcon(ACTIVE_COMPARISON_IMAGE.getImage().getDorsalImage()));
+				comparisonPreviousImageButton.setEnabled(true);
+				if (index + 2 >= ACTIVE_FROGMATCH.getImages().size()) { //2 because its the next one AFTER the next one, e.g. next and next
+					comparisonNextImageButton.setEnabled(false);
+				} else {
+					System.out.println("index+1: " + (index + 1) + ", size: " + ACTIVE_FROGMATCH.getImages().size());
+				}
+
+			}
+		});
+		comparisonPreviousImageButton = new JButton("Previous Image");
+		comparisonPreviousImageButton.setEnabled(false);
+		comparisonPreviousImageButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int index = ACTIVE_FROGMATCH.getImages().indexOf(ACTIVE_COMPARISON_IMAGE);
+				ACTIVE_COMPARISON_IMAGE = ACTIVE_FROGMATCH.getImages().get(index - 1);
+				comparisonImageLabel.setIcon(new ImageIcon(ACTIVE_COMPARISON_IMAGE.getImage().getDorsalImage()));
+				comparisonNextImageButton.setEnabled(true);
+				if (index - 1 <= 0) {
+					comparisonPreviousImageButton.setEnabled(false);
+				}
+			}
+		});
+
+		c.gridwidth = 1;
 		c.gridy = 3;
+		c.gridx = 3;
+		c.anchor = GridBagConstraints.WEST;
+		comparePanel.add(comparisonPreviousImageButton, c);
+
+		c.gridx = 5;
+		c.anchor = GridBagConstraints.EAST;
+		comparePanel.add(comparisonNextImageButton, c);
+
+		c.gridx = 2;
+		c.gridy = 4;
+		c.anchor = GridBagConstraints.EAST;
 		comparePanel.add(dorsalCompareButton, c);
 
+		c.gridx = 3;
+		c.anchor = GridBagConstraints.WEST;
+		comparePanel.add(mergeFrogsButton, c);
 		// add buttons to the toolbar
 		//searchBarButtons.setFloatable(false);
 		//searchBarButtons.setMargin(new Insets(2, 4, 2, 4));
@@ -931,7 +1003,7 @@ public class MainFrame extends JFrame {
 	/**
 	 * Called when SearchWorker finishes and publishes matches to the screen
 	 * 
-	 * @param matches
+	 * @param matches list of frogmatch objects to display
 	 */
 	public void setMatches(ArrayList<FrogMatch> matches) {
 		frogSearchModel.clear();
@@ -948,7 +1020,8 @@ public class MainFrame extends JFrame {
 				JOptionPane.showMessageDialog(null, "There are no matches according to Search Criteria.", "No Matches", JOptionPane.WARNING_MESSAGE);
 			} else {
 				//has image
-				JOptionPane.showMessageDialog(null, "There are no close matches according to Search Criteria.", "No Matches", JOptionPane.WARNING_MESSAGE);
+				JOptionPane.showMessageDialog(null, "There are no close matches according to Search Criteria.", "No Matches",
+						JOptionPane.WARNING_MESSAGE);
 			}
 		}
 	}
