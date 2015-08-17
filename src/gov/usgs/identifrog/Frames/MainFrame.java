@@ -203,6 +203,7 @@ public class MainFrame extends JFrame {
 	private JButton comparisonNextImageButton;
 	private JButton comparisonPreviousImageButton;
 	protected ImageMatch ACTIVE_COMPARISON_IMAGE;
+	private JButton mergeFrogsButton;
 
 	/**
 	 * MainFrame Constructor
@@ -217,8 +218,7 @@ public class MainFrame extends JFrame {
 			init();
 			statusBar.setMessage("Loaded project");
 		} catch (Exception e) {
-			IdentiFrog.LOGGER.writeMessage("MainFrame.MainFrame() Exception");
-			IdentiFrog.LOGGER.writeException(e);
+			IdentiFrog.LOGGER.writeExceptionWithMessage("MainFrame.MainFrame() Exception",e);
 		}
 	}
 
@@ -356,6 +356,14 @@ public class MainFrame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				new DiscriminatorFrame(MainFrame.this).setVisible(true);
 				updateDiscriminatorList();
+			}
+		});
+		
+		bTemplates.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new TemplateFrame(MainFrame.this).setVisible(true);
 			}
 		});
 
@@ -780,17 +788,11 @@ public class MainFrame extends JFrame {
 				if (SwingUtilities.isRightMouseButton(e)) {
 					frogSearchList.setSelectedIndex(frogSearchList.locationToIndex(e.getPoint()));
 				}
-				if (e.isPopupTrigger()) {
-					createSearchPopup(e);
-				}
 			}
 
 			public void mouseReleased(MouseEvent e) {
 				if (SwingUtilities.isRightMouseButton(e)) {
 					frogSearchList.setSelectedIndex(frogSearchList.locationToIndex(e.getPoint()));
-				}
-				if (e.isPopupTrigger()) {
-					createSearchPopup(e);
 				}
 			}
 		});
@@ -812,7 +814,7 @@ public class MainFrame extends JFrame {
 						comparisonNextImageButton.setEnabled(false);
 						comparisonPreviousImageButton.setEnabled(false);
 						((TitledBorder) comparisonImageLabel.getBorder()).setTitle("Comparison Image");
-
+						mergeFrogsButton.setEnabled(false);
 					} else {
 						if (searchTBSplitPane.getBottomComponent().isVisible()) {
 							ACTIVE_COMPARISON_IMAGE = ACTIVE_FROGMATCH.getTopImage();
@@ -827,6 +829,7 @@ public class MainFrame extends JFrame {
 								comparisonNextImageButton.setEnabled(false);
 							}
 							comparisonPreviousImageButton.setEnabled(false);
+							mergeFrogsButton.setEnabled(true);
 						}
 					}
 				}
@@ -869,8 +872,32 @@ public class MainFrame extends JFrame {
 		JPanel compareButtonsPanels = new JPanel();
 		JPanel leftStatsPanel = new JPanel();
 		JPanel rightStatsPanel = new JPanel();
-		JButton mergeFrogsButton = new JButton("Merge Frogs");
+		mergeFrogsButton = new JButton("Merge Frogs");
 		mergeFrogsButton.setEnabled(false);
+		mergeFrogsButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Frog otherFrog = XMLFrogDatabase.getFrogByID(frogSearchModel.get(frogSearchList.getSelectedIndex()).getFrog().getID()); //searchmatch
+				Frog sourceFrog = XMLFrogDatabase.findImageOwnerByHash(currentSearchImage.getSourceImageHash());
+				int result = JOptionPane.showConfirmDialog(MainFrame.this, "Merge Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID()
+						+ "?", "Confirm Frog Merge", JOptionPane.YES_NO_OPTION);
+				if (result == JOptionPane.YES_OPTION) {
+					IdentiFrog.LOGGER.writeMessage("Merging Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID());
+					sourceFrog.mergeWith(otherFrog);
+					//XMLFrogDatabase.updateFrog(sourceFrog.getID(), sourceFrog); //this is the copyfrog
+					XMLFrogDatabase.removeFrog(otherFrog.getID());
+					frogModel.removeElement(otherFrog);
+					//clear search results
+					frogSearchModel.clear();
+					IdentiFrog.LOGGER.writeMessage("Merged Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID() + ".");
+					statusBar.setMessage("Frogs merged");
+					XMLFrogDatabase.writeXMLFile();
+					JOptionPane.showMessageDialog(MainFrame.this, "Merged Frog " + otherFrog.getID() + " into Frog " + sourceFrog.getID() + ".",
+							"Frogs Merged", JOptionPane.INFORMATION_MESSAGE);
+				}
+			}
+		});
 
 		comparisonNextImageButton = new JButton("Next Image");
 		comparisonNextImageButton.setEnabled(false);
@@ -893,7 +920,6 @@ public class MainFrame extends JFrame {
 		comparisonPreviousImageButton = new JButton("Previous Image");
 		comparisonPreviousImageButton.setEnabled(false);
 		comparisonPreviousImageButton.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				int index = ACTIVE_FROGMATCH.getImages().indexOf(ACTIVE_COMPARISON_IMAGE);
@@ -1237,47 +1263,6 @@ public class MainFrame extends JFrame {
 		popup.add(popupAddSample);
 		popup.add(popupEditInfo);
 		popup.add(popupDeleteFrog);
-		popup.show(e.getComponent(), e.getX(), e.getY());
-	}
-
-	private void createSearchPopup(MouseEvent e) {
-		int frogIndex = frogSearchList.locationToIndex(e.getPoint());
-		if (frogIndex < 0) {
-			return;
-		}
-		final FrogMatch f = frogSearchModel.get(frogIndex);
-
-		//codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
-		JPopupMenu popup = new JPopupMenu();
-		JMenuItem popupMerge;
-
-		popupMerge = new JMenuItem("Merge Search & Match", imageMerge16);
-		popupMerge.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Frog otherFrog = XMLFrogDatabase.getFrogByID(f.getFrog().getID()); //searchmatch
-				Frog sourceFrog = XMLFrogDatabase.findImageOwnerByHash(currentSearchImage.getSourceImageHash());
-				int result = JOptionPane.showConfirmDialog(MainFrame.this, "Merge Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID()
-						+ "?", "Confirm Frog Merge", JOptionPane.YES_NO_OPTION);
-				if (result == JOptionPane.YES_OPTION) {
-					IdentiFrog.LOGGER.writeMessage("Merging Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID());
-					sourceFrog.mergeWith(otherFrog);
-					//XMLFrogDatabase.updateFrog(sourceFrog.getID(), sourceFrog); //this is the copyfrog
-					XMLFrogDatabase.removeFrog(otherFrog.getID());
-					frogModel.removeElement(otherFrog);
-					//clear search results
-					frogSearchModel.clear();
-					IdentiFrog.LOGGER.writeMessage("Merged Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID() + ".");
-					statusBar.setMessage("Frogs merged");
-					JOptionPane.showMessageDialog(MainFrame.this, "Merged Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID() + ".",
-							"Frogs Merged", JOptionPane.INFORMATION_MESSAGE);
-				}
-			}
-		});
-		if (ACTIVE_SEARCH_PACKAGE.getImage() != null) {
-			popup.add(popupMerge);
-		}
 		popup.show(e.getComponent(), e.getX(), e.getY());
 	}
 
