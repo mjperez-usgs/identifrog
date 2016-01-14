@@ -58,9 +58,15 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 	private ArrayList<Site> recentSites;
 	private MainFrame mf;
 	private StatusBar statusBar;
+	private ImageIcon imageWarning = new ImageIcon(MainFrame.class.getResource("/resources/IconWarning16.png"));
+	private ImageIcon imageOK = new ImageIcon(MainFrame.class.getResource("/resources/IconOK16.png"));
+	private ImageIcon imageUpdateAvailable = new ImageIcon(MainFrame.class.getResource("/resources/IconUpdateAvailable16.png"));
+	private ImageIcon imageHeartbeat = new ImageIcon(MainFrame.class.getResource("/resources/IconHeartbeat16.png"));
+	private ImageIcon imageGrayHeartbeat = new ImageIcon(MainFrame.class.getResource("/resources/IconGrayHeartbeat16.png"));
 
 	public ProjectManagerFrame() {
 		setupFrame();
+		new UpdateCheckerThread().execute();
 	}
 
 	public ProjectManagerFrame(MainFrame mf) {
@@ -370,9 +376,11 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 	 */
 	class UpdateCheckerThread extends SwingWorker<Void, Void> {
 		String serverResponse = null;
+		private JSONArray serverReleasesInfo;
+		private boolean hadError = false;
 
 		public UpdateCheckerThread() {
-
+			statusBar.setMessageWithIcon("Checking for updates",imageHeartbeat);
 		}
 
 		/**
@@ -381,9 +389,10 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 		@Override
 		protected Void doInBackground() {
 			try {
-				serverResponse = IOUtils.toString(new URL("https://api.github.com/repos/matryer/bitbar/releases"));
+				serverResponse = IOUtils.toString(new URL("https://api.github.com/repos/mjperez-usgs/IdentiFrog/releases"));
 			} catch (IOException e) {
 				IdentiFrog.LOGGER.writeExceptionWithMessage("IOException checking for updates:", e);
+				hadError = true;
 			}
 			return null;
 		}
@@ -399,20 +408,35 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 				Object obj = JSONValue.parse(serverResponse);
 				if (obj instanceof JSONArray) {
 					JSONArray releaseArray = (JSONArray) obj;
+					serverReleasesInfo = releaseArray;
+					IdentiFrog.LOGGER.writeMessage("Number of releases on server: "+releaseArray.size());
 					for (Object release : releaseArray) {
 						if (obj instanceof JSONObject) {
 							GitHubRelease ghb = new GitHubRelease((JSONObject) obj);
-							if (ghb.getAttachments().size() > 0 ) {
+							IdentiFrog.LOGGER.writeMessage("Release from server: "+ghb);
+							if (ghb.getAttachments().size() > 0) {
 								String relHRVersion = ghb.getTag();
-								if (relHRVersion.startsWith(("v")) {
+								if (relHRVersion.startsWith("v")) {
 									relHRVersion = relHRVersion.substring(1);
 								}
-								if (IdentiFrog.versionCompare(IdentiFrog.HR_VERSION, relHRVersion));
+								if (IdentiFrog.versionCompare(IdentiFrog.HR_VERSION, relHRVersion) > 0) {
+									//update available
+									shouldShowUpdateText = true;
+									break;
+								}
 							}
 						}
 					}
+					if (shouldShowUpdateText) {
+						statusBar.setMessageWithIcon("Update available",imageUpdateAvailable);
+					} else {
+						statusBar.setMessageWithIcon("No available updates",imageOK);
+					}
+				} else {
+					statusBar.setMessageWithIcon("Error checking for updates",imageWarning);
 				}
-				new UpdateAvailableFrame((JSONArray) obj, null);
+			} else {
+				statusBar.setMessageWithIcon("Error checking for updates",imageWarning);
 			}
 		}
 	}
