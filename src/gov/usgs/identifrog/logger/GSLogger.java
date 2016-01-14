@@ -165,7 +165,7 @@ public class GSLogger {
 	private void incrementPendingMessages(){
 		currentPendingMessages++;
 		if (currentPendingMessages > maxPendingMessage) {
-			System.err.println("Flushing messages");
+			//System.err.println("Flushing messages");
 			try {
 				fw.flush();
 			} catch (IOException e) {

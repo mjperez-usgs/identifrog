@@ -55,7 +55,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-public class XLSXTemplateGeneratorFrame extends JDialog {
+public class SignatureStrengthTestFrame extends JDialog {
 	JTextField exportFolderLocation, xlsxImportLocation;
 	private ImageIcon imageHeartbeat = new ImageIcon(MainFrame.class.getResource("/resources/IconHeartbeat16.png"));
 	private ImageIcon imageGrayHeartbeat = new ImageIcon(MainFrame.class.getResource("/resources/IconGrayHeartbeat16.png"));
@@ -67,7 +67,7 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 	private TemplateGeneratorWorker tgw;
 	private TemplateImportWorker tiw;
 
-	public XLSXTemplateGeneratorFrame(MainFrame parentFrame) {
+	public SignatureStrengthTestFrame(MainFrame parentFrame) {
 		this.parentFrame = parentFrame;
 		setupUI();
 		setLocationRelativeTo(parentFrame);
@@ -88,7 +88,7 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 
 	private void setupUI() {
 		setIconImages(IdentiFrog.ICONS);
-		setTitle("Batch Processing");
+		setTitle("Signature Strength Test");
 		setModal(true);
 
 		JPanel batchPanel = new JPanel(new GridBagLayout());
@@ -98,7 +98,8 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 
 		//Generate
 		JLabel generateInfo = new JLabel(
-				"<html><div style=\"width:300px;\">The batch generator will preprocess a folder of images and create a .xlsx file that can be filled out and then batch processed to import frogs. A file named template.xlsx file will be generated in the folder specified for editing.</div></html>");
+				"<html><div style=\"width:300px;\">A Signature Strength test will test all frogs signatures against every other frog's, as well as other signatures in the same frog."
+				+ "The purpose of this tool is that a frog's own signatures should always rank higher for similarity than other frogs.</div></html>");
 
 		c.anchor = GridBagConstraints.NORTHWEST;
 		c.gridwidth = 2;
@@ -116,26 +117,6 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 
 		exportFolderLocation.setEnabled(false);
 		exportFolderLocation.setColumns(30);
-		exportBrowseButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				File currentFile;
-				DialogFileChooser imageChooser = new DialogFileChooser(XLSXTemplateGeneratorFrame.this, "Choose an image from your folder", System
-						.getProperty("user.home"), DialogFileChooser.getImageFilter());
-				String filename = imageChooser.getName();
-				if (filename != null) {
-					currentFile = new File(filename);
-					exportFolderLocation.setText(currentFile.getParent());
-					generateButton.setEnabled(true);
-					psb.setMessage("Press Generate to load images");
-				} else {
-					if (exportFolderLocation.getText() != null || exportFolderLocation.getText().equals("")) {
-						generateButton.setEnabled(false);
-					}
-				}
-			}
-		});
 
 		c.gridwidth = 1;
 		c.gridx = 0;
@@ -158,12 +139,7 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 		c.gridx = 0;
 		useImagenameFormat = new JCheckBox("Auto fill ID using filename format ID_*.jpg");
 		useImagenameFormat.setToolTipText("<html><div style=\"width:300px;\">"
-				+ "Checking this box will have the generator attempt to extract a frog ID (separating a set of images of one frog from another) from the filename.<br>"
-				+ "The file format is FrogID_AnythingElse.jpg. Some valid examples are:<br>"
-				+ "- 01_img1.jpg<br>"
-				+ "- 101_redspots.jpg<br>"
-				+ "The frog ID must be an integer and can have leading zeros. Ones that fail to parse will not have their ID field filled in.<br>"
-				+ "Note that these IDs are not the same ones used in the database and simply force a set of images to belong to the same frog."
+				+ "Signature strength testing maeks sure all frog images for the same frog match to each other better than other frog images do.<br>"
 				+ "</div></html>");
 		batchPanel.add(useImagenameFormat, c);
 
@@ -186,30 +162,6 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 
 		xlsxImportLocation.setEnabled(false);
 		xlsxImportLocation.setColumns(30);
-		importBrowseButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				File currentFile;
-				ExtensionFileFilter filter = new ExtensionFileFilter();
-				filter.setDescription("XLSX files");
-				filter.addExtension(".xlsx");
-
-				DialogFileChooser xlsxChooser = new DialogFileChooser(XLSXTemplateGeneratorFrame.this, "Choose Completed XLSX ", System
-						.getProperty("user.home"), filter);
-				String filename = xlsxChooser.getName();
-				if (filename != null) {
-					currentFile = new File(filename);
-					xlsxImportLocation.setText(currentFile.toString());
-					importButton.setEnabled(true);
-					psb.setMessage("Press Import to process images");
-				} else {
-					if (xlsxImportLocation.getText() != null || xlsxImportLocation.getText().equals("")) {
-						importButton.setEnabled(false);
-					}
-				}
-			}
-		});
 
 		c.gridwidth = 1;
 		c.gridx = 0;

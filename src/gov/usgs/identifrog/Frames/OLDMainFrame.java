@@ -136,7 +136,7 @@ public class OLDMainFrame extends JFrame {
 	 *//*
 	public OLDMainFrame() {
 		enableEvents(AWTEvent.WINDOW_EVENT_MASK);
-		setIconImage(getToolkit().getImage(getClass().getResource("/resources/IconFrog.png")));
+		setIconImages(IdentiFrog.ICONS);
 		workingFolder = XMLFrogDatabase.getMainFolder();
 		//thumbnailCreator = new ThumbnailCreator(thumbnailFolder);
 		this.setTitle("IdentiFrog - " + XMLFrogDatabase.getFileNamePath());

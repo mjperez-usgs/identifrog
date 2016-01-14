@@ -29,8 +29,15 @@ public class FillSpot {
 	public BufferedImage newimg;
 	int rect_width, rect_height;
 
-	private ArrayList<SpotFiller> spotCoor = new ArrayList<SpotFiller>();
+	private ArrayList<SpotCoordinate> spotCoor = new ArrayList<SpotCoordinate>();
 
+	/**
+	 * Create a buffered image that contains a flood filled image from the point loc with the color fillColor using the image edgeImage as a base for checking outlines
+	 * @param edgeImage
+	 * @param fillColor
+	 * @param loc
+	 * @return
+	 */
 	public BufferedImage floodFill(BufferedImage edgeImage, Color fillColor, Point loc) {
 		if (loc.x < 0 || loc.x >= edgeImage.getWidth() || loc.y < 0 || loc.y >= edgeImage.getHeight()) {
 			throw new IllegalArgumentException();
@@ -55,7 +62,6 @@ public class FillSpot {
 		floodLoop(loc.x, loc.y, fill, old);
 
 		return filledImage;
-
 	}
 
 	// Recursively fills surrounding pixels of the old color
@@ -110,13 +116,19 @@ public class FillSpot {
 		return pix1[0] == pix2[0] && pix1[1] == pix2[1] && pix1[2] == pix2[2];
 	}
 
-	public BufferedImage getFilledSpot(int rad, int currentfilledSpotNum) {
+	/**
+	 * This method has side effects
+	 * @param dilationRadius
+	 * @param currentfilledSpotNum
+	 * @return
+	 */
+	public BufferedImage getFilledSpot(int dilationRadius, int currentfilledSpotNum) {
 
-		SpotFiller spotFiller;
+		SpotCoordinate spotFiller;
 		// 10 means radius = 1.0
 		/*
      */
-		int dilation_radius = rad + 10; // since dilation grows the edges, 1 more pixel for edges
+		int dilation_radius = dilationRadius + 10; // since dilation grows the edges, 1 more pixel for edges
 		int window = dilation_radius;
 
 		BufferedImage imgExpanded = new BufferedImage(rect_width + window - 1, rect_height + window - 1, BufferedImage.TYPE_INT_RGB);
@@ -130,7 +142,7 @@ public class FillSpot {
 
 		BinMorpher binMorpher = new BinMorpher();
 		dilatedImg = binMorpher.dilate(imgExpanded, dilation_radius / 10f);
-		dilatedImg = binMorpher.close(dilatedImg, rad / 10f);
+		dilatedImg = binMorpher.close(dilatedImg, dilationRadius / 10f);
 
 		// from expanded image size back to rect_width, rect_heigh
 		int offset = Math.round(window / 2);
@@ -143,7 +155,7 @@ public class FillSpot {
 				int red = (pixel & 0xff0000) >> 16;
 				if (red > 0) {
 					Point pixXY = new Point(c - offset, r - offset);
-					spotFiller = new SpotFiller(currentfilledSpotNum, pixXY);
+					spotFiller = new SpotCoordinate(currentfilledSpotNum, pixXY);
 					spotCoor.add(spotFiller);
 				}
 			}
@@ -152,7 +164,7 @@ public class FillSpot {
 		return newdilatedImg;
 	}
 
-	public ArrayList<SpotFiller> getFilledSpotCoor() {
+	public ArrayList<SpotCoordinate> getFilledSpotCoor() {
 		return spotCoor;
 	}
 

@@ -217,16 +217,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			}
 		}
 	};
-	/*
-	 * private ActionListener radDiscrButtonAction = new ActionListener() {
-	 * public void actionPerformed(ActionEvent e) { addDiscriminator =
-	 * ((JRadioButton) e.getSource()).getText(); /* if (((JRadioButton)
-	 * e.getSource()).getText() == "Yes") { addDiscriminator = "Yes"; } if
-	 * (((JRadioButton) e.getSource()).getText() == "No") { addDiscriminator =
-	 * "No"; }
-	 * 
-	 * } };
-	 */
+
 	JList<SiteImage> imageList = new JList<SiteImage>();
 	JList<SiteSample> sampleList = new JList<SiteSample>();
 	DefaultListModel<SiteImage> imageModel = new DefaultListModel<SiteImage>();
@@ -239,15 +230,12 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JLabel labEntryPersonTitle = new JLabel();
 	JLabel labObserverTitle = new JLabel();
 	JLabel labFrogTitle = new JLabel();
-	//JLabel labCapLocationTitle = new JLabel();
 
 	JPanel panelAllInfo = new JPanel();
 
 	JPanel panelSiteSampleInfo = new JPanel();
-	//JPanel recPanel = new JPanel();
 	JPanel panelDataEntry;
 	JPanel panelObserverInfo = new JPanel();
-	//JPanel panelLocation = new JPanel();
 
 	JPanel panelBottomButtons = new JPanel();
 
@@ -318,7 +306,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 	private void init() throws Exception {
 		setModal(true);
-		setIconImage(getToolkit().getImage(getClass().getResource("/resources/IconFrog.png")));
+		setIconImages(IdentiFrog.ICONS);
 		setLayout(new BorderLayout());
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		

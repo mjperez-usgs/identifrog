@@ -9,6 +9,7 @@ import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
 import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.DataObjects.SiteSample;
+import gov.usgs.identifrog.DataObjects.Template;
 import gov.usgs.identifrog.DataObjects.User;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 import gov.usgs.identifrog.cellrenderers.UserListCellRenderer;
@@ -274,7 +275,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 
 	private void init() throws Exception {
 		setModal(true);
-		setIconImage(getToolkit().getImage(getClass().getResource("/resources/IconFrog.png")));
+		setIconImages(IdentiFrog.ICONS);
 		setLayout(new BorderLayout());
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setTitle("Template Manager");
@@ -571,11 +572,12 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		textZone.setColumns(200);
 		butSave.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconSave32.png")));
 		butSave.setText("Save Entry");
-		butSave.setToolTipText("Saves this frog's information to the database and commits it to disk.");
+		butSave.setToolTipText("Saves this template to the database.");
 		butSave.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (commitChanges()) {
 					IdentiFrog.LOGGER.writeMessage("TemplateFrame is saving");
+					Template templateData = new Template();
 				}
 			}
 		});
@@ -716,16 +718,8 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 				entrydate = IdentiFrog.dateFormat.format(eDate);
 				String species = textSpecies.getText().trim();
 				String gender = (String) sexComboBox.getSelectedItem();
-				// Additional Discriminator
-				//String discriminator = (checkAdditionalDescriptor.isSelected()) ? "true": "false";
-				//int m = monthComboBox.getSelectedIndex() + 1;
-
 				Date d = addMonthToDate((Date) captureDatePicker.getModel().getValue());
 				String capturedate = IdentiFrog.dateFormat.format(d);
-
-				//yearComboBox.getSelectedItem() + "-" + m + "-"
-				//+ dayComboBox.getSelectedItem();
-
 				// mass
 				// length
 				String locationName = (String) comboLocationName.getSelectedItem().toString();

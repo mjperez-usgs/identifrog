@@ -5,6 +5,9 @@ import gov.usgs.identifrog.Frames.ErrorDialog;
 import gov.usgs.identifrog.Frames.FrogEditor;
 import gov.usgs.identifrog.Frames.MainFrame;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
+import gov.usgs.identifrog.extendedclasses.DilationSteppingSlider;
+import gov.usgs.identifrog.extendedclasses.EdgeSteppingSlider;
+import gov.usgs.identifrog.extendedclasses.NoiseSteppingSlider;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -18,6 +21,7 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -63,7 +67,6 @@ public class ImageManipFrame extends JDialog {
 	public String installDir;
 	private SliderListener listener = new SliderListener();
 	//private BorderLayout borderLayout1 = new BorderLayout();
-	private Image icon = Toolkit.getDefaultToolkit().getImage("/resources/IconFrog.png");
 	private ImagePanel imagePanel;
 	private FillSpot fillSpot;
 	private DigSignature digSignature;
@@ -112,12 +115,13 @@ public class ImageManipFrame extends JDialog {
 	public JPanel SliderTools = new JPanel();
 	// tool box for Final Binary image
 	private JPanel SliderNoiseTool = new JPanel();
-	private JSlider SliderThreshold_edges = new JSlider();
-	private JSlider SliderDilation_radius = new JSlider();
-	private JSlider SliderNoise_radius = new JSlider();
+	private JSlider SliderThreshold_edges = new EdgeSteppingSlider();
+	private JSlider SliderDilation_radius = new DilationSteppingSlider();
+	private JSlider SliderNoise_radius = new NoiseSteppingSlider();
 	private JLabel SliderLabel_edges = new JLabel();
 	private JLabel SliderLabel_radius = new JLabel();
 	private JLabel SliderLabel_noise = new JLabel();
+	private JLabel label_numSpots = new JLabel("Number of spots defined: 0");
 	// Panels to demonstrate examples
 	public JPanel ExamplePanelContainer = new JPanel();
 	public JPanel ExampleRidge = new JPanel();
@@ -150,12 +154,16 @@ public class ImageManipFrame extends JDialog {
 	public int imageInEllipse_width = 0;
 	public int imageInEllipse_heigth = 0;
 
-	private ImageIcon imageSave32 =  new ImageIcon(MainFrame.class.getResource("/resources/IconFloppy32.png"));
+	private ImageIcon imageSave32 = new ImageIcon(MainFrame.class.getResource("/resources/IconFloppy32.png"));
 	private Icon imagePrevious32 = new ImageIcon(MainFrame.class.getResource("/resources/IconPrevious32.png"));
 	private Icon imageNext32 = new ImageIcon(MainFrame.class.getResource("/resources/IconNext32.png"));
-	private Icon imageUndo32 =  new ImageIcon(MainFrame.class.getResource("/resources/IconUndo32.png"));
-	private Icon iamgeRestart32 =  new ImageIcon(MainFrame.class.getResource("/resources/IconRefresh32.png"));
-
+	private Icon imageUndo32 = new ImageIcon(MainFrame.class.getResource("/resources/IconUndo32.png"));
+	private Icon iamgeRestart32 = new ImageIcon(MainFrame.class.getResource("/resources/IconRefresh32.png"));
+	private JButton butClear = new JButton();
+	private JButton butOverlayToggle = new JButton();
+	private Icon imageErase32 = new ImageIcon(MainFrame.class.getResource("/resources/IconEraser32.png"));
+	private JButton butDetect = new JButton();
+	private Icon imageRadar32 = new ImageIcon(MainFrame.class.getResource("/resources/IconRadar32.png"));
 
 	/**
 	 * Creates a new Digital Signature Window using the specified parent and
@@ -181,7 +189,7 @@ public class ImageManipFrame extends JDialog {
 	private void init() throws Exception {
 		setModal(true);
 		installDir = XMLFrogDatabase.getMainFolder();
-		setIconImage(icon);
+		setIconImages(IdentiFrog.ICONS);
 		//setJMenuBar(jMenuBar1);
 		imagePanel = new ImagePanel(ImageManipFrame.this, image);
 		digSignature = new DigSignature();
@@ -211,8 +219,77 @@ public class ImageManipFrame extends JDialog {
 		butUndoFillSpot.setPreferredSize(new Dimension(41, 41));
 		butUndoFillSpot.setIcon(imageUndo32);
 		//butUndoFillSpot.setText("");
-		butUndoFillSpot.setToolTipText("Clear All");
+		butUndoFillSpot.setToolTipText("Undo Fill Spot");
 		butUndoFillSpot.addActionListener(new ImageManipFrame_butUndoFillSpot_actionAdapter(this));
+
+		butClear.setPreferredSize(new Dimension(41, 41));
+		butClear.setIcon(imageErase32);
+		//butUndoFillSpot.setText("");
+		butClear.setToolTipText("Wipe Spot Extraction Slate");
+		butClear.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				// TODO Auto-generated method stub
+				//imagePanel.
+				SliderThreshold_edges.setEnabled(false);
+				SliderNoise_radius.setEnabled(false);
+				SliderDilation_radius.setEnabled(false);
+				SliderLabel_edges.setEnabled(false);
+				SliderLabel_noise.setEnabled(false);
+				SliderLabel_radius.setEnabled(false);
+				TextFieldDilation_radius.setEnabled(false);
+				TextFieldNoise_radius.setEnabled(false);
+				TextFieldThreshold_edges.setEnabled(false);
+				
+				imagePanel.standardRectColor = IdentiFrog.copyImage(imagePanel.standardRectColorCopy); //make copy
+				//imagePanel.standardRectGray = new BufferedImage(ImagePanel.rect_width, ImagePanel.rect_height, BufferedImage.TYPE_3BYTE_BGR);
+				imagePanel.standardRectBinary = new BufferedImage(ImagePanel.rect_width, ImagePanel.rect_height, BufferedImage.TYPE_3BYTE_BGR);
+				imagePanel.standardRectEdgesDilated = new BufferedImage(ImagePanel.rect_width, ImagePanel.rect_height, BufferedImage.TYPE_3BYTE_BGR);
+				imagePanel.standardRectFilled = new BufferedImage(ImagePanel.rect_width, ImagePanel.rect_height, BufferedImage.TYPE_3BYTE_BGR);
+				setNumSpotsUI(0);
+				imagePanel.filledSpotNumber = 0;
+				repaint();
+			}
+		});
+
+		butDetect.setPreferredSize(new Dimension(41, 41));
+		butDetect.setIcon(imageRadar32);
+		//butUndoFillSpot.setText("");
+		butDetect.setToolTipText("Detect Edges");
+		butDetect.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				// TODO Auto-generated method stub
+				SliderThreshold_edges.setEnabled(true);
+				SliderNoise_radius.setEnabled(true);
+				SliderDilation_radius.setEnabled(true);
+				SliderLabel_edges.setEnabled(true);
+				SliderLabel_noise.setEnabled(true);
+				SliderLabel_radius.setEnabled(true);
+				TextFieldDilation_radius.setEnabled(true);
+				TextFieldNoise_radius.setEnabled(true);
+				TextFieldThreshold_edges.setEnabled(true);
+
+				imagePanel.detectEdges();
+				repaint();
+			}
+		});
+
+		butOverlayToggle.setPreferredSize(new Dimension(41, 41));
+		butOverlayToggle.setIcon(imageUndo32);
+		//butUndoFillSpot.setText("");
+		butOverlayToggle.setToolTipText("Toggle Spot Extraction Overlay");
+		butOverlayToggle.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				// TODO Auto-generated method stub
+
+			}
+		});
+
 		TextAreaStep.setFont(new java.awt.Font("SansSerif", Font.BOLD, 14));
 		TextAreaStep.setForeground(new Color(90, 0, 120));
 		TextAreaStep.setBackground(new Color(224, 223, 227));
@@ -225,8 +302,8 @@ public class ImageManipFrame extends JDialog {
 		TextAreaStatus.setFont(new java.awt.Font("SansSerif", Font.PLAIN, 14));
 		TextAreaStatus.setForeground(new Color(90, 0, 120));
 		TextAreaStatus.setBackground(new Color(224, 223, 227));
-		TextAreaStatus.setMinimumSize(new Dimension(332, 70));
-		TextAreaStatus.setPreferredSize(new Dimension(332, 70));
+		TextAreaStatus.setMinimumSize(new Dimension(332, 80));
+		TextAreaStatus.setPreferredSize(new Dimension(332, 80));
 		TextAreaStatus.setEditable(false);
 		TextAreaStatus.setMargin(new Insets(0, 10, 0, 0));
 		TextAreaStatus.setLineWrap(true);
@@ -345,14 +422,16 @@ public class ImageManipFrame extends JDialog {
 		SliderDilation_radius.setPreferredSize(new Dimension(220, 20));
 		SliderDilation_radius.setMaximumSize(new Dimension(220, 20));
 		SliderDilation_radius.setMinimumSize(new Dimension(220, 20));
+		SliderDilation_radius.setMajorTickSpacing(5);
 		SliderLabel_radius.setPreferredSize(new Dimension(220, 13));
 		SliderLabel_radius.setMaximumSize(new Dimension(220, 13));
 		SliderLabel_radius.setMinimumSize(new Dimension(220, 13));
 		SliderLabel_radius.setFont(new Font(curFont.getFontName(), curFont.getStyle(), 11));
 		SliderLabel_radius.setText("Dilation Radius");
 		SliderNoise_radius.setOrientation(JSlider.HORIZONTAL);
-		SliderNoise_radius.setMaximum(100);
-		SliderNoise_radius.setMinimum(0);
+		/*
+		 * SliderNoise_radius.setMaximum(100); SliderNoise_radius.setMinimum(0);
+		 */
 		SliderNoise_radius.putClientProperty("Slider.paintThumbArrowShape", Boolean.TRUE);
 		SliderNoise_radius.setValue(imagePanel.getNoise_radius());
 		SliderNoise_radius.addChangeListener(listener);
@@ -379,6 +458,8 @@ public class ImageManipFrame extends JDialog {
 		SliderTools.setBackground(sliderToolBoxColor);
 		SliderTools.add(butFillSpot, null);
 		SliderTools.add(butUndoFillSpot);
+		SliderTools.add(butClear);
+		SliderTools.add(butDetect);
 		SliderTools.add(SliderLabel_edges, null);
 		SliderTools.add(SliderThreshold_edges, null);
 		SliderTools.add(TextFieldThreshold_edges, null);
@@ -407,6 +488,7 @@ public class ImageManipFrame extends JDialog {
 		colorFingerprintTool.setPreferredSize(new Dimension(146, 80));
 		colorFingerprintTool.add(butPencil);
 		colorFingerprintTool.add(butUndoPencil);
+		colorFingerprintTool.add(butOverlayToggle);
 		SpotExtractionPanelTools.setVisible(false);
 		SpotExtractionPanelTools.setBackground(sliderToolBoxColor);
 		SpotExtractionPanelTools.setLayout(null);
@@ -415,6 +497,8 @@ public class ImageManipFrame extends JDialog {
 		SliderTools.setBounds(0, 261, 295, 180);
 		SpotExtractionPanelTools.add(SliderTools);
 		SliderNoiseTool.setBounds(0, 481, 280, 120);
+		label_numSpots.setBounds(0, 510, 280, 120);
+		SpotExtractionPanelTools.add(label_numSpots);
 		// p.add(SliderNoiseTool);
 		// Panel with Examples
 		getContentPane().add(ExamplePanelContainer, BorderLayout.WEST);
@@ -722,7 +806,8 @@ public class ImageManipFrame extends JDialog {
 			ExampleRidge.setVisible(false);
 			inPanelToolsInstructions.setVisible(true);
 			TextAreaStep.setText("Step 7 of 7: BINARY FINGERPRINT CREATION");
-			TextAreaStatus.setText("Use the Tools to extract a spot pattern into\nthe Binary Fingerprint.\nThen click Next>>");
+			TextAreaStatus
+					.setText("Use the Tools to extract a spot pattern into\nthe Binary Fingerprint.\nDo not include any spots that do not have a\nmajority in the image.\nClick Save to save the signature.");
 			TextAreaTools
 					.setText("Use the Spot Filler and click inside each\nspot contour.\nFilled spots are added to the Binary Fingerprint.\n\nAdjust the Edge Threshold and Dilation Radius\nfor edge detection.\n\nUse the Pencil on the Color Fingerprint to\nconnect any broken contours.");
 			setSpotExtractionPanelTools(true);
@@ -857,8 +942,13 @@ public class ImageManipFrame extends JDialog {
 			imagePanel.backOperationStep();
 			imagePanel.deleteTempFiles();
 			imagePanel.repaint();
+			setNumSpotsUI(0);
 			break;
 		}
+	}
+
+	protected void setNumSpotsUI(int i) {
+		label_numSpots.setText("Number of spots defined: "+i);
 	}
 
 	// All these are enabled or disabled at the same time, simply saving code
@@ -952,15 +1042,18 @@ public class ImageManipFrame extends JDialog {
 	}
 
 	/**
-	 * This class listens for changes to the sliders
+	 * This class listens for changes to the sliders. It redraws the interfaces.
+	 * Requires sliders to be at certain modulos to prevent the system from
+	 * locking up.
 	 * 
 	 * @author mjperez
 	 *
 	 */
 	class SliderListener implements ChangeListener {
-		private ThresholdWorker thresholdWorker = new ThresholdWorker();
+		//private ThresholdWorker thresholdWorker = new ThresholdWorker();
 
 		public void stateChanged(ChangeEvent e) {
+			boolean redraw = true;
 			imagePanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 			JSlider slider = (JSlider) e.getSource();
 			butFillSpot.getModel().setPressed(false);
@@ -971,19 +1064,27 @@ public class ImageManipFrame extends JDialog {
 				TextFieldThreshold_edges.setText("" + SliderThreshold_edges.getValue());
 				imagePanel.setThreshold_edges(SliderThreshold_edges.getValue());
 				noise_radius_active = false;
+				if (SliderThreshold_edges.getValue() % 50 != 0) {
+					redraw = false;
+				}
 			} else if (slider == SliderDilation_radius) {
 				TextFieldDilation_radius.setText("" + SliderDilation_radius.getValue());
 				imagePanel.setDilation_radius(SliderDilation_radius.getValue());
 				imagePanel.setNoise_slider_Active(false);
 				noise_radius_active = false;
+				if (SliderDilation_radius.getValue() % 5 != 0) {
+					redraw = false;
+				}
 			} else if (slider == SliderNoise_radius) {
 				TextFieldNoise_radius.setText("" + SliderNoise_radius.getValue());
 				imagePanel.setNoise_radius(SliderNoise_radius.getValue());
 				imagePanel.setNoise_slider_Active(true);
 				noise_radius_active = true;
 			}
-			thresholdWorker.cancel(true);
-			thresholdWorker.execute();
+			//thresholdWorker.cancel(true);
+			if (redraw) {
+				new ThresholdWorker().execute();
+			}
 		}
 	}
 

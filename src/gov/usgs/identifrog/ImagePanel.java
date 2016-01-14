@@ -1,7 +1,6 @@
 package gov.usgs.identifrog;
 
 import gov.usgs.identifrog.DataObjects.SiteImage;
-import gov.usgs.identifrog.Frames.ErrorDialog;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 
 import java.awt.BasicStroke;
@@ -32,12 +31,9 @@ import java.awt.image.Kernel;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Vector;
 import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
@@ -57,9 +53,9 @@ import org.apache.commons.io.FilenameUtils;
  * </p>
  * 
  * @author Oksana V. Kelly 2008
- * @author Oksana V. Kelly used image rotation/alignment by Steven P. Miller from <b>IdentiFrog</b>
- *         <i>2005</i>
- *         
+ * @author Oksana V. Kelly used image rotation/alignment by Steven P. Miller
+ *         from <b>IdentiFrog</b> <i>2005</i>
+ * 
  */
 
 @SuppressWarnings("serial")
@@ -67,8 +63,7 @@ public class ImagePanel extends JPanel {
 	FlowLayout borderLayout1 = new FlowLayout(FlowLayout.CENTER, 0, 50);
 
 	private ImageManipFrame parentFrame;
-	@SuppressWarnings("unchecked")
-	private Vector operations = new Vector();
+	private ArrayList<File> operations = new ArrayList<File>();
 	private int operationPlace = 0;
 	private int maxOperations = 0;
 
@@ -109,8 +104,8 @@ public class ImagePanel extends JPanel {
 	private boolean twoEyeClicks = false;
 	private boolean ridgeRect = false;
 	/*
-	 * Northern Leopard Frog :set the right boundary 0.1d to the left from the corners of the eyes d
-	 * is the distanceBnEyes
+	 * Northern Leopard Frog :set the right boundary 0.1d to the left from the
+	 * corners of the eyes d is the distanceBnEyes
 	 */
 	private double dist_from_eyes = 0.1;
 	private double distanceBnEyes = 0.0;
@@ -175,7 +170,7 @@ public class ImagePanel extends JPanel {
 	private boolean getMouseLocation = false;
 
 	// Center point
-	private boolean showCenterPoint = false;
+	private boolean showCenterPoint = true;
 	private boolean centerWithMouseClick = false;
 	protected Point center;
 
@@ -200,8 +195,8 @@ public class ImagePanel extends JPanel {
 	public static final int small_rect_width = 32;
 	public static final int small_rect_height = 16;
 
-	private BufferedImage standardRectColor = new BufferedImage(rect_width, rect_height, BufferedImage.TYPE_3BYTE_BGR);
-	private BufferedImage standardRectColorCopy = new BufferedImage(rect_width, rect_height, BufferedImage.TYPE_3BYTE_BGR);
+	public BufferedImage standardRectColor = new BufferedImage(rect_width, rect_height, BufferedImage.TYPE_3BYTE_BGR);
+	public BufferedImage standardRectColorCopy = new BufferedImage(rect_width, rect_height, BufferedImage.TYPE_3BYTE_BGR);
 	public BufferedImage standardRectGray = new BufferedImage(rect_width, rect_height, BufferedImage.TYPE_3BYTE_BGR);
 	public BufferedImage standardRectGrayCopy = new BufferedImage(rect_width, rect_height, BufferedImage.TYPE_3BYTE_BGR);
 	public BufferedImage standardRectBinary = new BufferedImage(rect_width, rect_height, BufferedImage.TYPE_3BYTE_BGR);
@@ -224,17 +219,21 @@ public class ImagePanel extends JPanel {
 	// coordinates to draw Resulting Binary image
 	public static final int BinaryImgX = 110, BinaryImgY = 490;
 
-	private Color rectColor = new Color(191, 184, 191);
+	//private Color rectColor = new Color(191, 184, 191);
+	private Color rectColor = Color.red;
 
+	
 	// Pencil
 	ArrayList<Pencil_Line> pencilCoor = new ArrayList<Pencil_Line>();
 	public int drawingNumber = 0;
 	// Spot Filler
-	public ArrayList<SpotFiller> spotFilledCoor = new ArrayList<SpotFiller>();
+	public ArrayList<SpotCoordinate> spotFilledCoor = new ArrayList<SpotCoordinate>();
 	public int filledSpotNumber = 0;
-	
+
 	private SiteImage siteImage;
-	
+
+	private boolean usingUnderlay = true;
+
 
 	/**
 	 * Constructor for with an image
@@ -248,7 +247,7 @@ public class ImagePanel extends JPanel {
 		parentFrame = frame;
 		siteImage = image;
 		imageFile = new File(image.getSourceFilePath());
-		
+
 		IdentiFrog.LOGGER.writeMessage("ImagePanel inputfile = " + imageFile.getName());
 
 		// initialize control points for two curves
@@ -366,7 +365,8 @@ public class ImagePanel extends JPanel {
 	} // end paint component
 
 	/**
-	 * imports an image file, reduces it to screen size, and displays it on the screen
+	 * imports an image file, reduces it to screen size, and displays it on the
+	 * screen
 	 * 
 	 * @param inputfile
 	 *            File image file to be manipulated
@@ -387,10 +387,11 @@ public class ImagePanel extends JPanel {
 	}
 
 	/**
-	 * Resamples the dorsal view and saves it in the dorsal folder with the specified filename 
+	 * Resamples the dorsal view and saves it in the dorsal folder with the
+	 * specified filename
 	 */
 	public void exportDownsampledImage(String fileName) {
-		
+
 		// next lines create dor_ image ratioW x 256
 		double ratioH1 = dorImgHeight / image.getHeight();
 		resampleImage(ratioH1 * image.getWidth(), (int) dorImgHeight);
@@ -502,7 +503,7 @@ public class ImagePanel extends JPanel {
 				image = imageDorsal;
 				G2D.setColor(rectColor);
 				G2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				G2D.draw(new RoundRectangle2D.Double(dorsalImgX - 3, dorsalImgY - 3, image.getWidth() + 6, image.getHeight() + 6, 8, 8));
+				G2D.draw(new RoundRectangle2D.Double(dorsalImgX - 3, dorsalImgY - 3, image.getWidth() + 6, image.getHeight() + 6, 8, 8)); //draw container around image
 				G2D.setColor(Color.black);
 				G2D.setFont(new java.awt.Font("SansSerif", Font.BOLD, 15));
 				G2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
@@ -519,7 +520,7 @@ public class ImagePanel extends JPanel {
 				G2D.setColor(rectColor);
 				G2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 				G2D.draw(new RoundRectangle2D.Double(ColorRectImgX - 3, ColorRectImgY - 3, rect_width + 6, rect_height + 6, 8, 8));
-				G2D.setColor(Color.black);
+				G2D.setColor(Color.red);
 				G2D.setFont(new java.awt.Font("SansSerif", Font.BOLD, 14));
 				G2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
 				G2D.drawString("Color Fingerprint", x_title + 52, ColorRectImgY - 6);
@@ -529,7 +530,7 @@ public class ImagePanel extends JPanel {
 				// display detected Edges rectangle
 				G2D.setColor(rectColor);
 				G2D.draw(new RoundRectangle2D.Double(EdgelImgX - 3, EdgelImgY - 3, rect_width + 6, rect_height + 6, 8, 8));
-				G2D.setColor(Color.black);
+				G2D.setColor(Color.red);
 				G2D.setFont(new Font("Default", Font.BOLD, 14));
 				G2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
 				G2D.drawString("Spot Extraction", x_title + 57, EdgelImgY - 6);
@@ -537,15 +538,19 @@ public class ImagePanel extends JPanel {
 				G2D.drawImage(standardRectEdgesDilated, null, EdgelImgX, EdgelImgY);
 
 				/*
-				 * clear standardRectBinary image by means of drawing on it java does not have a
-				 * method to clear BufferedImage
+				 * clear standardRectBinary image by means of drawing on it java
+				 * does not have a method to clear BufferedImage
 				 */
 				if (reset) {
 					// clear images if back/restart buttons pressed
 					BufferedImage cleanImage = new BufferedImage(rect_width, rect_height, BufferedImage.TYPE_3BYTE_BGR);
 					Graphics2D g2D = standardRectBinary.createGraphics();
 					g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-					g2D.drawImage(cleanImage, 0, 0, rect_width, rect_height, null);
+					if (usingUnderlay) {
+						g2D.drawImage(cleanImage, 0, 0, rect_width, rect_height, null);
+					} else {
+						g2D.drawImage(imageDorsal, 0, 0, rect_width, rect_height, null);
+					}
 					reset = false;
 				}
 
@@ -681,7 +686,8 @@ public class ImagePanel extends JPanel {
 			boundingBox.setSize((int) boundingBox.getWidth(), (int) (image.getHeight() - boundingBox.getY()));
 		}
 
-		BufferedImage filteredImage = image.getSubimage((int) boundingBox.getX(), (int) boundingBox.getY(), (int) boundingBox.getWidth(), (int) boundingBox.getHeight());
+		BufferedImage filteredImage = image.getSubimage((int) boundingBox.getX(), (int) boundingBox.getY(), (int) boundingBox.getWidth(),
+				(int) boundingBox.getHeight());
 		image = filteredImage;
 		imageDorsal = image;
 	}
@@ -689,30 +695,20 @@ public class ImagePanel extends JPanel {
 	// Creates a matrix based on a the raster of the 2D image, then reduces it
 	// by a factor
 	// of <reductionFactorRGB>
-	/*public String fillMatrix() {
-		
-		String Path = XMLFrogDatabase.getMainFolder();
-		String fileName = imageFile.getName();
-		try {
-			FileOutputStream out = new FileOutputStream(Path, true);
-			PrintWriter writer = new PrintWriter(out);
-			// Create a downsampled version of the image and translate values
-			// into a matrix
-			double pixel;
-			resampleImage(matrixCol, matrixRow);
-			for (int row = 0; row < matrixRow; row++) {
-				for (int col = 0; col < matrixCol; col++) {
-					pixel = image.getRGB(col, row) / reductionFactorRGB;
-					valueMatrix[row][col] = pixel;
-					writer.print(pixel + " "); // TESTING
-				}
-				writer.println(); // TESTING
-			}
-			writer.close();
-		} catch (Exception e) {
-		}
-		return Path + File.separator + "tempOutput.txt";
-	}*/
+	/*
+	 * public String fillMatrix() {
+	 * 
+	 * String Path = XMLFrogDatabase.getMainFolder(); String fileName =
+	 * imageFile.getName(); try { FileOutputStream out = new
+	 * FileOutputStream(Path, true); PrintWriter writer = new PrintWriter(out);
+	 * // Create a downsampled version of the image and translate values // into
+	 * a matrix double pixel; resampleImage(matrixCol, matrixRow); for (int row
+	 * = 0; row < matrixRow; row++) { for (int col = 0; col < matrixCol; col++)
+	 * { pixel = image.getRGB(col, row) / reductionFactorRGB;
+	 * valueMatrix[row][col] = pixel; writer.print(pixel + " "); // TESTING }
+	 * writer.println(); // TESTING } writer.close(); } catch (Exception e) { }
+	 * return Path + File.separator + "tempOutput.txt"; }
+	 */
 
 	// Filtering Operations
 	private void Filter(BufferedImageOp op) {
@@ -979,29 +975,29 @@ public class ImagePanel extends JPanel {
 	protected static BasicStroke convertLineStyle(int style, int w) {
 		BasicStroke bs = new BasicStroke(w);
 		switch (style) {
-			case 0: // solid
-				bs = new BasicStroke(w);
-				break;
-			case 1: // dotted
-				float dotted[] = { 2.0f };
-				bs = new BasicStroke(w, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 10.0f, dotted, 0.0f);
-				break;
-			case 2: // reverse dotted
-				float revdotted[] = { 2.0f };
-				bs = new BasicStroke(w, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 0.0f, revdotted, 10.0f);
-				break;
-			case 3: // long dashed
-				float longdashed[] = { 10.0f };
-				bs = new BasicStroke(w, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 10.0f, longdashed, 0.0f);
-				break;
-			case 4: // dot dashed
-				float dotdashed[] = { 6.0f, 4.0f, 2.0f, 4.0f };
-				bs = new BasicStroke(w, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 10.0f, dotdashed, 0.0f);
-				break;
-			case 5: // dashed
-				float dashed[] = { 5.0f };
-				bs = new BasicStroke(w, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 10.0f, dashed, 0.0f);
-				break;
+		case 0: // solid
+			bs = new BasicStroke(w);
+			break;
+		case 1: // dotted
+			float dotted[] = { 2.0f };
+			bs = new BasicStroke(w, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 10.0f, dotted, 0.0f);
+			break;
+		case 2: // reverse dotted
+			float revdotted[] = { 2.0f };
+			bs = new BasicStroke(w, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 0.0f, revdotted, 10.0f);
+			break;
+		case 3: // long dashed
+			float longdashed[] = { 10.0f };
+			bs = new BasicStroke(w, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 10.0f, longdashed, 0.0f);
+			break;
+		case 4: // dot dashed
+			float dotdashed[] = { 6.0f, 4.0f, 2.0f, 4.0f };
+			bs = new BasicStroke(w, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 10.0f, dotdashed, 0.0f);
+			break;
+		case 5: // dashed
+			float dashed[] = { 5.0f };
+			bs = new BasicStroke(w, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 10.0f, dashed, 0.0f);
+			break;
 
 		} // end switch
 		return bs;
@@ -1068,7 +1064,7 @@ public class ImagePanel extends JPanel {
 				mouseX1 = e.getX();
 				mouseY1 = e.getY();
 				if (mouseX1 > image.getWidth() || mouseY1 > image.getHeight()) {
-					new ErrorDialog("You are outside the image area. Please try again.");
+					//new ErrorDialog("You are outside the image area. Please try again.");
 					return;
 				}
 				parentFrame.TextAreaStep.setText("Step 2 of 7: BODY ALIGNMENT");
@@ -1112,14 +1108,14 @@ public class ImagePanel extends JPanel {
 		// ************* USER CLICKS ON SPOTS *******//
 		// users clicks inside spots and they are being filled and displayed
 		if (fillspot && !pencil) {
-			if (e.getX() >= EdgelImgX & e.getX() <= EdgelImgX + rect_width & e.getY() >= EdgelImgY & e.getY() <= EdgelImgY + rect_height) {
+			if (e.getX() >= EdgelImgX && e.getX() <= EdgelImgX + rect_width && e.getY() >= EdgelImgY && e.getY() <= EdgelImgY + rect_height) {
 				int mouse_x = e.getX();
 				int mouse_y = e.getY();
 
-				Point floodpoint = new Point(mouse_x - EdgelImgX, mouse_y - EdgelImgY);
+				Point floodpoint = new Point(mouse_x - EdgelImgX, mouse_y - EdgelImgY); //flood fill from this point.
 				Color white = new Color(255, 255, 255, 255);
 
-				++filledSpotNumber;
+				++filledSpotNumber; //TODO Make it so this does not always increment (if you want to fill in more parts of a spot
 				// IdentiFrog.LOGGER.writeMessage("press filledSpotNumber " +
 				// filledSpotNumber + " dilation_radius " + dilation_radius);
 
@@ -1127,13 +1123,10 @@ public class ImagePanel extends JPanel {
 				standardRectFilled = spot.floodFill(standardRectEdgesDilated, white, floodpoint);
 				BufferedImage imgWithNewSpotFilled = spot.getFilledSpot(dilation_radius, filledSpotNumber);
 				updateBinaryImage(imgWithNewSpotFilled);
-
-				ArrayList<SpotFiller> currentSpotFilledCoor = spot.getFilledSpotCoor();
-				spotFilledCoor.addAll(currentSpotFilledCoor);
+				ArrayList<SpotCoordinate> currentSpotFilledCoor = spot.getFilledSpotCoor(); //array of pixels
+				spotFilledCoor.addAll(currentSpotFilledCoor); //array of pixels that are filled
+				parentFrame.setNumSpotsUI(filledSpotNumber);
 				repaint();
-
-			} else {
-				new ErrorDialog("You are outside the image area. Please try again.");
 			}
 		}
 
@@ -1144,12 +1137,14 @@ public class ImagePanel extends JPanel {
 		if (selectedPoint != null) {
 
 			/* moving control points not on the left/right boundaries */
-			if (selectedPoint != firstCurvePoints[0] & selectedPoint != firstCurvePoints[3] & selectedPoint != secondCurvePoints[0] & selectedPoint != secondCurvePoints[3]) {
+			if (selectedPoint != firstCurvePoints[0] & selectedPoint != firstCurvePoints[3] & selectedPoint != secondCurvePoints[0]
+					& selectedPoint != secondCurvePoints[3]) {
 				selectedPoint.setLocation(e.getPoint());
 				repaint();
 			}
 			/*
-			 * left boundary line moves up/down while user drags the contol point
+			 * left boundary line moves up/down while user drags the contol
+			 * point
 			 */
 			if (selectedPoint == firstCurvePoints[0]) {
 				firstCurvePoints[0].x = leftBoundLine[0].x;
@@ -1164,7 +1159,8 @@ public class ImagePanel extends JPanel {
 				repaint();
 			}
 			/*
-			 * right boundary line moves up/down while user drags the contol point
+			 * right boundary line moves up/down while user drags the contol
+			 * point
 			 */
 			if (selectedPoint == firstCurvePoints[3]) {
 				firstCurvePoints[3].x = rightBoundLine[0].x;
@@ -1184,7 +1180,8 @@ public class ImagePanel extends JPanel {
 
 		if (pencil) {
 			// coordinates to draw color fingerprint
-			if (e.getX() >= ColorRectImgX & e.getX() <= ColorRectImgX + rect_width & e.getY() >= ColorRectImgY & e.getY() <= ColorRectImgY + rect_height) {
+			if (e.getX() >= ColorRectImgX & e.getX() <= ColorRectImgX + rect_width & e.getY() >= ColorRectImgY
+					& e.getY() <= ColorRectImgY + rect_height) {
 				Point2D.Double p = new Point2D.Double();
 				p.setLocation(e.getX() - ColorRectImgX, e.getY() - ColorRectImgY);
 				drawWithPencil(p);
@@ -1218,7 +1215,8 @@ public class ImagePanel extends JPanel {
 				oneEyeClick = false;
 				parentFrame.setNextOn(true);
 				parentFrame.TextAreaStep.setText("Step 6 of 7: DORSOLATERAL FOLDS ALIGNMENT");
-				parentFrame.TextAreaStatus.setText("Align upper and lower boundaries to inner\ndorsolateral folds by moving the control points.\nThen click Next>>");
+				parentFrame.TextAreaStatus
+						.setText("Align upper and lower boundaries to inner\ndorsolateral folds by moving the control points.\nThen click Next>>");
 			}
 			repaint();
 			reset = false;
@@ -1242,7 +1240,8 @@ public class ImagePanel extends JPanel {
 		}
 
 		if (pencil) {
-			if (e.getX() >= ColorRectImgX & e.getX() < ColorRectImgX + rect_width & e.getY() >= ColorRectImgY & e.getY() < ColorRectImgY + rect_height) {
+			if (e.getX() >= ColorRectImgX & e.getX() < ColorRectImgX + rect_width & e.getY() >= ColorRectImgY
+					& e.getY() < ColorRectImgY + rect_height) {
 				// new drawing
 				++drawingNumber;
 				IdentiFrog.LOGGER.writeMessage("press " + drawingNumber);
@@ -1327,8 +1326,8 @@ public class ImagePanel extends JPanel {
 	}
 
 	/*
-	 * Oksana Kelly: Mapping Shape (formed by upper/lower bezier curves) onto Rectangle rect_width,
-	 * rect_height
+	 * Oksana Kelly: Mapping Shape (formed by upper/lower bezier curves) onto
+	 * Rectangle rect_width, rect_height
 	 */
 	public void mapOntoRectangle() {
 		if (image == null) {
@@ -1441,8 +1440,8 @@ public class ImagePanel extends JPanel {
 	}
 
 	/*
-	 * http://www.cubic.org/docs/bezier.htm Use DeCasteljau algorithm to get coordinates of all the
-	 * points on bezier curve, t = [0; 1]
+	 * http://www.cubic.org/docs/bezier.htm Use DeCasteljau algorithm to get
+	 * coordinates of all the points on bezier curve, t = [0; 1]
 	 */
 	public void getBezierPoints(Point2D ctrPointscurve[], String whichCurve) {
 
@@ -1502,9 +1501,9 @@ public class ImagePanel extends JPanel {
 	}
 
 	/**
-	 * modified code from the book "Digital Image Processing - An Algorithmic Introduction using
-	 * Java" by Wilhelm Burger and Mark J. Burge, Copyright (C) <i>2005</i>-2008 Springer-Verlag
-	 * Berlin, Heidelberg, New York.
+	 * modified code from the book "Digital Image Processing - An Algorithmic
+	 * Introduction using Java" by Wilhelm Burger and Mark J. Burge, Copyright
+	 * (C) <i>2005</i>-2008 Springer-Verlag Berlin, Heidelberg, New York.
 	 */
 	private int getInterpolatedPixel(double xcoor, double ycoor) {
 		// bicubic interpolator
@@ -1559,10 +1558,17 @@ public class ImagePanel extends JPanel {
 		return z;
 	}
 
+	/**
+	 * Detects edges for the image.
+	 * This method has side effects.
+	 * @return image with edges detected.
+	 */
 	public BufferedImage detectEdges() {
 
-		BufferedImage standardRectGrayExpanded = new BufferedImage(rect_width + window_size - 1, rect_height + window_size - 1, BufferedImage.TYPE_3BYTE_BGR);
-		BufferedImage standardRectEdgesExpanded = new BufferedImage(rect_width + window_size - 1, rect_height + window_size - 1, BufferedImage.TYPE_3BYTE_BGR);
+		BufferedImage standardRectGrayExpanded = new BufferedImage(rect_width + window_size - 1, rect_height + window_size - 1,
+				BufferedImage.TYPE_3BYTE_BGR);
+		BufferedImage standardRectEdgesExpanded = new BufferedImage(rect_width + window_size - 1, rect_height + window_size - 1,
+				BufferedImage.TYPE_3BYTE_BGR);
 		BufferedImage dilatedImage = new BufferedImage(rect_width + window_size - 1, rect_height + window_size - 1, BufferedImage.TYPE_3BYTE_BGR);
 
 		// pad image borders with the closest border pixels before filtering
@@ -1582,7 +1588,8 @@ public class ImagePanel extends JPanel {
 		standardRectEdgesExpanded = detector.getEdgesImage();
 
 		/*
-		 * dilate image with already extended border since dilation also needs border padding
+		 * dilate image with already extended border since dilation also needs
+		 * border padding
 		 */
 
 		dilatedImage = binMorpher.dilate(standardRectEdgesExpanded, dilation_radius / 10f);
@@ -1613,6 +1620,7 @@ public class ImagePanel extends JPanel {
 	}
 
 	public void updateBinaryImage(BufferedImage imageWithNewSpotFilled) {
+		
 		for (int col = 0; col < rect_width; ++col) {
 			for (int row = 0; row < rect_height; ++row) {
 				int pix = imageWithNewSpotFilled.getRGB(col, row);
@@ -1624,8 +1632,27 @@ public class ImagePanel extends JPanel {
 		}
 	}
 
+	private BufferedImage getOverlaidBinaryImage() {
+		BufferedImage overlaidImage = IdentiFrog.copyImage(imageDorsal);
+		
+		for (int col = 0; col < rect_width; ++col) {
+			for (int row = 0; row < rect_height; ++row) {
+				int pix = standardRectBinary.getRGB(col, row);
+				int c = (pix & 0xff0000) >> 16;
+				if (c == 255) {
+					//pixel is white.
+					overlaidImage.setRGB(col, row, pix);
+				}
+			}
+		}
+		
+		return overlaidImage;
+	}
+
 	/**
-	 * This method extracts the image name and then appends ".png" to the image name.
+	 * This method extracts the image name and then appends ".png" to the image
+	 * name.
+	 * 
 	 * @author Michael Perez 2015
 	 * @return The <i>proper</i> image name.
 	 */
@@ -1636,9 +1663,13 @@ public class ImagePanel extends JPanel {
 
 	/**
 	 * Writes the Rendered image to the specified folder and filename.
-	 * @param image image to write
-	 * @param folder folder to write into
-	 * @param imageName filename to write to
+	 * 
+	 * @param image
+	 *            image to write
+	 * @param folder
+	 *            folder to write into
+	 * @param imageName
+	 *            filename to write to
 	 */
 	private void saveImage(RenderedImage image, String folder, String imageName) {
 		try {
@@ -1744,12 +1775,11 @@ public class ImagePanel extends JPanel {
 
 			// redraw previously filled spot(s)
 			if (spotFilledCoor.size() > 0) {
+				Color colWhite = new Color(255, 255, 255); // Color white
+				int white = colWhite.getRGB(); //gets 24-bit white
 
-				int white = (255 & 0xff) << 16 | (255 & 0xff) << 8 | 255 & 0xff;
-				for (int k = 0; k < spotFilledCoor.size(); ++k) {
-					// IdentiFrog.LOGGER.writeMessage(pencilCoor.get(k).startL + " " +
-					// pencilCoor.get(k).endL);
-					standardRectBinary.setRGB(spotFilledCoor.get(k).pixCoor.x, spotFilledCoor.get(k).pixCoor.y, white);
+				for (SpotCoordinate fill : spotFilledCoor) {
+					standardRectBinary.setRGB(fill.pixCoor.x, fill.pixCoor.y, white);
 				}
 				g2D.dispose();
 			}
@@ -1880,7 +1910,7 @@ public class ImagePanel extends JPanel {
 			operations.add(operationPlace, file);
 			operationPlace++;
 			for (int i = operationPlace; i < operations.size(); i++) {
-				operations.removeElementAt(i);
+				operations.remove(i);
 			}
 		} else {
 			System.err.print("There was an error adding a new operation step");

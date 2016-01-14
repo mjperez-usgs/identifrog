@@ -10,11 +10,11 @@ import java.awt.Point;
  * 
  * @author Oksana V. Kelly 2008
  */
-public class SpotFiller {
+public class SpotCoordinate {
 	public int filledSpotNum;
 	public Point pixCoor;
 
-	public SpotFiller(int spotNum, Point filledpixcoor) {
+	public SpotCoordinate(int spotNum, Point filledpixcoor) {
 		filledSpotNum = spotNum;
 		pixCoor = filledpixcoor;
 	}

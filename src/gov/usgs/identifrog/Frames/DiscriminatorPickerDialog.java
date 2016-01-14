@@ -1,5 +1,6 @@
 package gov.usgs.identifrog.Frames;
 
+import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.DataObjects.Discriminator;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 import gov.usgs.identifrog.ui.JCheckBoxList;
@@ -34,7 +35,7 @@ public class DiscriminatorPickerDialog extends JDialog {
 
 	private void init(ArrayList<Discriminator> alreadySelectedDiscrims) {
 		setTitle("Select discriminators");
-		setIconImage(getToolkit().getImage(getClass().getResource("/resources/IconFrog.png")));
+		setIconImages(IdentiFrog.ICONS);
 		setModal(true);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 

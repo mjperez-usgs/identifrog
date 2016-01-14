@@ -16,11 +16,13 @@ public class Frog implements Comparable<Frog> {
 	private String gender;
 	private ArrayList<Discriminator> discriminators;
 	private ArrayList<SiteSample> siteSamples;
+	private ArrayList<Integer> previousIds;
 	private boolean isFreshImport = false;
 
 	public Frog() {
 		siteSamples = new ArrayList<SiteSample>();
 		discriminators = new ArrayList<Discriminator>();
+		previousIds = new ArrayList<Integer>();
 	}
 
 	/**
@@ -38,6 +40,7 @@ public class Frog implements Comparable<Frog> {
 		siteSamples = new ArrayList<SiteSample>();
 		siteSamples.add(sample);
 		discriminators = new ArrayList<Discriminator>();
+		previousIds = new ArrayList<Integer>();
 	}
 
 	/**
@@ -61,6 +64,18 @@ public class Frog implements Comparable<Frog> {
 		for (Discriminator d : frog.getDiscriminators()) {
 			discriminators.add(new Discriminator(d));
 		}
+		previousIds = new ArrayList<Integer>();
+		for (Integer i : frog.getPreviousIds()) {
+			previousIds.add(new Integer(i));
+		}
+	}
+
+	public ArrayList<Integer> getPreviousIds() {
+		return previousIds;
+	}
+
+	public void setPreviousIds(ArrayList<Integer> previousIds) {
+		this.previousIds = previousIds;
 	}
 
 	public void addSiteSample(SiteSample sample) {
@@ -113,6 +128,15 @@ public class Frog implements Comparable<Frog> {
 				sites.appendChild(sample.createElement(document));
 			}
 			element.appendChild(sites);
+			
+			
+			Element previousIDs = document.createElement("previousids");
+			for (Integer prevId : previousIds) {
+				Element prevIdElem = document.createElement("previousid");
+				prevIdElem.appendChild(document.createTextNode(Integer.toString(prevId)));
+				previousIDs.appendChild(prevIdElem);
+			}
+			element.appendChild(previousIDs);
 		}
 		return element;
 	}
@@ -132,6 +156,11 @@ public class Frog implements Comparable<Frog> {
 		for (SiteSample sample : siteSamples) {
 			str += sample.toString();
 		}
+		str += "Previous IDs: \n";
+		for (Integer i : previousIds) {
+			str += i +" ";
+		}
+		str += "\n";
 		return str;
 	}
 
@@ -397,5 +426,11 @@ public class Frog implements Comparable<Frog> {
 		for (SiteSample s : other.getSiteSamples()) {
 			addSiteSample(s);
 		}
+		
+		//add other's ids
+		for (int id: other.previousIds) {
+			previousIds.add(id);
+		}
+		previousIds.add(other.getID());
 	}
 }

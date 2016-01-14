@@ -161,7 +161,6 @@ public class MainFrame extends JFrame {
 	private JMenuItem MenuItemTemplates = new JMenuItem("Data Templates", new ImageIcon(MainFrame.class.getResource("/resources/IconBookmark16.png")));
 	private JMenuItem MenuItemDiscriminators = new JMenuItem("Discriminators", new ImageIcon(
 			MainFrame.class.getResource("/resources/IconDiscriminator16.png")));
-	private JCheckBoxMenuItem CheckBoxMenuItemShowThumbs = new JCheckBoxMenuItem("Show Thumbnails", true);
 	private HashMap<JCheckBox, Discriminator> searchDiscriminatorMap = new HashMap<JCheckBox, Discriminator>();
 	private JCheckBoxList discriminatorList = new JCheckBoxList();
 	private final DefaultListModel<JCheckBox> discriminatorModel = new DefaultListModel<JCheckBox>();
@@ -210,7 +209,7 @@ public class MainFrame extends JFrame {
 	 */
 	public MainFrame() {
 		enableEvents(AWTEvent.WINDOW_EVENT_MASK);
-		setIconImage(getToolkit().getImage(getClass().getResource("/resources/IconFrog.png")));
+		setIconImages(IdentiFrog.ICONS);
 		workingFolder = XMLFrogDatabase.getMainFolder();
 		//thumbnailCreator = new ThumbnailCreator(thumbnailFolder);
 		this.setTitle("IdentiFrog - " + XMLFrogDatabase.getFileNamePath());
@@ -218,7 +217,7 @@ public class MainFrame extends JFrame {
 			init();
 			statusBar.setMessage("Loaded project");
 		} catch (Exception e) {
-			IdentiFrog.LOGGER.writeExceptionWithMessage("MainFrame.MainFrame() Exception",e);
+			IdentiFrog.LOGGER.writeExceptionWithMessage("MainFrame.MainFrame() Exception", e);
 		}
 	}
 
@@ -358,9 +357,9 @@ public class MainFrame extends JFrame {
 				updateDiscriminatorList();
 			}
 		});
-		
+
 		bTemplates.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				new TemplateFrame(MainFrame.this).setVisible(true);
@@ -370,7 +369,6 @@ public class MainFrame extends JFrame {
 		bHelp.addActionListener(new MainFrame_butHelp_actionAdapter(this));
 		//
 		MenuItemEdit.setAccelerator(javax.swing.KeyStroke.getKeyStroke('E', InputEvent.CTRL_MASK, false));
-		CheckBoxMenuItemShowThumbs.setAccelerator(javax.swing.KeyStroke.getKeyStroke('T', InputEvent.CTRL_MASK, false));
 		MenuItemDelete.setAccelerator(javax.swing.KeyStroke.getKeyStroke('D', InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, false));
 		//
 		MenuItemEdit.addActionListener(new ActionListener() {
@@ -396,7 +394,6 @@ public class MainFrame extends JFrame {
 				runManual();
 			}
 		});
-		CheckBoxMenuItemShowThumbs.addActionListener(new MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter(this));
 
 		// ActionListeners for Add Site Functionality
 		menuItemProjectManager.addActionListener(new ActionListener() {
@@ -432,6 +429,14 @@ public class MainFrame extends JFrame {
 			}
 		});
 
+		MenuItemAllFrogVerify.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new SignatureStrengthTestFrame(MainFrame.this);
+			}
+		});
+
 		// add menu items
 		menuFile.add(menuItemCreateXLSX);
 		menuFile.add(MenuItemMarkExport);
@@ -455,8 +460,6 @@ public class MainFrame extends JFrame {
 		menuProject.add(MenuItemUsers);
 		menuProject.add(MenuItemTemplates);
 		menuProject.add(MenuItemDiscriminators);
-		menuProject.addSeparator();
-		menuProject.add(CheckBoxMenuItemShowThumbs);
 		mainMenu.add(menuProject);
 		mainMenu.add(menuHelp);
 		setJMenuBar(mainMenu);
@@ -469,8 +472,6 @@ public class MainFrame extends JFrame {
 
 		setupBrowser();
 		setupSearch();
-
-		//frogListPane.set
 
 		//Compile interface================
 		GridBagConstraints cons = new GridBagConstraints();
@@ -816,7 +817,7 @@ public class MainFrame extends JFrame {
 						((TitledBorder) comparisonImageLabel.getBorder()).setTitle("Comparison Image");
 						mergeFrogsButton.setEnabled(false);
 					} else {
-						if (searchTBSplitPane.getBottomComponent().isVisible()) {
+						if (searchTBSplitPane != null && searchTBSplitPane.getBottomComponent().isVisible()) {
 							ACTIVE_COMPARISON_IMAGE = ACTIVE_FROGMATCH.getTopImage();
 							comparisonImageLabel.setIcon(new ImageIcon(ACTIVE_COMPARISON_IMAGE.getImage().getDorsalImage()));
 							comparisonImageLabel.setText(null);
@@ -869,9 +870,6 @@ public class MainFrame extends JFrame {
 		c.gridx = 3;
 		comparePanel.add(comparisonImageLabel, c);
 
-		JPanel compareButtonsPanels = new JPanel();
-		JPanel leftStatsPanel = new JPanel();
-		JPanel rightStatsPanel = new JPanel();
 		mergeFrogsButton = new JButton("Merge Frogs");
 		mergeFrogsButton.setEnabled(false);
 		mergeFrogsButton.addActionListener(new ActionListener() {
@@ -884,17 +882,26 @@ public class MainFrame extends JFrame {
 						+ "?", "Confirm Frog Merge", JOptionPane.YES_NO_OPTION);
 				if (result == JOptionPane.YES_OPTION) {
 					IdentiFrog.LOGGER.writeMessage("Merging Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID());
-					sourceFrog.mergeWith(otherFrog);
-					//XMLFrogDatabase.updateFrog(sourceFrog.getID(), sourceFrog); //this is the copyfrog
-					XMLFrogDatabase.removeFrog(otherFrog.getID());
-					frogModel.removeElement(otherFrog);
+					
+					if (sourceFrog.getID() < otherFrog.getID()) {
+						sourceFrog.mergeWith(otherFrog);
+						XMLFrogDatabase.removeFrog(otherFrog.getID());
+						frogModel.removeElement(otherFrog);
+						JOptionPane.showMessageDialog(MainFrame.this, "Merged Frog " + otherFrog.getID() + " into Frog " + sourceFrog.getID() + ".",
+								"Frogs Merged", JOptionPane.INFORMATION_MESSAGE);
+					} else {
+						otherFrog.mergeWith(sourceFrog);
+						XMLFrogDatabase.removeFrog(sourceFrog.getID());
+						frogModel.removeElement(sourceFrog);
+						JOptionPane.showMessageDialog(MainFrame.this, "Merged Frog " + sourceFrog.getID() + " into Frog " + otherFrog.getID() + ".",
+								"Frogs Merged", JOptionPane.INFORMATION_MESSAGE);
+					}
+
 					//clear search results
 					frogSearchModel.clear();
 					IdentiFrog.LOGGER.writeMessage("Merged Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID() + ".");
 					statusBar.setMessage("Frogs merged");
 					XMLFrogDatabase.writeXMLFile();
-					JOptionPane.showMessageDialog(MainFrame.this, "Merged Frog " + otherFrog.getID() + " into Frog " + sourceFrog.getID() + ".",
-							"Frogs Merged", JOptionPane.INFORMATION_MESSAGE);
 				}
 			}
 		});
@@ -1029,7 +1036,8 @@ public class MainFrame extends JFrame {
 	/**
 	 * Called when SearchWorker finishes and publishes matches to the screen
 	 * 
-	 * @param matches list of frogmatch objects to display
+	 * @param matches
+	 *            list of frogmatch objects to display
 	 */
 	public void setMatches(ArrayList<FrogMatch> matches) {
 		frogSearchModel.clear();
@@ -1387,16 +1395,7 @@ public class MainFrame extends JFrame {
 	 * Help | About action performed
 	 */
 	public void menuItemHelpAbout_actionPerformed(ActionEvent e) {
-		AboutDialog dlg = new AboutDialog(this);
-		// About dlg = new About(this);
-
-		Dimension dialogSize = dlg.getPreferredSize();
-		Dimension frameSize = getSize();
-		Point loc = getLocation();
-		dlg.setLocation((frameSize.width - dialogSize.width) / 2 + loc.x, (frameSize.height - dialogSize.height) / 2 + loc.y);
-		dlg.setModal(true);
-		dlg.pack();
-		dlg.setVisible(true);
+		new AboutDialog(this);
 	}
 
 	// Overridden so we can exit when window is closed
@@ -1639,17 +1638,5 @@ class MainFrame_MenuItemMarkExport_actionAdapter implements java.awt.event.Actio
 
 	public void actionPerformed(ActionEvent e) {
 		adaptee.MenuItemMarkExport_actionPerformed(e);
-	}
-}
-
-class MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter implements java.awt.event.ActionListener {
-	MainFrame adaptee;
-
-	MainFrame_CheckBoxMenuItemShowThumbs_actionAdapter(MainFrame adaptee) {
-		this.adaptee = adaptee;
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		//	adaptee.CheckBoxMenuItemShowThumbs_actionPerformed(e);
 	}
 }

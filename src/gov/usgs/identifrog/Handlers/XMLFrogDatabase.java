@@ -6,6 +6,7 @@ import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
 import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.DataObjects.SiteSample;
+import gov.usgs.identifrog.DataObjects.Template;
 import gov.usgs.identifrog.DataObjects.User;
 import gov.usgs.identifrog.Frames.MainFrame;
 
@@ -33,11 +34,15 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -57,6 +62,10 @@ public class XMLFrogDatabase {
 	private static ArrayList<Discriminator> discriminators;
 	private static int highestSessionDiscriminatorID = 0; //used when adding items to the discriminator list but not yet commited
 	private static SwingWorker<Boolean, Integer> thread;
+	private static ArrayList<Template> templates;
+	private static XPathFactory factory = XPathFactory.newInstance();
+	private static XPath xpath = factory.newXPath();
+	private static int HIGHEST_ASSIGNED_ID = 1;
 
 	/*
 	 * public XMLFrogDatabase() { XMLFrogDatabase.frogs = new ArrayList<Frog>();
@@ -99,11 +108,19 @@ public class XMLFrogDatabase {
 		Element recorderElement = doc.createElement("recorders");
 		Element observersElement = doc.createElement("observers");
 		Element discrimintorsElement = doc.createElement("discriminators");
+		Element templatesElement = doc.createElement("templates");
+		Element metadataElement = doc.createElement("metadata");
+		Element metaHighestIDElement = doc.createElement("highestid");
+		metadataElement.setTextContent("0");
+
 		root.appendChild(frogsElem);
 		usersElem.appendChild(recorderElement);
 		usersElem.appendChild(observersElement);
 		root.appendChild(usersElem);
 		root.appendChild(discrimintorsElement);
+		root.appendChild(templatesElement);
+		metadataElement.appendChild(metaHighestIDElement);
+		root.appendChild(metadataElement);
 		doc.appendChild(root);
 
 		// WRITE XML FILE
@@ -159,6 +176,7 @@ public class XMLFrogDatabase {
 		recorders = new ArrayList<User>();
 		observers = new ArrayList<User>();
 		discriminators = new ArrayList<Discriminator>();
+		templates = new ArrayList<Template>();
 		try {
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder docBuilder = null;
@@ -366,9 +384,30 @@ public class XMLFrogDatabase {
 					}
 					frog.addSiteSample(sample);
 				}
-
+				//load previous IDs
+				NodeList previousIDList = (NodeList) xpath.evaluate("previousids/previousid", frogElement, XPathConstants.NODESET);
+				//NodeList previousIDList = frogElement.getElementsByTagName("previousids");
+				if (previousIDList.getLength() > 0) {
+					//has previous id elements
+					for (int x = 0; x < previousIDList.getLength(); x++) {
+						Element idElement = (Element) previousIDList.item(x);
+						if (idElement.getNodeType() == Node.ELEMENT_NODE) {
+							IdentiFrog.LOGGER.writeMessage("Frog has previous ID: " + idElement.getTextContent());
+							frog.getPreviousIds().add(new Integer(idElement.getTextContent()));
+						}
+					}
+				}
 				frogs.add(frog);
 			}
+			IdentiFrog.LOGGER.writeMessage("Loading templates from DB");
+			//Load templates TODO
+
+			
+			//Load Metadata
+			HIGHEST_ASSIGNED_ID = Integer.parseInt(xpath.evaluate("/frogdatabase/metadata/highestid", doc));
+			//HIGHEST_ASSIGNED_ID = Integer.parseInt(highestIdElem.getTextContent());
+			IdentiFrog.LOGGER.writeMessage("Highest ID this DB has assigned: "+HIGHEST_ASSIGNED_ID);
+
 			IdentiFrog.LOGGER.writeMessage("Loaded XML DB, loaded data for " + frogs.size() + " frogs.");
 			XMLFrogDatabase.FULLY_LOADED = true;
 		} catch (Exception e) {
@@ -448,7 +487,7 @@ public class XMLFrogDatabase {
 	 */
 	public static void setFile(File file) {
 		if (!file.getAbsolutePath().toLowerCase().endsWith(IdentiFrog.DB_FILENAME.toLowerCase())) {
-			IdentiFrog.LOGGER.writeError("Setting database file to something not named database.xml!");
+			IdentiFrog.LOGGER.writeError("Setting database file to something not named database.xml! this will cause a crash");
 		}
 
 		XMLFrogDatabase.dbfile = file;
@@ -548,13 +587,13 @@ public class XMLFrogDatabase {
 		if (!FULLY_LOADED) {
 			IdentiFrog.LOGGER.writeError("Attempting to get next available ID before DB has been loaded!");
 		}
-		int nextAvailable = 0;
+		/*int nextAvailable = 0;
 		for (Frog frog : frogs) {
 			if (frog.getID() > nextAvailable) {
 				nextAvailable = frog.getID();
 			}
-		}
-		return nextAvailable + 1;
+		}*/
+		return HIGHEST_ASSIGNED_ID + 1;
 	}
 
 	/**
@@ -1001,13 +1040,22 @@ public class XMLFrogDatabase {
 		private int numProcessed = 0;
 
 		public CommitWorker(MainFrame attachedFrame) {
+			//Calculate the new HIGHEST_ASSIGNED_ID.
+			int highest = HIGHEST_ASSIGNED_ID;
+			for (Frog frog : frogs) {
+				if (frog.getID() > highest) {
+					highest = frog.getID();
+				}
+			}
+			HIGHEST_ASSIGNED_ID = highest;
+			
 			this.attachedFrame = attachedFrame;
 			numToProcess += discriminators.size();
 			numToProcess += frogs.size();
 			numToProcess += recorders.size();
 			numToProcess += observers.size();
 		}
-		
+
 		@Override
 		protected Boolean doInBackground() throws Exception {
 			IdentiFrog.LOGGER.writeMessage("Synchronizing memory-database to disk...");
@@ -1029,7 +1077,7 @@ public class XMLFrogDatabase {
 			IdentiFrog.LOGGER.writeMessage("Writing frogs to DB");
 
 			for (Discriminator d : discriminators) {
-				d.setInUse(false); //reset inuse flag for setting when parsing frogs attached discriminators (will set to true again)
+				d.setInUse(false); //reset inuse flag. Will set again parsing frogs for attached discriminators (will set to true again)
 			}
 
 			for (Frog frog : frogs) {
@@ -1070,10 +1118,14 @@ public class XMLFrogDatabase {
 			}
 			root.appendChild(discrimsElement);
 
-			/*
-			 * System.out.println("Dumping frogs tostrg"); for (Frog frog :
-			 * frogs) { System.out.println(frog); }
-			 */
+			//METADATA
+			IdentiFrog.LOGGER.writeMessage("Writing DB metadata to DB");
+
+			Element metadataElement = doc.createElement("metadata");
+			Element metaHighestIDElement = doc.createElement("highestid");
+			metadataElement.setTextContent(Integer.toString(HIGHEST_ASSIGNED_ID));
+			metadataElement.appendChild(metaHighestIDElement);
+			root.appendChild(metadataElement);
 
 			// WRITE XML FILE
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
