@@ -16,7 +16,7 @@ public class GitHubRelease {
 	private ArrayList<GitHubAttachment> attachments;
 	private String body;
 	private boolean isPreRelease;
-	private String tag;
+	private String tag_name;
 
 	public GitHubRelease(JSONObject releaseInfo) {
 		this.setName((String) releaseInfo.get("name"));
@@ -31,15 +31,15 @@ public class GitHubRelease {
 		}
 		this.setPreRelease((Boolean)releaseInfo.get("prerelease"));
 		this.setBody((String) releaseInfo.get("body"));
-		this.setTag((String) releaseInfo.get("tag"));
+		this.setTagName((String) releaseInfo.get("tag_name"));
 	}
 	
-	public String getTag() {
-		return tag;
+	public String getTagName() {
+		return tag_name;
 	}
 
-	public void setTag(String tag) {
-		this.tag = tag;
+	public void setTagName(String tag) {
+		this.tag_name = tag;
 	}
 	
 	public boolean isPreRelease() {

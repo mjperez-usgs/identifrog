@@ -61,7 +61,7 @@ public class UpdateAvailableFrame extends JDialog implements ActionListener, Pro
 	public static void main(String[] args) throws MalformedURLException, IOException {
 		//Testing of UpdateAvailableFrame
 		System.out.println("Getting testing JSON...");
-		String json = IOUtils.toString(new URL("https://api.github.com/repos/matryer/bitbar/releases"));
+		String json = IOUtils.toString(new URL("https://api.github.com/repos/mjperez-usgs/identifrog/releases"));
 		System.out.println("Received testing JSON, starting UI test");
 		Object obj = JSONValue.parse(json);
 		IdentiFrog.initLogger();
@@ -311,6 +311,7 @@ public class UpdateAvailableFrame extends JDialog implements ActionListener, Pro
 			if (!error) {
 				runUpdateScript(newBuildNum);
 			} else {
+				JOptionPane.showMessageDialog(UpdateAvailableFrame.this, "The update was unable to be extracted.\nThe log file will indicate why.", "Update Error", JOptionPane.ERROR_MESSAGE);
 				dispose();
 			}
 		}
@@ -438,7 +439,7 @@ public class UpdateAvailableFrame extends JDialog implements ActionListener, Pro
 		sb.append("\r\n");
 		sb.append("setlocal");
 		sb.append("\r\n");
-		sb.append("echo Current directory: %CD%");
+		sb.append("echo Switching versions of IdentiFrog");
 		sb.append("\r\n");
 		sb.append("::Wait for 2 seconds so the JVM fully exits.");
 		sb.append("\r\n");
@@ -448,33 +449,14 @@ public class UpdateAvailableFrame extends JDialog implements ActionListener, Pro
 		sb.append("\r\n");
 		sb.append("xcopy /Y /S \"" + IdentiFrog.getUpdateFileExtractedDestination() + "\" \"" + System.getProperty("user.dir") + "\"");
 		sb.append("\r\n");
-		sb.append("::Cleanup");
-		sb.append("\r\n");
-		//sb.append("rmdir /S /Q \"" + IdentiFrog.getUpdatesFolder());
-		sb.append("\r\n");
 		sb.append("::Run IdentiFrog");
 		sb.append("\r\n");
-		sb.append("popd");
-		sb.append("\r\n");
-		//sb.append("pause");
-		sb.append("\r\n");
-		/*
-		 * if (newBuildNum == IdentiFrog.INT_VERSION) {
-		 * sb.append("IdentiFrog.exe --minor-update-from "); } else {
-		 */
 		sb.append("\"" + System.getProperty("user.dir") + File.separator + "IdentiFrog.exe\" --update-from ");
-		sb.append(IdentiFrog.INT_VERSION);
+		sb.append(IdentiFrog.HR_VERSION);
 		sb.append("\r\n");
 		sb.append("endlocal");
 		sb.append("\r\n");
-		sb.append("call :deleteSelf&exit /b");
-		sb.append("\r\n");
-		sb.append(":deleteSelf");
-		sb.append("\r\n");
-		//sb.append("start /b \"\" cmd /c del \"%~f0\"&exit /b");
-
-		//sb.append("pause");
-		//sb.append("exit");
+		sb.append("(goto) 2>nul & rmdir /S /Q \""+IdentiFrog.getUpdatesFolder()+"\"");
 		try {
 			String updatePath = new File(IdentiFrog.getUpdaterScript()).getAbsolutePath();
 			Files.write(Paths.get(updatePath), sb.toString().getBytes(), StandardOpenOption.CREATE);

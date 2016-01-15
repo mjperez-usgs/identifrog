@@ -4,7 +4,6 @@ import gov.usgs.identifrog.ExtensionFileFilter;
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.Site;
 import gov.usgs.identifrog.DataObjects.GitHubRelease;
-import gov.usgs.identifrog.Frames.UpdateAvailableFrame.HTTPDownloadUtil;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 import gov.usgs.identifrog.ui.StatusBar;
 
@@ -19,7 +18,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URL;
@@ -42,9 +40,6 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
-
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -376,7 +371,6 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 	 */
 	class UpdateCheckerThread extends SwingWorker<Void, Void> {
 		String serverResponse = null;
-		private JSONArray serverReleasesInfo;
 		private boolean hadError = false;
 
 		public UpdateCheckerThread() {
@@ -408,18 +402,19 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 				Object obj = JSONValue.parse(serverResponse);
 				if (obj instanceof JSONArray) {
 					JSONArray releaseArray = (JSONArray) obj;
-					serverReleasesInfo = releaseArray;
+					IdentiFrog.SERVER_RELEASES_INFO = releaseArray;
 					IdentiFrog.LOGGER.writeMessage("Number of releases on server: "+releaseArray.size());
 					for (Object release : releaseArray) {
-						if (obj instanceof JSONObject) {
-							GitHubRelease ghb = new GitHubRelease((JSONObject) obj);
+						if (release instanceof JSONObject) {
+							GitHubRelease ghb = new GitHubRelease((JSONObject) release);
 							IdentiFrog.LOGGER.writeMessage("Release from server: "+ghb);
 							if (ghb.getAttachments().size() > 0) {
-								String relHRVersion = ghb.getTag();
+								String relHRVersion = ghb.getTagName();
 								if (relHRVersion.startsWith("v")) {
 									relHRVersion = relHRVersion.substring(1);
 								}
-								if (IdentiFrog.versionCompare(IdentiFrog.HR_VERSION, relHRVersion) > 0) {
+								int versionComparison = IdentiFrog.versionCompare(relHRVersion,IdentiFrog.HR_VERSION);
+								if (versionComparison > 0) {
 									//update available
 									shouldShowUpdateText = true;
 									break;

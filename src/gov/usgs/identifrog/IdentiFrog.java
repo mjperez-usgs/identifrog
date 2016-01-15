@@ -33,6 +33,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.json.simple.JSONArray;
 import org.w3c.dom.Element;
 
 /**
@@ -52,7 +53,7 @@ public class IdentiFrog {
 	//private final Preferences node = root.node("edu/isu/aadis/defaults");
 	public final static boolean DEBUGGING_BUILD = true; //when building the app, change this to false and debugging items will be hidden
 	public static final String DB_FILENAME = "datafile.xml"; //filename for the DB, can possibly change.
-	public static final String HR_VERSION = "0.1.0";
+	public static final String HR_VERSION = "0.0.01";
 	public static final int INT_VERSION = 1;
 	public static final String BUILD_DATE = "10/26/2015";
 
@@ -66,6 +67,7 @@ public class IdentiFrog {
 	public static DecimalFormat decimalFormat = new DecimalFormat("#.00");
 	public static MainFrame activeMainFrame;
 	public static ArrayList<Image> ICONS;
+	public static JSONArray SERVER_RELEASES_INFO;
 
 	// construct the application
 	public IdentiFrog() throws FileNotFoundException, ParseException, IOException {

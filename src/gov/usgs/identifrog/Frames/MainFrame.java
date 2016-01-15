@@ -152,6 +152,7 @@ public class MainFrame extends JFrame {
 	private JMenuItem menuItemHelpAbout = new JMenuItem("About");
 	private JMenu menuProject = new JMenu("Project");
 	private JMenuItem menuItemProjectManager = new JMenuItem("Project Manager");
+	private JMenuItem menuItemUpdater = new JMenuItem("Check for updates");
 	private JMenuItem menuItemSaveSiteAs = new JMenuItem("Save Site As", imageSaveAs16);
 	private JMenuItem MenuItemEdit = new JMenuItem("Edit Frog", imageEdit16);
 	private JMenuItem MenuItemAllFrogVerify = new JMenuItem("Signature Strength Test", imageLink16);
@@ -404,6 +405,14 @@ public class MainFrame extends JFrame {
 				pmf.setVisible(true);
 			}
 		});
+		
+		menuItemUpdater.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new UpdateAvailableFrame(IdentiFrog.SERVER_RELEASES_INFO, MainFrame.this);
+			}
+		});
 
 		menuItemSaveSiteAs.addActionListener(new ActionListener() {
 			@Override
@@ -444,6 +453,7 @@ public class MainFrame extends JFrame {
 		menuFile.add(menuItemProjectManager);
 		menuFile.add(menuItemSaveSiteAs);
 		menuFile.addSeparator();
+		menuFile.add(menuItemUpdater);
 		menuFile.add(menuItemFileExit);
 
 		menuHelp.add(MenuItemHelp);
