@@ -122,7 +122,7 @@ public class MainFrame extends JFrame {
 	//private ImageIcon imageImage16 = new ImageIcon(MainFrame.class.getResource("/resources/IconImage16.png"));
 	private ImageIcon imageDelete16 = new ImageIcon(MainFrame.class.getResource("/resources/IconDelete16.png"));
 	private ImageIcon imageEdit16 = new ImageIcon(MainFrame.class.getResource("/resources/IconEdit16.png"));
-	private ImageIcon imageWarning16 = new ImageIcon(MainFrame.class.getResource("/resources/IconWarning16.png"));
+	public ImageIcon imageWarning16 = new ImageIcon(MainFrame.class.getResource("/resources/IconWarning16.png"));
 	private ImageIcon imageMerge16 = new ImageIcon(MainFrame.class.getResource("/resources/IconMerge16.png"));
 	private ImageIcon imageLink16 = new ImageIcon(MainFrame.class.getResource("/resources/IconLink16.png"));
 	private ImageIcon imageMark16 = new ImageIcon(MainFrame.class.getResource("/resources/IconMark16.png"));
@@ -827,7 +827,7 @@ public class MainFrame extends JFrame {
 						((TitledBorder) comparisonImageLabel.getBorder()).setTitle("Comparison Image");
 						mergeFrogsButton.setEnabled(false);
 					} else {
-						if (searchTBSplitPane != null && searchTBSplitPane.getBottomComponent().isVisible()) {
+						if (searchTBSplitPane != null && searchTBSplitPane.getBottomComponent() != null && searchTBSplitPane.getBottomComponent().isVisible()) {
 							ACTIVE_COMPARISON_IMAGE = ACTIVE_FROGMATCH.getTopImage();
 							comparisonImageLabel.setIcon(new ImageIcon(ACTIVE_COMPARISON_IMAGE.getImage().getDorsalImage()));
 							comparisonImageLabel.setText(null);

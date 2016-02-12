@@ -401,12 +401,98 @@ public class XMLFrogDatabase {
 			}
 			IdentiFrog.LOGGER.writeMessage("Loading templates from DB");
 			//Load templates TODO
+			Template template = null;
+			String templateXpath = "/frogdatabase/templates/template";
+			NodeList tList = (NodeList) xpath.evaluate(templateXpath, doc, XPathConstants.NODESET);
 
-			
+			for (int i = 0; i < tList.getLength(); i++) {
+				template = new Template();
+				Element templateElement = (Element) tList.item(i);
+
+				// load template one by one
+				IdentiFrog.LOGGER.writeMessage("Loading -date- for Template");
+				NamedNodeMap dateAttributes = templateElement.getElementsByTagName("date").item(0).getAttributes();
+				template.setDateEntry(dateAttributes.getNamedItem("entry").getTextContent());
+				template.setDateCapture(dateAttributes.getNamedItem("capture").getTextContent());
+				// Biometrics
+				IdentiFrog.LOGGER.writeMessage("Loading -biometrics- for Template");
+				NamedNodeMap bm = templateElement.getElementsByTagName("biometrics").item(0).getAttributes();
+				if (bm.getNamedItem("mass") != null) {
+					template.setMass(bm.getNamedItem("mass").getNodeValue());
+				}
+				if (bm.getNamedItem("length") != null) {
+					template.setLength(bm.getNamedItem("length").getNodeValue());
+				}
+
+				// Comments
+				IdentiFrog.LOGGER.writeMessage("Loading -comments- for Template");
+				template.setComments(templateElement.getElementsByTagName("comments").item(0).getTextContent());
+
+				// Location
+				IdentiFrog.LOGGER.writeMessage("Loading -location- for Template");
+				Location location = new Location();
+				Element locationElement = (Element) templateElement.getElementsByTagName("location").item(0);
+				// Location - name
+				location.setName(locationElement.getElementsByTagName("name").item(0).getTextContent());
+				// Location - description
+				location.setDescription(locationElement.getElementsByTagName("description").item(0).getTextContent());
+				// Location - coordinate
+				NodeList coordinate = locationElement.getElementsByTagName("coordinate");
+				if (coordinate.getLength() < 1) {
+					// no coordinate was set
+					IdentiFrog.LOGGER.writeMessage("No coordinate data in -location- in Template");
+					location.setCoordinateType(null);
+				} else {
+					Element coordinateElement = (Element) coordinate.item(0);
+					//Node ct = coordinateElement.getAttributes().("type");
+					if (coordinateElement != null && coordinateElement.getAttributes().getNamedItem("type") != null) {
+						location.setCoordinateType(coordinate.item(0).getAttributes().getNamedItem("type").getTextContent());
+						// Element coordinateElement = ((Element)
+						// nn.item(0)).getElementsByTagName("coordinate");
+						if (location.getCoordinateType().equals("Lat/Long")) {
+							IdentiFrog.LOGGER.writeMessage("Loading LatLong -location- for Template");
+							location.setLongitude(coordinateElement.getElementsByTagName("longitude").item(0).getTextContent());
+							location.setLatitude(coordinateElement.getElementsByTagName("latitude").item(0).getTextContent());
+							location.setDatum(coordinateElement.getElementsByTagName("datum").item(0).getTextContent());
+						} else if (location.getCoordinateType().equals("UTM")) {
+							IdentiFrog.LOGGER.writeMessage("Loading UTM -location- for Template");
+							location.setLongitude(coordinateElement.getElementsByTagName("easting").item(0).getTextContent());
+							location.setLatitude(coordinateElement.getElementsByTagName("northing").item(0).getTextContent());
+							location.setDatum(coordinateElement.getElementsByTagName("datum").item(0).getTextContent());
+							location.setZone(Integer.parseInt(coordinateElement.getElementsByTagName("zone").item(0).getTextContent()));
+						} else {
+							IdentiFrog.LOGGER.writeError("Error: Unknown coordinate type (" + location.getCoordinateType()
+									+ ")for -location- in Template, skipping coordinate data.");
+						}
+					} else {
+						IdentiFrog.LOGGER.writeError("Frog has sample in DB that has a location without a TYPE attribute on the LOCATION node.");
+					}
+				}
+				template.setLocation(location);
+
+				// Personel
+				IdentiFrog.LOGGER.writeMessage("Loading -userids(s)- for Template");
+				//User observer = new User();
+				//User recorder = new User();
+				Element observerElem = (Element) templateElement.getElementsByTagName("observer").item(0);
+				template.setObserver(XMLFrogDatabase.getObserverByID(Integer.parseInt(observerElem.getTextContent())));
+
+				Element recorderElem = (Element) templateElement.getElementsByTagName("recorder").item(0);
+				template.setRecorder(XMLFrogDatabase.getRecorderByID(Integer.parseInt(recorderElem.getTextContent())));
+
+				// SurveyID
+				IdentiFrog.LOGGER.writeMessage("Loading -surveyid- for Template");
+				template.setSurveyID(templateElement.getElementsByTagName("surveyid").item(0).getTextContent());
+				templates.add(template);
+			}
+
 			//Load Metadata
-			HIGHEST_ASSIGNED_ID = Integer.parseInt(xpath.evaluate("/frogdatabase/metadata/highestid", doc));
+			String highestIDStr = xpath.evaluate("/frogdatabase/metadata/highestid", doc);
+			if (highestIDStr != null && !highestIDStr.equals("")) {
+				HIGHEST_ASSIGNED_ID = Integer.parseInt(highestIDStr);
+			}
 			//HIGHEST_ASSIGNED_ID = Integer.parseInt(highestIdElem.getTextContent());
-			IdentiFrog.LOGGER.writeMessage("Highest ID this DB has assigned: "+HIGHEST_ASSIGNED_ID);
+			IdentiFrog.LOGGER.writeMessage("Highest ID this DB has assigned: " + HIGHEST_ASSIGNED_ID);
 
 			IdentiFrog.LOGGER.writeMessage("Loaded XML DB, loaded data for " + frogs.size() + " frogs.");
 			XMLFrogDatabase.FULLY_LOADED = true;
@@ -587,12 +673,10 @@ public class XMLFrogDatabase {
 		if (!FULLY_LOADED) {
 			IdentiFrog.LOGGER.writeError("Attempting to get next available ID before DB has been loaded!");
 		}
-		/*int nextAvailable = 0;
-		for (Frog frog : frogs) {
-			if (frog.getID() > nextAvailable) {
-				nextAvailable = frog.getID();
-			}
-		}*/
+		/*
+		 * int nextAvailable = 0; for (Frog frog : frogs) { if (frog.getID() >
+		 * nextAvailable) { nextAvailable = frog.getID(); } }
+		 */
 		return HIGHEST_ASSIGNED_ID + 1;
 	}
 
@@ -1048,7 +1132,7 @@ public class XMLFrogDatabase {
 				}
 			}
 			HIGHEST_ASSIGNED_ID = highest;
-			
+
 			this.attachedFrame = attachedFrame;
 			numToProcess += discriminators.size();
 			numToProcess += frogs.size();
@@ -1118,12 +1202,23 @@ public class XMLFrogDatabase {
 			}
 			root.appendChild(discrimsElement);
 
+			//Templates
+			IdentiFrog.LOGGER.writeMessage("Writing templates to DB");
+			Element templatesElement = doc.createElement("templates");
+
+			for (Template template : templates) {
+				templatesElement.appendChild(template.createElement(doc));
+				numProcessed++;
+				publish(numProcessed);
+			}
+			root.appendChild(discrimsElement);
+
 			//METADATA
 			IdentiFrog.LOGGER.writeMessage("Writing DB metadata to DB");
 
 			Element metadataElement = doc.createElement("metadata");
 			Element metaHighestIDElement = doc.createElement("highestid");
-			metadataElement.setTextContent(Integer.toString(HIGHEST_ASSIGNED_ID));
+			metaHighestIDElement.setTextContent(Integer.toString(HIGHEST_ASSIGNED_ID));
 			metadataElement.appendChild(metaHighestIDElement);
 			root.appendChild(metadataElement);
 
@@ -1162,6 +1257,18 @@ public class XMLFrogDatabase {
 
 		private int calcPercent(int latestUpdate) {
 			return (int) (((double) numProcessed / numToProcess) * 100);
+		}
+		
+		@Override
+		protected void done(){
+			try {
+				get();
+			} catch (Exception e) {
+				IdentiFrog.LOGGER.writeExceptionWithMessage("Error saving DB:" , e);
+				if (attachedFrame != null) {
+					attachedFrame.getStatusBar().setMessageWithIcon("Error saving database: " + e.getMessage(),attachedFrame.imageWarning16);
+				}
+			}
 		}
 	}
 

@@ -131,7 +131,6 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 
 			//images.add(simage);
 			init();
-			textFrog_ID.setText(Integer.toString(XMLFrogDatabase.getNextAvailableFrogID()));
 			LocalDate now = LocalDate.now();
 			entryDatePicker.getModel().setDate(now.getYear(), now.getMonthValue() - 1, now.getDayOfMonth()); //-1 cause it's 0 indexed
 			entryDatePicker.getModel().setSelected(true);
@@ -227,9 +226,6 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 	JLabel labEntrydate = new JLabel();
 	String[] sexStrings = { "M", "F", "J", "Unknown" };
 	JDatePickerImpl captureDatePicker;
-	JComboBox<?> sexComboBox = new JComboBox<Object>(sexStrings);
-	JRadioButton additDiscrNo = new JRadioButton("No", false);
-	JRadioButton additDiscrYes = new JRadioButton("Yes", false);
 	//JCheckBox checkAdditionalDescriptor = new JCheckBox("Additional Discriminator");
 	JButton butDiscriminators = new JButton("Discriminators", imageDiscriminators16);
 	DecimalFormat integerFormat = new DecimalFormat("#");
@@ -249,10 +245,6 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 	JDatePickerImpl entryDatePicker;
 	JLabel labZone = new JLabel();
 	JTextField textLocDesc = new JTextField();
-	JTextField textSpecies = new JTextField();
-	JTextField textFrog_ID = new JTextField();
-	JLabel labFrog_ID = new JLabel("ID");
-	JLabel labFRO = new JLabel();
 
 	JLabel labDatum = new JLabel();
 	JLabel labLocationName = new JLabel();
@@ -320,11 +312,6 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		panelDataEntry.setBorder(entryPersonBorder);
 		//recPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-		JPanel panelFrogInfo = new JPanel(new GridBagLayout());
-		TitledBorder staticFrogBorder = BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Static Frog Information");
-		staticFrogBorder.setTitleFont(level1TitleFont);
-		panelFrogInfo.setBorder(staticFrogBorder);
-
 		JPanel panelBiometrics = new JPanel(new GridBagLayout());
 		TitledBorder biometricsBorder = BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Biometrics");
 		biometricsBorder.setTitleFont(level2TitleFont);
@@ -391,36 +378,6 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		c.gridy = 0;
 		c.weightx = 0.2;
 		c.weighty = 0;
-
-		//row1
-		panelFrogInfo.add(labFrog_ID, c);
-		c.gridx = 1;
-		c.weightx = 1;
-		c.insets = leftSpaceInsets;
-		panelFrogInfo.add(labSpecies, c);
-		c.gridx = 2;
-		panelFrogInfo.add(labSex, c);
-
-		//row 2
-		c.gridx = 0;
-		c.gridy = 1;
-		c.weightx = 0.2;
-		c.insets = noInsets;
-		panelFrogInfo.add(textFrog_ID, c);
-		textFrog_ID.setEnabled(false);
-		c.weightx = 1;
-		c.insets = leftSpaceInsets;
-		c.gridx = 1;
-		panelFrogInfo.add(textSpecies, c);
-		c.gridx = 2;
-		panelFrogInfo.add(sexComboBox, c);
-
-		c.gridx = 3;
-		c.gridy = 1;
-		panelFrogInfo.add(butDiscriminators, c);
-
-		panelFrogInfo.setMinimumSize(new Dimension(100, 60));
-		panelFrogInfo.setMaximumSize(new Dimension(10000, 60));
 
 		//Data Entry Panel======================
 		c = new GridBagConstraints();
@@ -716,8 +673,6 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 			try {
 				Date eDate = addMonthToDate((Date) entryDatePicker.getModel().getValue());
 				entrydate = IdentiFrog.dateFormat.format(eDate);
-				String species = textSpecies.getText().trim();
-				String gender = (String) sexComboBox.getSelectedItem();
 				Date d = addMonthToDate((Date) captureDatePicker.getModel().getValue());
 				String capturedate = IdentiFrog.dateFormat.format(d);
 				// mass
@@ -748,18 +703,25 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 						zone);
 
 				//Generate sitesample
-				/*SiteSample sample = new SiteSample();
-				sample.setSurveyID(textSurveyID.getText().trim());
-				sample.setMass(textMass.getText().trim());
-				sample.setLength(textLength.getText().trim());
-				sample.setDateCapture(capturedate);
-				sample.setDateEntry(entrydate);
-				User selectedObs = (User) comboObserver.getSelectedItem();
-				User selectedRec = (User) comboRecorder.getSelectedItem();
-				sample.setRecorder(XMLFrogDatabase.getRecorderByID(selectedRec.getID())); //we use IDs instead of assigning values because 
-				sample.setObserver(XMLFrogDatabase.getObserverByID(selectedObs.getID())); //these may be out of sync with the XML database (say a user fools with the file in the background)
-				sample.setComments(textComments.getText().trim());
-				sample.setLocation(lc);*/
+				/*
+				 * SiteSample sample = new SiteSample();
+				 * sample.setSurveyID(textSurveyID.getText().trim());
+				 * sample.setMass(textMass.getText().trim());
+				 * sample.setLength(textLength.getText().trim());
+				 * sample.setDateCapture(capturedate);
+				 * sample.setDateEntry(entrydate); User selectedObs = (User)
+				 * comboObserver.getSelectedItem(); User selectedRec = (User)
+				 * comboRecorder.getSelectedItem();
+				 * sample.setRecorder(XMLFrogDatabase
+				 * .getRecorderByID(selectedRec.getID())); //we use IDs instead
+				 * of assigning values because
+				 * sample.setObserver(XMLFrogDatabase
+				 * .getObserverByID(selectedObs.getID())); //these may be out of
+				 * sync with the XML database (say a user fools with the file in
+				 * the background)
+				 * sample.setComments(textComments.getText().trim());
+				 * sample.setLocation(lc);
+				 */
 
 				//update copyfrog's sample
 
@@ -786,79 +748,68 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 	 * 
 	 * @param sample
 	 *
-	protected void loadSiteSample(int index) {
-		activeSample = index;
-
-			try {
-					Date entryDate;
-					entryDate = IdentiFrog.dateFormat.parse(sample.getDateEntry());
-					//ridiculous... thanks oracle
-					Calendar cal = Calendar.getInstance();
-					cal.setTime(entryDate);
-					int year = cal.get(Calendar.YEAR);
-					int month = cal.get(Calendar.MONTH);
-					int day = cal.get(Calendar.DAY_OF_MONTH);
-					entryDatePicker.getModel().setDate(year, month - 1, day); //-1 cause it's 0 indexed
-					entryDatePicker.getModel().setSelected(true);
-				}
-			} catch (ParseException e) {
-				IdentiFrog.LOGGER.writeExceptionWithMessage("Failed to parse entry date when loading sitesample!", e);
-			}
-
-			try {
-					Date captureDate;
-					captureDate = IdentiFrog.dateFormat.parse(sample.getDateCapture());
-					//ridiculous... thanks oracle
-					Calendar cal = Calendar.getInstance();
-					cal.setTime(captureDate);
-					int year = cal.get(Calendar.YEAR);
-					int month = cal.get(Calendar.MONTH);
-					int day = cal.get(Calendar.DAY_OF_MONTH);
-					captureDatePicker.getModel().setDate(year, month - 1, day); //-1 cause it's 0 indexed
-					captureDatePicker.getModel().setSelected(true);
-				}
-			} catch (ParseException e) {
-				IdentiFrog.LOGGER.writeExceptionWithMessage("Failed to parse capture date when loading sitesample!", e);
-			}
-
-			textSurveyID.setText(sample.getSurveyID());
-			comboRecorder.setSelectedItem(sample.getRecorder());
-			comboObserver.setSelectedItem(sample.getObserver());
-
-			if (sample.getLocation() != null && sample.getLocation().getCoordinateType() != null) {
-				if (sample.getLocation().getCoordinateType().equals("UTM")) {
-					textX.setText(sample.getLocation().getLatitude());
-					textY.setText(sample.getLocation().getLongitude());
-					UTMButton.setSelected(true);
-					textZone.setText(Integer.toString(sample.getLocation().getZone()));
-					labZone.setVisible(true);
-					textZone.setVisible(true);
-				} else {
-					textY.setText(sample.getLocation().getLongitude());
-					textX.setText(sample.getLocation().getLatitude());
-					LatLongButton.setSelected(true);
-					labZone.setVisible(false);
-					textZone.setVisible(false);
-				}
-				textLocDesc.setText(sample.getLocation().getDescription());
-				textDatum.setText(sample.getLocation().getDatum());
-			}
-
-			for (Location l : XMLFrogDatabase.getAllLocations()) {
-				comboLocationName.addItem(l);
-			}
-
-			textMass.setText(sample.getMass());
-			textLength.setText(sample.getLength());
-			textComments.setText(sample.getComments());
-		}
-		if (!LatLongButton.isSelected() && !UTMButton.isSelected()) {
-			LatLongButton.setSelected(true);
-			labZone.setVisible(false);
-			textZone.setVisible(false);
-
-		}
-	}*/
+	 *            protected void loadSiteSample(int index) { activeSample =
+	 *            index;
+	 * 
+	 *            try { Date entryDate; entryDate =
+	 *            IdentiFrog.dateFormat.parse(sample.getDateEntry());
+	 *            //ridiculous... thanks oracle Calendar cal =
+	 *            Calendar.getInstance(); cal.setTime(entryDate); int year =
+	 *            cal.get(Calendar.YEAR); int month = cal.get(Calendar.MONTH);
+	 *            int day = cal.get(Calendar.DAY_OF_MONTH);
+	 *            entryDatePicker.getModel().setDate(year, month - 1, day); //-1
+	 *            cause it's 0 indexed
+	 *            entryDatePicker.getModel().setSelected(true); } } catch
+	 *            (ParseException e) {
+	 *            IdentiFrog.LOGGER.writeExceptionWithMessage
+	 *            ("Failed to parse entry date when loading sitesample!", e); }
+	 * 
+	 *            try { Date captureDate; captureDate =
+	 *            IdentiFrog.dateFormat.parse(sample.getDateCapture());
+	 *            //ridiculous... thanks oracle Calendar cal =
+	 *            Calendar.getInstance(); cal.setTime(captureDate); int year =
+	 *            cal.get(Calendar.YEAR); int month = cal.get(Calendar.MONTH);
+	 *            int day = cal.get(Calendar.DAY_OF_MONTH);
+	 *            captureDatePicker.getModel().setDate(year, month - 1, day);
+	 *            //-1 cause it's 0 indexed
+	 *            captureDatePicker.getModel().setSelected(true); } } catch
+	 *            (ParseException e) {
+	 *            IdentiFrog.LOGGER.writeExceptionWithMessage
+	 *            ("Failed to parse capture date when loading sitesample!", e);
+	 *            }
+	 * 
+	 *            textSurveyID.setText(sample.getSurveyID());
+	 *            comboRecorder.setSelectedItem(sample.getRecorder());
+	 *            comboObserver.setSelectedItem(sample.getObserver());
+	 * 
+	 *            if (sample.getLocation() != null &&
+	 *            sample.getLocation().getCoordinateType() != null) { if
+	 *            (sample.getLocation().getCoordinateType().equals("UTM")) {
+	 *            textX.setText(sample.getLocation().getLatitude());
+	 *            textY.setText(sample.getLocation().getLongitude());
+	 *            UTMButton.setSelected(true);
+	 *            textZone.setText(Integer.toString(
+	 *            sample.getLocation().getZone())); labZone.setVisible(true);
+	 *            textZone.setVisible(true); } else {
+	 *            textY.setText(sample.getLocation().getLongitude());
+	 *            textX.setText(sample.getLocation().getLatitude());
+	 *            LatLongButton.setSelected(true); labZone.setVisible(false);
+	 *            textZone.setVisible(false); }
+	 *            textLocDesc.setText(sample.getLocation().getDescription());
+	 *            textDatum.setText(sample.getLocation().getDatum()); }
+	 * 
+	 *            for (Location l : XMLFrogDatabase.getAllLocations()) {
+	 *            comboLocationName.addItem(l); }
+	 * 
+	 *            textMass.setText(sample.getMass());
+	 *            textLength.setText(sample.getLength());
+	 *            textComments.setText(sample.getComments()); } if
+	 *            (!LatLongButton.isSelected() && !UTMButton.isSelected()) {
+	 *            LatLongButton.setSelected(true); labZone.setVisible(false);
+	 *            textZone.setVisible(false);
+	 * 
+	 *            } }
+	 */
 
 	/**
 	 * Opens the Discriminators Management window and stalls execution of this
@@ -1028,12 +979,6 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		} else if (!captureDatePicker.getModel().isSelected()) {
 			captureDatePicker.requestFocus(true);
 			errorMessage = "Capture date cannot be empty";
-		} else if (isEmptyString(textSpecies.getText())) {
-			textSpecies.requestFocus(true);
-			errorMessage = "Frog species cannot be empty";
-		} else if (isEmptyString((String) sexComboBox.getSelectedItem())) {
-			sexComboBox.requestFocus(true);
-			errorMessage = "A frog must entry must have a gender.";
 		} else if (!entryDatePicker.getModel().isSelected()) {
 			entryDatePicker.requestFocus(true);
 			errorMessage = "Entry date cannot be empty";
@@ -1131,10 +1076,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 	void butClearAll_actionPerformed(ActionEvent e) {
 		if (JOptionPane.showConfirmDialog(this, "This will clear all entered information on this screen.", "Clear Information",
 				JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
-			textSpecies.setText("");
-			sexComboBox.setSelectedItem(-1);
 			captureDatePicker.getModel().setSelected(false);
-			sexComboBox.setSelectedItem(null);
 			textMass.setText("");
 			textLength.setText("");
 			textComments.setText("");
@@ -1150,12 +1092,6 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 	}
 
 	private void butDebugAutopopulate_actionPerformed(ActionEvent e) {
-		textFrog_ID.setText(Integer.toString(XMLFrogDatabase.getNextAvailableFrogID()));
-		textSpecies.setText("Jumpy");
-		sexComboBox.setSelectedItem("M");
-		//dayComboBox.setSelectedItem("16");
-		//monthComboBox.setSelectedItem("Mar");
-		//yearComboBox.setSelectedItem("2015");
 		LocalDate now = LocalDate.now();
 		captureDatePicker.getModel().setDate(now.getYear(), now.getMonthValue() - 1, now.getDayOfMonth()); //-1 cause it's 0 indexed
 		captureDatePicker.getModel().setSelected(true);
@@ -1187,7 +1123,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 			loccoor = coor;
 		}
 	}
-	
+
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
 		// TODO Auto-generated method stub
