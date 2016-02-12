@@ -331,13 +331,20 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 
 		// load recent site info for parsing
 		ArrayList<Site> recentSites = null;
-		try {
-			ObjectInputStream in = new ObjectInputStream(new FileInputStream(ProjectManagerFrame.RECENT_SITES_FILE));
-			recentSites = (ArrayList<Site>) in.readObject();
-			in.close();
-		} catch (Exception e) {
-			IdentiFrog.LOGGER.writeExceptionWithMessage("Error reading recent sites list:", e);
-			recentSites = new ArrayList<Site>(); // empty
+		File recentSitesFile = new File(ProjectManagerFrame.RECENT_SITES_FILE);
+		if (recentSitesFile.exists()) {
+			try {
+				ObjectInputStream in = new ObjectInputStream(new FileInputStream(ProjectManagerFrame.RECENT_SITES_FILE));
+				recentSites = (ArrayList<Site>) in.readObject();
+				in.close();
+			} catch (Exception e) {
+				IdentiFrog.LOGGER.writeExceptionWithMessage("Error reading recent sites list:", e);
+				recentSites = new ArrayList<Site>(); // empty
+			}
+		} else {
+			File dataFolder = recentSitesFile.getParentFile();
+			dataFolder.mkdirs();
+			recentSites = new ArrayList<Site>();
 		}
 
 		recentSites.add(newSite);
@@ -355,10 +362,8 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 			out.close();
 			out.flush();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			IdentiFrog.LOGGER.writeException(e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			IdentiFrog.LOGGER.writeException(e);
 		}
 	}
@@ -374,7 +379,7 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 		private boolean hadError = false;
 
 		public UpdateCheckerThread() {
-			statusBar.setMessageWithIcon("Checking for updates",imageHeartbeat);
+			statusBar.setMessageWithIcon("Checking for updates", imageHeartbeat);
 		}
 
 		/**
@@ -403,17 +408,17 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 				if (obj instanceof JSONArray) {
 					JSONArray releaseArray = (JSONArray) obj;
 					IdentiFrog.SERVER_RELEASES_INFO = releaseArray;
-					IdentiFrog.LOGGER.writeMessage("Number of releases on server: "+releaseArray.size());
+					IdentiFrog.LOGGER.writeMessage("Number of releases on server: " + releaseArray.size());
 					for (Object release : releaseArray) {
 						if (release instanceof JSONObject) {
 							GitHubRelease ghb = new GitHubRelease((JSONObject) release);
-							IdentiFrog.LOGGER.writeMessage("Release from server: "+ghb);
+							IdentiFrog.LOGGER.writeMessage("Release from server: " + ghb);
 							if (ghb.getAttachments().size() > 0) {
 								String relHRVersion = ghb.getTagName();
 								if (relHRVersion.startsWith("v")) {
 									relHRVersion = relHRVersion.substring(1);
 								}
-								int versionComparison = IdentiFrog.versionCompare(relHRVersion,IdentiFrog.HR_VERSION);
+								int versionComparison = IdentiFrog.versionCompare(relHRVersion, IdentiFrog.HR_VERSION);
 								if (versionComparison > 0) {
 									//update available
 									shouldShowUpdateText = true;
@@ -423,15 +428,15 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 						}
 					}
 					if (shouldShowUpdateText) {
-						statusBar.setMessageWithIcon("Update available",imageUpdateAvailable);
+						statusBar.setMessageWithIcon("Update available", imageUpdateAvailable);
 					} else {
-						statusBar.setMessageWithIcon("No available updates",imageOK);
+						statusBar.setMessageWithIcon("No available updates", imageOK);
 					}
 				} else {
-					statusBar.setMessageWithIcon("Error checking for updates",imageWarning);
+					statusBar.setMessageWithIcon("Error checking for updates", imageWarning);
 				}
 			} else {
-				statusBar.setMessageWithIcon("Error checking for updates",imageWarning);
+				statusBar.setMessageWithIcon("Error checking for updates", imageWarning);
 			}
 		}
 	}

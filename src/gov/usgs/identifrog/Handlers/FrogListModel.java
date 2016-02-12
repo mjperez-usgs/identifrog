@@ -52,7 +52,9 @@ public class FrogListModel extends AbstractListModel<Frog> {
 
 	public Frog removeElement(int i) {
 		Frog removed = frogs.remove(i);
-		fireIntervalRemoved(this, i, i);
+		if (removed != null) {
+			fireIntervalRemoved(this, -1, -1);
+		}
 		return removed;
 	}
 
