@@ -1321,12 +1321,20 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			isError = false;
 			try {
 				mass = Double.parseDouble(textMass.getText().trim());
+				if (mass <= 0){
+					errorMessage = "Sample's mass must be greater than 0";
+					isError = true;
+				}
 			} catch (NumberFormatException nfe) {
 				errorMessage = "Sample's mass must be a number";
 				isError = true;
 			}
 			try {
 				length = Double.parseDouble(textLength.getText().trim());
+				if (length <= 0){
+					errorMessage = "Sample's length must be greater than 0";
+					isError = true;
+				}
 			} catch (NumberFormatException nfe) {
 				errorMessage = "Sample's length must be a number";
 				isError = true;

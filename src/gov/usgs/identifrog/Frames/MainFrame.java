@@ -1312,7 +1312,7 @@ public class MainFrame extends JFrame {
 		Frog owner = XMLFrogDatabase.findImageOwnerByHash(img.getSourceImageHash());
 		if (owner != null) {
 			JOptionPane.showMessageDialog(this, "The image '" + image.getName() + "' has already been entered (part of frog " + owner.getID()
-					+ ").\n" + "To the image, first delete it from the database.", "Image already entered", JOptionPane.ERROR_MESSAGE);
+					+ ").\n" + "To add this image, first delete it from that frog.", "Image already entered", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 

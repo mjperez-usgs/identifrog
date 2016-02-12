@@ -27,6 +27,7 @@ public class FrogListModel extends AbstractListModel<Frog> {
 
 	public void addElement(Frog f) {
 		frogs.add(f);
+		fireContentsChanged(this, frogs.size() - 1, frogs.size() - 1);
 	}
 
 	public Frog get(int index) {
@@ -50,7 +51,9 @@ public class FrogListModel extends AbstractListModel<Frog> {
 	}
 
 	public Frog removeElement(int i) {
-		return frogs.remove(i);
+		Frog removed = frogs.remove(i);
+		fireIntervalRemoved(this, i, i);
+		return removed;
 	}
 
 	public void setList(ArrayList<Frog> array) {
