@@ -150,6 +150,12 @@ public class UsersFrame extends JDialog implements ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
+				String fname = fName.getText().trim();
+				String lname = lName.getText().trim();
+				if (fname.length() <= 0 || lname.length() <=0) {
+					return;
+				}
+				
 				if (checkIsObserver.isSelected()) {
 					User user = new User();
 					user.setFirstName(fName.getText().trim());
