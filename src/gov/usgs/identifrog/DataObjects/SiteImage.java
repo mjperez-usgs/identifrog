@@ -361,6 +361,9 @@ public class SiteImage {
 	 */
 	public String getOriginalFilename() {
 		String filename = getImageFileName();
+		if (filename == null) {
+			return FilenameUtils.getName(sourceFilePath); //pending processing
+		}
 		String extension = FilenameUtils.getExtension(filename);
 		String hash = getSourceImageHash();
 

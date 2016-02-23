@@ -357,7 +357,10 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 						popupOriginalFilename = new JMenuItem("Originally entered as " + img.getOriginalFilename(), imageImage16);
 						popupOriginalFilename.setEnabled(false);
 						popup.add(popupOriginalFilename);
-
+					} else {
+						popupOriginalFilename = new JMenuItem("Pending processing: " + img.getOriginalFilename(), imageImage16);
+						popupOriginalFilename.setEnabled(false);
+						popup.add(popupOriginalFilename);
 					}
 					popup.show(e.getComponent(), e.getX(), e.getY());
 				}
