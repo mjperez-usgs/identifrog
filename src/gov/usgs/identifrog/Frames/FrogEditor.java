@@ -1319,6 +1319,12 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			//fields are populated
 			System.out.println("Fields are populated.");
 			isError = false;
+			Date capDate = IdentiFrog.removeTime(addMonthToDate((Date) captureDatePicker.getModel().getValue()));
+			Date entDate = IdentiFrog.removeTime(addMonthToDate((Date) entryDatePicker.getModel().getValue()));
+			if (capDate.after(entDate) ){
+				isError = true;
+				errorMessage = "Capture date cannot be after entry date"; 
+			}
 			try {
 				mass = Double.parseDouble(textMass.getText().trim());
 				if (mass <= 0){
