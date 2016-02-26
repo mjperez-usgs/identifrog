@@ -29,16 +29,13 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.io.File;
-import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Properties;
-import java.util.prefs.Preferences;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -89,13 +86,14 @@ import org.jdatepicker.impl.UtilDateModel;
 public class FrogEditor extends JDialog implements ListSelectionListener {
 	protected MainFrame parentFrame;
 	private boolean shouldSave = false;
-
-	private Preferences root = Preferences.userRoot();
+	private boolean checkImageCountOnExit = false;
+	//private Preferences root = Preferences.userRoot();
 	//private Preferences node = root.node("edu/isu/aadis/defaults");
 
 	private Font level1TitleFont = new Font("MS Sans Serif", Font.BOLD, 14);
 	private Font level2TitleFont = new Font("MS Sans Serif", Font.BOLD, 12);
 	private ImageIcon imageNew16 = new ImageIcon(MainFrame.class.getResource("/resources/IconNew16.png"));
+	private ImageIcon imageDelete16 = new ImageIcon(MainFrame.class.getResource("/resources/IconDelete16.png"));
 	private ImageIcon imageImage16 = new ImageIcon(MainFrame.class.getResource("/resources/IconImage16.png"));
 	private ImageIcon imageDiscriminators16 = new ImageIcon(MainFrame.class.getResource("/resources/IconDiscriminator16.png"));
 
@@ -112,9 +110,11 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	protected int maxentrypersondbid = 0;
 	protected ImageManipFrame iFrame;
 	private Frog frog;
-	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+	//private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 	private boolean isNewFrog = false;
-	private int activeSample = 0;
+	private int activeSampleIndex = 0;
+	private ArrayList<SiteImage> imagesToRemove = new ArrayList<>(); //only happens on commit.
+	private ArrayList<SiteSample> surveysToDelete = new ArrayList<>();
 
 	/**
 	 * This is the standard add-frog window that comes up when a "New Frog" is
@@ -309,8 +309,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		setIconImages(IdentiFrog.ICONS);
 		setLayout(new BorderLayout());
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		
-		
+
 		//start init
 		imageList = new JList<SiteImage>(imageModel);
 		imageList.addListSelectionListener(this);
@@ -325,8 +324,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					imageList.setSelectedIndex(idx);
 					//codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
 					JPopupMenu popup = new JPopupMenu();
-					JMenuItem popupSignatureSearch, popupOriginalFilename;
-					
+					JMenuItem popupSignatureSearch, popupDeleteImage, popupOriginalFilename;
+
 					popupSignatureSearch = new JMenuItem();
 					if (img.isSignatureGenerated()) {
 						popupSignatureSearch.setText("Search for frog match");
@@ -336,7 +335,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					popupSignatureSearch.addActionListener(new ActionListener() {
 						@Override
 						public void actionPerformed(ActionEvent e) {
-							if (img.isSignatureGenerated()){
+							if (img.isSignatureGenerated()) {
 								//search for this frog via image
 								parentFrame.setSearchImage(img);
 								parentFrame.getTabbedPane().setSelectedIndex(1);
@@ -351,7 +350,30 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 							}
 						}
 					});
+					popupDeleteImage = new JMenuItem();
+					popupDeleteImage.setText("Delete image");
+					popupDeleteImage.setIcon(imageDelete16);
+					popupDeleteImage.addActionListener(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							String message = "Remove this image from this survey?";
+							if (img.isProcessed()) {
+								message = "This will remove this image from the database.\nThis operation can't be undone.\nDelete this image from this survey?";
+							}
+							int result = JOptionPane.showConfirmDialog(FrogEditor.this, message, "Remove Frog Image", JOptionPane.YES_NO_OPTION);
+							if (result == JOptionPane.OK_OPTION) {
+								imageModel.removeElement(img);
+								SiteSample sample = frog.getSiteSamples().get(activeSampleIndex); //must keep list of samples and frog samples in sync
+								//Images
+								boolean removed = sample.getSiteImages().remove(img);
+								System.out.println("Removed site image: " + removed);
+								imagesToRemove.add(img);
+							}
+						}
+					});
+
 					popup.add(popupSignatureSearch);
+					popup.add(popupDeleteImage);
 
 					if (img.isProcessed()) {
 						popupOriginalFilename = new JMenuItem("Originally entered as " + img.getOriginalFilename(), imageImage16);
@@ -389,7 +411,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		changeSurveyButton
 				.setToolTipText("<html>Change editor to the selected site survey.<br>Saves the current data in this editor window but does not commit it unless this frog is saved.</html>");
 		changeSurveyButton.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (sampleList.getSelectedIndex() >= 0 && commitChanges()) {
@@ -397,8 +419,41 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				}
 			}
 		});
+		JButton deleteSurveyButton = new JButton("Delete Survey");
+		deleteSurveyButton
+				.setToolTipText("<html>Deletes the selected survey.<br>Will delete frogs images from database associated with that survey.</html>");
+		deleteSurveyButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				SiteSample sampleToRemove = sampleList.getSelectedValue();
+				if (sampleToRemove != null) {
+					int result = JOptionPane.showConfirmDialog(FrogEditor.this, "Deleting this sample will delete all associated images with it.",
+							"Deleting Site Sample", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+					if (result == JOptionPane.OK_OPTION) {
+						surveysToDelete.add(sampleToRemove);
+						sampleModel.removeElement(sampleToRemove);
+						if (sampleModel.size() == 0) {
+							String[] options = new String[] { "Add Survey", "Delete Frog" };
+							result = JOptionPane.showOptionDialog(FrogEditor.this,
+									"This frog has no surveys.\nYou need to add a new survey or delete this frog.", "No Surveys",
+									JOptionPane.ERROR_MESSAGE, 0, null, options, options[1]);
+							if (result == 0) {
+								//add survey
+
+							} else if (result == 1) {
+								//delete frog
+							}
+
+						}
+					}
+				}
+			}
+		});
+
 		changeSurveyPanel.add(labelActiveSurvey);
 		changeSurveyPanel.add(changeSurveyButton);
+		changeSurveyPanel.add(deleteSurveyButton);
 
 		//Data
 		ArrayList<User> observers = XMLFrogDatabase.getObservers();
@@ -752,6 +807,24 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		butSave.setToolTipText("Saves this frog's information to the database and commits it to disk.");
 		butSave.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				if (checkImageCountOnExit) {
+					ArrayList<SiteSample> surveysToRemove = new ArrayList<>();
+					for (SiteSample survey : frog.getSiteSamples()) {
+						if (survey.getSiteImages().size() <= 0) {
+							surveysToRemove.add(survey);
+						}
+					}
+					frog.getSiteSamples().removeAll(surveysToRemove);
+					if (frog.getSiteSamples().size() == 0) {
+						//no images...
+						frog.delete();
+						shouldSave = true;
+						IdentiFrog.LOGGER.writeMessage("FrogEditor is closing with status FROG DELETED (no images)");
+						dispose();
+						return;
+					}
+				}
+
 				if (commitChanges()) {
 					IdentiFrog.LOGGER.writeMessage("FrogEditor is closing with status SAVED");
 					ArrayList<SiteImage> images = new ArrayList<SiteImage>();
@@ -764,7 +837,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					shouldSave = true;
 					dispose();
 					IdentiFrog.LOGGER.writeMessage("FrogEditor has closed");
-
 					//openDigSigFrame(maxfrogdbid);
 				}
 			}
@@ -913,7 +985,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	 * @return
 	 */
 	private boolean commitChanges() {
-		if (validateData()) {
+		if (validateData() && confirmDeletion()) {
 			try {
 				Date eDate = addMonthToDate((Date) entryDatePicker.getModel().getValue());
 				entrydate = IdentiFrog.dateFormat.format(eDate);
@@ -974,10 +1046,11 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				for (int i = 0; i < imageModel.getSize(); i++) {
 					images.add(imageModel.get(i));
 				}
+
 				sample.setSiteImages(images);
 
 				//update copyfrog's sample
-				this.frog.getSiteSamples().set(activeSample, sample);
+				this.frog.getSiteSamples().set(activeSampleIndex, sample);
 
 				//update copyfrog static info
 				this.frog.setSpecies(species);
@@ -985,6 +1058,14 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				if (this.frog.getID() <= 0) {
 					this.frog.setID(XMLFrogDatabase.getNextAvailableFrogID());
 				}
+
+				if (imagesToRemove.size() > 0) {
+					IdentiFrog.LOGGER.writeMessage("Removing " + imagesToRemove.size() + " images.");
+					for (SiteImage img : imagesToRemove) {
+						img.deleteImage();
+					}
+				}
+				imagesToRemove.clear();
 
 				IdentiFrog.LOGGER.writeMessage("Commited updated sample to copyfrog in editor");
 				return true;
@@ -996,11 +1077,27 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			return false;
 		}
 	}
-	
+
+	private boolean confirmDeletion() {
+		if (imagesToRemove.size() > 0) {
+			int result = JOptionPane.showConfirmDialog(this, "Confirm deletion of " + imagesToRemove.size() + " images.", "Confirm image deletion",
+					JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+			if (result == JOptionPane.OK_OPTION) {
+				for (SiteImage img : imagesToRemove) {
+					img.deleteImage();
+				}
+				return true;
+			} else {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	private Date addMonthToDate(Date d) {
 		Calendar c = Calendar.getInstance();
 		c.setTime(d);
-		c.add(Calendar.MONTH, 1);  // number of days to add
+		c.add(Calendar.MONTH, 1); // number of days to add
 		return c.getTime();
 	}
 
@@ -1010,7 +1107,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	 * @param sample
 	 */
 	protected void loadSiteSample(int index) {
-		activeSample = index;
+		activeSampleIndex = index;
 
 		SiteSample sample = this.frog.getSiteSamples().get(index); //must keep list of samples and frog samples in sync
 		imageModel.clear();
@@ -1077,11 +1174,10 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				textLocDesc.setText(sample.getLocation().getDescription());
 				textDatum.setText(sample.getLocation().getDatum());
 			}
-			
+
 			for (Location l : XMLFrogDatabase.getAllLocations()) {
 				comboLocationName.addItem(l);
 			}
-			
 
 			textMass.setText(sample.getMass());
 			textLength.setText(sample.getLength());
@@ -1095,12 +1191,12 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		} else {
 			labelActiveSurvey.setText("New Survey");
 		}
-		
+
 		if (!LatLongButton.isSelected() && !UTMButton.isSelected()) {
 			LatLongButton.setSelected(true);
 			labZone.setVisible(false);
 			textZone.setVisible(false);
-			
+
 		}
 	}
 
@@ -1324,13 +1420,13 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			isError = false;
 			Date capDate = IdentiFrog.removeTime(addMonthToDate((Date) captureDatePicker.getModel().getValue()));
 			Date entDate = IdentiFrog.removeTime(addMonthToDate((Date) entryDatePicker.getModel().getValue()));
-			if (capDate.after(entDate) ){
+			if (capDate.after(entDate)) {
 				isError = true;
-				errorMessage = "Capture date cannot be after entry date"; 
+				errorMessage = "Capture date cannot be after entry date";
 			}
 			try {
 				mass = Double.parseDouble(textMass.getText().trim());
-				if (mass <= 0){
+				if (mass <= 0) {
 					errorMessage = "Sample's mass must be greater than 0";
 					isError = true;
 				}
@@ -1340,7 +1436,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			}
 			try {
 				length = Double.parseDouble(textLength.getText().trim());
-				if (length <= 0){
+				if (length <= 0) {
 					errorMessage = "Sample's length must be greater than 0";
 					isError = true;
 				}
@@ -1363,7 +1459,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			}
 
 			if (imageList.getModel().getSize() <= 0) {
-				errorMessage = "All site sample's must contain at least 1 image";
+				errorMessage = "Each site survey must contain at least 1 image.\nIf you want to delete this survey, delete it from the survey list.";
 				isError = true;
 			}
 		}

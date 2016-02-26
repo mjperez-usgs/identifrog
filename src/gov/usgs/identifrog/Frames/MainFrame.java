@@ -405,9 +405,9 @@ public class MainFrame extends JFrame {
 				pmf.setVisible(true);
 			}
 		});
-		
+
 		menuItemUpdater.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				new UpdateAvailableFrame(IdentiFrog.SERVER_RELEASES_INFO, MainFrame.this);
@@ -827,7 +827,8 @@ public class MainFrame extends JFrame {
 						((TitledBorder) comparisonImageLabel.getBorder()).setTitle("Comparison Image");
 						mergeFrogsButton.setEnabled(false);
 					} else {
-						if (searchTBSplitPane != null && searchTBSplitPane.getBottomComponent() != null && searchTBSplitPane.getBottomComponent().isVisible()) {
+						if (searchTBSplitPane != null && searchTBSplitPane.getBottomComponent() != null
+								&& searchTBSplitPane.getBottomComponent().isVisible()) {
 							ACTIVE_COMPARISON_IMAGE = ACTIVE_FROGMATCH.getTopImage();
 							comparisonImageLabel.setIcon(new ImageIcon(ACTIVE_COMPARISON_IMAGE.getImage().getDorsalImage()));
 							comparisonImageLabel.setText(null);
@@ -892,7 +893,7 @@ public class MainFrame extends JFrame {
 						+ "?", "Confirm Frog Merge", JOptionPane.YES_NO_OPTION);
 				if (result == JOptionPane.YES_OPTION) {
 					IdentiFrog.LOGGER.writeMessage("Merging Frog " + otherFrog.getID() + " with Frog " + sourceFrog.getID());
-					
+
 					if (sourceFrog.getID() < otherFrog.getID()) {
 						sourceFrog.mergeWith(otherFrog);
 						XMLFrogDatabase.removeFrog(otherFrog.getID());
@@ -1364,12 +1365,23 @@ public class MainFrame extends JFrame {
 		//we should check if the frog has changed
 		Frog editedFrog = editFrogWindow.getFrog();
 		if (editFrogWindow.shouldSave() && editedFrog != null) {
-			XMLFrogDatabase.updateFrog(f.getID(), editedFrog);
-			FrogBrowserCellRenderer.idImageMap.remove(editedFrog.getID()); //force thumbnail to update
-			frogModel.set(frogIndex, editedFrog);
+			if (editedFrog.isDeleted()) {
+				//delete
+				XMLFrogDatabase.removeFrog(editedFrog.getID());
+				FrogBrowserCellRenderer.idImageMap.remove(editedFrog.getID()); //force thumbnail to update
+				statusBar.setMessage("Deleted frog from database");
+				frogModel.removeElement(frogIndex);
+			} else {
+				//update
+				XMLFrogDatabase.updateFrog(f.getID(), editedFrog);
+				FrogBrowserCellRenderer.idImageMap.remove(editedFrog.getID()); //force thumbnail to update
+				frogModel.set(frogIndex, editedFrog);
+				statusBar.setMessage("Updated frog in database");
+			}
+			
 			XMLFrogDatabase.writeXMLFile();
 			updateSpeciesList();
-			statusBar.setMessage("Updated frog in database");
+			frogList.revalidate();
 			frogList.repaint();
 		}
 	}
@@ -1391,6 +1403,7 @@ public class MainFrame extends JFrame {
 		if (JOptionPane.showConfirmDialog(null, "Deleting this frog will remove " + numImages + " " + ((numImages == 1) ? "image" : "images")
 				+ " and " + numSignatures + " " + ((numSignatures == 1) ? "signature" : "signatures") + ".\n" + "Delete this frog?", "Delete Frog",
 				JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
+			IdentiFrog.LOGGER.writeMessage("Deleting frog from database: "+f);
 			f.delete();
 			frogModel.removeElement(f);
 			XMLFrogDatabase.removeFrog(f.getID());
@@ -1398,6 +1411,7 @@ public class MainFrame extends JFrame {
 			updateSpeciesList();
 			XMLFrogDatabase.writeXMLFile();
 			statusBar.setMessage("Deleted frog from database");
+			frogList.revalidate();
 		}
 	}
 

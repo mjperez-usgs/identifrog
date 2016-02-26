@@ -18,6 +18,7 @@ public class Frog implements Comparable<Frog> {
 	private ArrayList<SiteSample> siteSamples;
 	private ArrayList<Integer> previousIds;
 	private boolean isFreshImport = false;
+	private boolean deleted;
 
 	public Frog() {
 		siteSamples = new ArrayList<SiteSample>();
@@ -327,12 +328,21 @@ public class Frog implements Comparable<Frog> {
 	}
 
 	/**
-	 * Processes a delete request on this frog. Deletes this frogs images.
+	 * Processes a delete request on this frog. Deletes this frogs images and will remove from the database on the next save.
 	 */
 	public void delete() {
 		for (SiteImage img : getAllSiteImages()) {
 			img.deleteImage();
 		}
+		deleted = true;
+	}
+
+	public boolean isDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
 	}
 
 	/**

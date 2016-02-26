@@ -27,8 +27,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,7 +48,9 @@ import javax.swing.SwingWorker;
 import javax.swing.border.EmptyBorder;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.poi.ss.usermodel.BuiltinFormats;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -456,7 +456,7 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 						publish("Verifying " + FilenameUtils.getName(f.toString()));
 						img = ImageIO.read(f); //verifies file can load
 						if (useFilenameFormat) {
-							data.put(rowNum, new Object[] { f.toString(), getFrogID(f.toString()) });
+							data.put(rowNum, new Object[] { f.toString(), Integer.parseInt(getFrogID(f.toString())) });
 						} else {
 							data.put(rowNum, new Object[] { f.toString() });
 						}
@@ -468,12 +468,6 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 						rowNum++;
 						img = null;
 						System.gc();
-						// you probably want something more involved here
-						// to display in your UI
-						//IdentiFrog.LOGGER.writeMessage("image: " + f.getName());
-						//IdentiFrog.LOGGER.writeMessage(" width : " + img.getWidth());
-						//IdentiFrog.LOGGER.writeMessage(" height: " + img.getHeight());
-						//IdentiFrog.LOGGER.writeMessage(" size  : " + f.length());
 					} catch (final IOException e) {
 						// handle errors here
 					}
@@ -492,9 +486,19 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 				Row row = imageSheet.createRow(rownum++);
 				Object[] rowData = data.get(key);
 				int cellnum = 0;
-				for (Object obj : rowData) {
+				for (int i = 0; i < rowData.length; i++) {
+					Object obj = rowData[i];
 					Cell cell = row.createCell(cellnum++);
-					if (obj instanceof String) {
+					if (obj instanceof Integer) {
+						cell.setCellValue((Integer) obj);
+						System.out.println("INTEGER");
+						if (i == 1) {
+							System.out.println("cell 2");
+							CellStyle cellStyle = book.createCellStyle();
+						    cellStyle.setDataFormat((short) 1);
+						    cell.setCellStyle(cellStyle);
+						}
+					} else if (obj instanceof String) {
 						cell.setCellValue((String) obj);
 					} else if (obj instanceof Boolean) {
 						cell.setCellValue((Boolean) obj);
