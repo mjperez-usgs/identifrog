@@ -987,15 +987,15 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	private boolean commitChanges() {
 		if (validateData() && confirmDeletion()) {
 			try {
-				Date eDate = addMonthToDate((Date) entryDatePicker.getModel().getValue());
-				entrydate = IdentiFrog.dateFormat.format(eDate);
+				Date eDate = (Date) entryDatePicker.getModel().getValue();
+				String entrydate = IdentiFrog.dateFormat.format(eDate);
 				String species = textSpecies.getText().trim();
 				String gender = (String) sexComboBox.getSelectedItem();
 				// Additional Discriminator
 				//String discriminator = (checkAdditionalDescriptor.isSelected()) ? "true": "false";
 				//int m = monthComboBox.getSelectedIndex() + 1;
 
-				Date d = addMonthToDate((Date) captureDatePicker.getModel().getValue());
+				Date d = (Date) captureDatePicker.getModel().getValue();
 				String capturedate = IdentiFrog.dateFormat.format(d);
 
 				//yearComboBox.getSelectedItem() + "-" + m + "-"
@@ -1033,6 +1033,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				sample.setSurveyID(textSurveyID.getText().trim());
 				sample.setMass(textMass.getText().trim());
 				sample.setLength(textLength.getText().trim());
+				System.out.println(capturedate + " " + entrydate);
 				sample.setDateCapture(capturedate);
 				sample.setDateEntry(entrydate);
 				User selectedObs = (User) comboObserver.getSelectedItem();
@@ -1128,7 +1129,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					int year = cal.get(Calendar.YEAR);
 					int month = cal.get(Calendar.MONTH);
 					int day = cal.get(Calendar.DAY_OF_MONTH);
-					entryDatePicker.getModel().setDate(year, month - 1, day); //-1 cause it's 0 indexed
+					entryDatePicker.getModel().setDate(year, month, day); //-1 cause it's 0 indexed
 					entryDatePicker.getModel().setSelected(true);
 				}
 			} catch (ParseException e) {
@@ -1145,7 +1146,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					int year = cal.get(Calendar.YEAR);
 					int month = cal.get(Calendar.MONTH);
 					int day = cal.get(Calendar.DAY_OF_MONTH);
-					captureDatePicker.getModel().setDate(year, month - 1, day); //-1 cause it's 0 indexed
+					captureDatePicker.getModel().setDate(year, month, day);
 					captureDatePicker.getModel().setSelected(true);
 				}
 			} catch (ParseException e) {
@@ -1418,8 +1419,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			//fields are populated
 			System.out.println("Fields are populated.");
 			isError = false;
-			Date capDate = IdentiFrog.removeTime(addMonthToDate((Date) captureDatePicker.getModel().getValue()));
-			Date entDate = IdentiFrog.removeTime(addMonthToDate((Date) entryDatePicker.getModel().getValue()));
+			Date capDate = IdentiFrog.removeTime((Date) captureDatePicker.getModel().getValue());
+			Date entDate = IdentiFrog.removeTime((Date) entryDatePicker.getModel().getValue());
 			if (capDate.after(entDate)) {
 				isError = true;
 				errorMessage = "Capture date cannot be after entry date";
