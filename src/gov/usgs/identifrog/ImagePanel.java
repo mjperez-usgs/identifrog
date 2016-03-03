@@ -1323,6 +1323,7 @@ public class ImagePanel extends JPanel {
 		image = previousImage;
 		parentFrame.setMenuItemUndo(false);
 		repaint();
+		spo
 	}
 
 	/*
@@ -1760,6 +1761,7 @@ public class ImagePanel extends JPanel {
 			// undo the latest filled spot
 			int lastFilledSpotNum = spotFilledCoor.get(spotFilledCoor.size() - 1).filledSpotNum;
 			int j = spotFilledCoor.size() - 1;
+			parentFrame.setNumSpotsUI(Math.max(0, j));
 			while (j >= 0 && spotFilledCoor.get(j).filledSpotNum == lastFilledSpotNum) {
 				spotFilledCoor.remove(j);
 				--j;

@@ -38,6 +38,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -277,7 +278,7 @@ public class ImageManipFrame extends JDialog {
 			}
 		});
 
-		butOverlayToggle.setPreferredSize(new Dimension(41, 41));
+/*		butOverlayToggle.setPreferredSize(new Dimension(41, 41));
 		butOverlayToggle.setIcon(imageUndo32);
 		//butUndoFillSpot.setText("");
 		butOverlayToggle.setToolTipText("Toggle Spot Extraction Overlay");
@@ -288,7 +289,7 @@ public class ImageManipFrame extends JDialog {
 				// TODO Auto-generated method stub
 
 			}
-		});
+		});*/
 
 		TextAreaStep.setFont(new java.awt.Font("SansSerif", Font.BOLD, 14));
 		TextAreaStep.setForeground(new Color(90, 0, 120));
@@ -488,7 +489,7 @@ public class ImageManipFrame extends JDialog {
 		colorFingerprintTool.setPreferredSize(new Dimension(146, 80));
 		colorFingerprintTool.add(butPencil);
 		colorFingerprintTool.add(butUndoPencil);
-		colorFingerprintTool.add(butOverlayToggle);
+		//colorFingerprintTool.add(butOverlayToggle);
 		SpotExtractionPanelTools.setVisible(false);
 		SpotExtractionPanelTools.setBackground(sliderToolBoxColor);
 		SpotExtractionPanelTools.setLayout(null);
@@ -798,6 +799,14 @@ public class ImageManipFrame extends JDialog {
 	protected void butNext_actionPerformed(ActionEvent e) {
 		switch (step) {
 		case 1:// to spot extraction window
+			try {
+				imagePanel.mapOntoRectangle();
+			} catch (ArrayIndexOutOfBoundsException ex) {
+				IdentiFrog.LOGGER.writeExceptionWithMessage("User likely drew an invalid rectangle: ",ex);
+				JOptionPane.showMessageDialog(this, "Error: Invalid selection.\nMake sure you have drawn a figure without overlaps\nand the line are all within the image.", "Error generating dorsal image", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			
 			ExamplePanelContainer.setVisible(true);
 			ExampleVent.setVisible(false);
 			ExampleSnout.setVisible(false);
@@ -813,7 +822,7 @@ public class ImageManipFrame extends JDialog {
 			setSpotExtractionPanelTools(true);
 			imagePanel.setImageinEllipse(false);
 			// ready to map fingerprint onto Standard Rectangle
-			imagePanel.mapOntoRectangle();
+			
 			imagePanel.standardRectEdgesDilated = imagePanel.detectEdges();
 			imagePanel.trackOriginalRectImage();
 			imagePanel.setSpotExtraction(true);
@@ -848,11 +857,6 @@ public class ImageManipFrame extends JDialog {
 				IdentiFrog.LOGGER.writeError("Could not obtain binary image, variable was null (in case 2)");
 				new ErrorDialog("Could not obtain binary image");
 			}
-			// ///////////////////////////////////////////////////////////////////////////////////
-			//parentFrame.updateCells();
-			//XMLFrogDatabase.getFrogs().get(XMLFrogDatabase.getFrogs().size() - 1).setPathImage(imageName1);
-			////IdentiFrog.LOGGER.writeMessage(XMLFrogDatabase.getFrogs().size());
-			//XMLFrogDatabase.writeXMLFile();
 			image.setSignatureGenerated(true);
 			image.processImageIntoDB(true);
 			closeAction();
