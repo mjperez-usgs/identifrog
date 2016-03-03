@@ -743,6 +743,7 @@ public class XLSXTemplateGeneratorFrame extends JDialog {
 				SiteSample value = entry.getValue();
 				Frog f = new Frog();
 				f.setID(XMLFrogDatabase.getNextAvailableFrogID());
+				XMLFrogDatabase.setHIGHEST_ASSIGNED_ID(XMLFrogDatabase.getHIGHEST_ASSIGNED_ID() + 1);
 				f.addSiteSample(value);
 				f.setFreshImport(true);
 				XMLFrogDatabase.addFrog(f);

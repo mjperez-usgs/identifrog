@@ -489,10 +489,10 @@ public class XMLFrogDatabase {
 			//Load Metadata
 			String highestIDStr = xpath.evaluate("/frogdatabase/metadata/highestid", doc);
 			if (highestIDStr != null && !highestIDStr.equals("")) {
-				HIGHEST_ASSIGNED_ID = Integer.parseInt(highestIDStr);
+				setHIGHEST_ASSIGNED_ID(Integer.parseInt(highestIDStr));
 			}
 			//HIGHEST_ASSIGNED_ID = Integer.parseInt(highestIdElem.getTextContent());
-			IdentiFrog.LOGGER.writeMessage("Highest ID this DB has assigned: " + HIGHEST_ASSIGNED_ID);
+			IdentiFrog.LOGGER.writeMessage("Highest ID this DB has assigned: " + getHIGHEST_ASSIGNED_ID());
 
 			IdentiFrog.LOGGER.writeMessage("Loaded XML DB, loaded data for " + frogs.size() + " frogs.");
 			XMLFrogDatabase.FULLY_LOADED = true;
@@ -677,7 +677,7 @@ public class XMLFrogDatabase {
 		 * int nextAvailable = 0; for (Frog frog : frogs) { if (frog.getID() >
 		 * nextAvailable) { nextAvailable = frog.getID(); } }
 		 */
-		return HIGHEST_ASSIGNED_ID + 1;
+		return getHIGHEST_ASSIGNED_ID() + 1;
 	}
 
 	/**
@@ -1117,6 +1117,14 @@ public class XMLFrogDatabase {
 		return true;
 	}
 
+	public static int getHIGHEST_ASSIGNED_ID() {
+		return HIGHEST_ASSIGNED_ID;
+	}
+
+	public static void setHIGHEST_ASSIGNED_ID(int hIGHEST_ASSIGNED_ID) {
+		HIGHEST_ASSIGNED_ID = hIGHEST_ASSIGNED_ID;
+	}
+
 	static class CommitWorker extends SwingWorker<Boolean, Integer> {
 
 		private MainFrame attachedFrame;
@@ -1125,13 +1133,13 @@ public class XMLFrogDatabase {
 
 		public CommitWorker(MainFrame attachedFrame) {
 			//Calculate the new HIGHEST_ASSIGNED_ID.
-			int highest = HIGHEST_ASSIGNED_ID;
+			int highest = getHIGHEST_ASSIGNED_ID();
 			for (Frog frog : frogs) {
 				if (frog.getID() > highest) {
 					highest = frog.getID();
 				}
 			}
-			HIGHEST_ASSIGNED_ID = highest;
+			setHIGHEST_ASSIGNED_ID(highest);
 
 			this.attachedFrame = attachedFrame;
 			numToProcess += discriminators.size();
@@ -1218,7 +1226,7 @@ public class XMLFrogDatabase {
 
 			Element metadataElement = doc.createElement("metadata");
 			Element metaHighestIDElement = doc.createElement("highestid");
-			metaHighestIDElement.setTextContent(Integer.toString(HIGHEST_ASSIGNED_ID));
+			metaHighestIDElement.setTextContent(Integer.toString(getHIGHEST_ASSIGNED_ID()));
 			metadataElement.appendChild(metaHighestIDElement);
 			root.appendChild(metadataElement);
 
