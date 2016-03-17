@@ -62,11 +62,8 @@ public class DiscriminatorFrame extends JDialog {
 	}
 
 	private void setupFrame() {
-		// TODO Auto-generated method stub
 		setTitle("Data Discriminators");
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
-		//new ImageIcon(this.getClass().getClassLoader().getResource("/resources/IconFrog.png"));
 		setIconImage(new ImageIcon(this.getClass().getResource("/resources/IconFrog.png")).getImage());
 		if (callingFrame == null && callingDialog == null) {
 			//close if this is opened by main()

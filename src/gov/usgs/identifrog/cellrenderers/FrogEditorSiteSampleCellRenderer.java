@@ -12,11 +12,18 @@ public class FrogEditorSiteSampleCellRenderer extends DefaultListCellRenderer {
 		super.getListCellRendererComponent(list, null, index, isSelected, cellHasFocus); //null - don't run toString()
 		if (value instanceof SiteSample) {
 			SiteSample sample = (SiteSample) value;
-			if (sample.getDateCapture() == null && sample.getSurveyID() == null) {
-				setText("New Survey");
-			} else {
-				setText(sample.getDateCapture()+" "+sample.getSurveyID());
+			
+			String text = "";
+			if (isSelected) {
+				text += "Active Survey:\n";
 			}
+			
+			if (sample.getDateCapture() == null && sample.getSurveyID() == null) {
+				text += "null..";
+			} else {
+				text += sample.getDateCapture()+": "+sample.getSurveyID();
+			}
+			setText(text);
 		}
 		return this;
 	}

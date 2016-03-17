@@ -55,8 +55,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
@@ -115,6 +118,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	private int activeSampleIndex = 0;
 	private ArrayList<SiteImage> imagesToRemove = new ArrayList<>(); //only happens on commit.
 	private ArrayList<SiteSample> surveysToDelete = new ArrayList<>();
+	private JTabbedPane tabPane = new JTabbedPane();
 
 	/**
 	 * This is the standard add-frog window that comes up when a "New Frog" is
@@ -219,11 +223,11 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	};
 
 	JList<SiteImage> imageList = new JList<SiteImage>();
-	JList<SiteSample> sampleList = new JList<SiteSample>();
+	//JList<SiteSample> sampleList = new JList<SiteSample>();
 	DefaultListModel<SiteImage> imageModel = new DefaultListModel<SiteImage>();
-	DefaultListModel<SiteSample> sampleModel = new DefaultListModel<SiteSample>();
+	DefaultComboBoxModel<SiteSample> sampleModel = new DefaultComboBoxModel<SiteSample>();
 
-	JButton butFillPreviousFrogInfo = new JButton();
+	JButton butFillFromTemplate = new JButton();
 	JButton butEditDiscriminators = new JButton();
 	JButton butEditTemplates = new JButton();
 	JButton butDebugPopulate = new JButton();
@@ -263,7 +267,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	DecimalFormat integerFormat = new DecimalFormat("#");
 	JFormattedTextField textMass = new JFormattedTextField(IdentiFrog.decimalFormat);
 	JLabel labFrogComments = new JLabel();
-	JTextField textComments = new JTextField();
+	JTextArea textComments = new JTextArea();
 	JLabel labCoorType = new JLabel();
 	JLabel labX = new JLabel();
 	JTextField textX = new JTextField();
@@ -303,6 +307,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JComboBox<User> comboRecorder;
 	JButton usersButton;
 	JComboBox<Location> comboLocationName = new JComboBox<Location>();
+	private JComboBox<SiteSample> surveySwitcherCombobox;
 
 	private void init() throws Exception {
 		setModal(true);
@@ -389,20 +394,18 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			}
 		});
 
-		sampleList = new JList<SiteSample>(sampleModel);
-		sampleList.addListSelectionListener(this);
-		sampleList.setCellRenderer(new FrogEditorSiteSampleCellRenderer());
-		sampleList.addMouseListener(new java.awt.event.MouseAdapter() {
-			public void mouseClicked(MouseEvent e) {
-				if (SwingUtilities.isLeftMouseButton(e)) {
-					//-- select a row
-					//final int idx = sampleList.locationToIndex(e.getPoint());
-					//final SiteSample img = sampleList.getModel().getElementAt(idx);
-					//commitChanges();
-					//loadSiteSample(idx);
-				}
-			}
-		});
+		/*
+		 * sampleList = new JList<SiteSample>(sampleModel);
+		 * sampleList.addListSelectionListener(this);
+		 * sampleList.setCellRenderer(new FrogEditorSiteSampleCellRenderer());
+		 * sampleList.addMouseListener(new java.awt.event.MouseAdapter() {
+		 * public void mouseClicked(MouseEvent e) { if
+		 * (SwingUtilities.isLeftMouseButton(e)) { //-- select a row //final int
+		 * idx = sampleList.locationToIndex(e.getPoint()); //final SiteSample
+		 * img = sampleList.getModel().getElementAt(idx); //commitChanges();
+		 * //loadSiteSample(idx); } } });
+		 */
+		JPanel panelFrogImages = new JPanel();
 
 		JPanel changeSurveyPanel = new JPanel();
 		changeSurveyPanel.setLayout(new BoxLayout(changeSurveyPanel, BoxLayout.PAGE_AXIS));
@@ -414,46 +417,39 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (sampleList.getSelectedIndex() >= 0 && commitChanges()) {
-					loadSiteSample(sampleList.getSelectedIndex());
-				}
+				//if (sampleList.getSelectedIndex() >= 0 && commitChanges()) {
+				//	loadSiteSample(sampleList.getSelectedIndex());
+				//}
 			}
 		});
-		JButton deleteSurveyButton = new JButton("Delete Survey");
-		deleteSurveyButton
-				.setToolTipText("<html>Deletes the selected survey.<br>Will delete frogs images from database associated with that survey.</html>");
-		deleteSurveyButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				SiteSample sampleToRemove = sampleList.getSelectedValue();
-				if (sampleToRemove != null) {
-					int result = JOptionPane.showConfirmDialog(FrogEditor.this, "Deleting this sample will delete all associated images with it.",
-							"Deleting Site Sample", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-					if (result == JOptionPane.OK_OPTION) {
-						surveysToDelete.add(sampleToRemove);
-						sampleModel.removeElement(sampleToRemove);
-						if (sampleModel.size() == 0) {
-							String[] options = new String[] { "Add Survey", "Delete Frog" };
-							result = JOptionPane.showOptionDialog(FrogEditor.this,
-									"This frog has no surveys.\nYou need to add a new survey or delete this frog.", "No Surveys",
-									JOptionPane.ERROR_MESSAGE, 0, null, options, options[1]);
-							if (result == 0) {
-								//add survey
-
-							} else if (result == 1) {
-								//delete frog
-							}
-
-						}
-					}
-				}
-			}
-		});
+		/*
+		 * JButton deleteSurveyButton = new JButton("Delete Survey");
+		 * deleteSurveyButton .setToolTipText(
+		 * "<html>Deletes the selected survey.<br>Will delete frogs images from database associated with that survey.</html>"
+		 * ); deleteSurveyButton.addActionListener(new ActionListener() {
+		 * 
+		 * @Override public void actionPerformed(ActionEvent arg0) { SiteSample
+		 * sampleToRemove = sampleList.getSelectedValue(); if (sampleToRemove !=
+		 * null) { int result = JOptionPane.showConfirmDialog(FrogEditor.this,
+		 * "Deleting this sample will delete all associated images with it.",
+		 * "Deleting Site Sample", JOptionPane.OK_CANCEL_OPTION,
+		 * JOptionPane.WARNING_MESSAGE); if (result == JOptionPane.OK_OPTION) {
+		 * surveysToDelete.add(sampleToRemove);
+		 * sampleModel.removeElement(sampleToRemove); if (sampleModel.size() ==
+		 * 0) { String[] options = new String[] { "Add Survey", "Delete Frog" };
+		 * result = JOptionPane.showOptionDialog(FrogEditor.this,
+		 * "This frog has no surveys.\nYou need to add a new survey or delete this frog."
+		 * , "No Surveys", JOptionPane.ERROR_MESSAGE, 0, null, options,
+		 * options[1]); if (result == 0) { //add survey
+		 * 
+		 * } else if (result == 1) { //delete frog }
+		 * 
+		 * } } } } });
+		 */
 
 		changeSurveyPanel.add(labelActiveSurvey);
 		changeSurveyPanel.add(changeSurveyButton);
-		changeSurveyPanel.add(deleteSurveyButton);
+		//changeSurveyPanel.add(deleteSurveyButton);
 
 		//Data
 		ArrayList<User> observers = XMLFrogDatabase.getObservers();
@@ -480,8 +476,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		panelAllInfo.setLayout(new BoxLayout(panelAllInfo, BoxLayout.PAGE_AXIS));
 
 		//Surveys Panel
-		JPanel surveysPanel = new JPanel(new BorderLayout());
-		surveysPanel.setMinimumSize(new Dimension(100, 50));
+		//JPanel surveysPanel = new JPanel(new BorderLayout());
+		//surveysPanel.setMinimumSize(new Dimension(100, 50));
 		addSurveyButton.setMaximumSize(new Dimension(160, 15));
 		addSurveyButton.addActionListener(new ActionListener() {
 			@Override
@@ -494,10 +490,10 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				}
 			}
 		});
-		surveysPanel.add(addSurveyButton, BorderLayout.NORTH);
-		JScrollPane ssp = new JScrollPane(sampleList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		surveysPanel.add(ssp, BorderLayout.CENTER);
-		surveysPanel.add(changeSurveyPanel, BorderLayout.SOUTH);
+		//surveysPanel.add(addSurveyButton, BorderLayout.NORTH);
+		//JScrollPane ssp = new JScrollPane(sampleList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		//surveysPanel.add(ssp, BorderLayout.CENTER);
+		//surveysPanel.add(changeSurveyPanel, BorderLayout.SOUTH);
 
 		//Images panel
 		JPanel imagesPanel = new JPanel(new BorderLayout());
@@ -552,17 +548,22 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		panelAllInfo.setPreferredSize(new Dimension(800, 695));
 
 		//top buttons==============
-		butFillPreviousFrogInfo.setText("Fill From Template");
-		butFillPreviousFrogInfo.setVisible(true);
-		butFillPreviousFrogInfo.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconBookmark32.png")));
-		butFillPreviousFrogInfo.addActionListener(new java.awt.event.ActionListener() {
+		surveySwitcherCombobox = new JComboBox<SiteSample>();
+		sampleModel = new DefaultComboBoxModel<SiteSample>();
+		surveySwitcherCombobox.setModel(sampleModel);
+		surveySwitcherCombobox.setRenderer(new FrogEditorSiteSampleCellRenderer());
+
+		butFillFromTemplate.setText("Fill From Template");
+		butFillFromTemplate.setVisible(true);
+		butFillFromTemplate.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconBookmark16.png")));
+		butFillFromTemplate.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				butFillPreviousFrogInfo_actionPerformed(e);
 			}
 		});
 
 		//Manage Users
-		ImageIcon imageUser = new ImageIcon(FrogEditor.class.getResource("/resources/IconUsers32.png"));
+		ImageIcon imageUser = new ImageIcon(FrogEditor.class.getResource("/resources/IconUsers16.png"));
 		usersButton = new JButton("Manage Users", imageUser);
 		//Icon from: http://www.softicons.com/business-icons/dragon-soft-icons-by-artua.com/user-icon
 		//License: Free for non-commercial use, commercial use not allowed
@@ -584,9 +585,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		});
 
 		//Debugging button
-		butDebugPopulate.setText("Debug: Autopopulate");
 		butDebugPopulate.setVisible(false);
-		butDebugPopulate.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconDebug32.png")));
+		butDebugPopulate.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconDebug16.png")));
 		butDebugPopulate.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				butDebugAutopopulate_actionPerformed(e);
@@ -704,9 +704,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		c.insets = leftSpaceInsets;
 		c.gridx = 1;
 		panelDataEntry.add(observerLabel, c);
-		c.gridx = 2;
-		c.weightx = 0.5;
-		panelDataEntry.add(labSurveyID, c);
 
 		//4th row
 		c.insets = noInsets;
@@ -719,11 +716,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		c.insets = leftSpaceInsets;
 		c.gridx = 1;
 		panelDataEntry.add(comboObserver, c);
-		c.gridx = 2;
-		c.weightx = 0.5;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		textSurveyID.setMinimumSize(textSurveyID.getPreferredSize());
-		panelDataEntry.add(textSurveyID, c);
 
 		panelDataEntry.setMaximumSize(new Dimension(10000, 120));
 
@@ -738,11 +730,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		textMass.setColumns(5);
 		labLength.setText("Length, mm");
 		textLength.setColumns(5);
-		labSurveyID.setText("Survey ID");
-		textSurveyID.setColumns(5);
-
-		labFrogComments.setText("Comments");
-		textComments.setColumns(210);
 
 		c = new GridBagConstraints();
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -776,7 +763,13 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		c.gridheight = 2;
 		c.weighty = 1;
 		c.fill = GridBagConstraints.BOTH;
-		panelBiometrics.add(textComments, c);
+		
+		
+		labFrogComments.setText("Comments");
+		textComments.setColumns(115);
+		textComments.setWrapStyleWord(true);
+		textComments.setLineWrap(true);
+		panelBiometrics.add(new JScrollPane(textComments,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER), c);
 
 		// PANEL LOCATION INFO
 		labLocationName.setText("Location Name");
@@ -864,7 +857,9 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		//top buttons
 		panelTopButtons.setLayout(new BoxLayout(panelTopButtons, BoxLayout.LINE_AXIS));
 		panelTopButtons.add(Box.createHorizontalGlue());
-		panelTopButtons.add(butFillPreviousFrogInfo);
+		panelTopButtons.add(surveySwitcherCombobox);
+		panelTopButtons.add(Box.createHorizontalGlue());
+		panelTopButtons.add(butFillFromTemplate);
 		panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
 		panelTopButtons.add(usersButton);
 		//panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
@@ -875,6 +870,13 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		}
 		panelTopButtons.add(Box.createHorizontalGlue());
 
+		labSurveyID.setText("Survey ID");
+		textSurveyID.setColumns(5);
+		JPanel surveyNamePanel = new JPanel(new BorderLayout());
+		surveyNamePanel.add(labSurveyID,BorderLayout.WEST);
+		surveyNamePanel.add(textSurveyID,BorderLayout.EAST);
+		
+		panelSiteSurvey.add(surveyNamePanel);
 		panelSiteSurvey.add(panelDataEntry);
 		panelSiteSurvey.add(panelLocation);
 		panelSiteSurvey.add(panelBiometrics);
@@ -954,22 +956,30 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		panelBottomButtons.add(butSave);
 		panelBottomButtons.add(Box.createHorizontalGlue());
 		//panelAllInfo.add(labImage);
-		panelAllInfo.add(panelTopButtons);
 		panelAllInfo.add(panelFrogInfo);
-		panelAllInfo.add(panelSiteSurvey);
+		panelAllInfo.add(tabPane);
+
+		//panelAllInfo.add(panelSiteSurvey);
 		//panelAllInfo.add(labFRO);
 
 		panelAllInfo.add(Box.createVerticalGlue());
 		panelAllInfo.add(panelBottomButtons);
-		//getContentPane().add(panelAllInfo, BorderLayout.CENTER);
-		JSplitPane topbottomSplitpane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, surveysPanel, imagesPanel);
-		topbottomSplitpane.setMinimumSize(new Dimension(140, 140));
-		JSplitPane leftrightSplitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, topbottomSplitpane, panelAllInfo);
-		topbottomSplitpane.setDividerLocation(140);
+		
+		panelSiteSurvey.add(Box.createVerticalGlue());
+		JSplitPane leftrightSplitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, imagesPanel /*new JPanel()*/, panelSiteSurvey);
 		leftrightSplitpane.setDividerLocation(120);
-		//leftrightSplitpane.setEnabled(false);
-		//topbottomSplitpane.setEnabled(true);
-		add(leftrightSplitpane);
+
+		JPanel surveyPanel = new JPanel(new BorderLayout());
+
+		surveyPanel.add(panelTopButtons, BorderLayout.NORTH);
+		surveyPanel.add(leftrightSplitpane, BorderLayout.CENTER);
+
+		tabPane.add("Site Surveys", surveyPanel);
+		tabPane.add("Frog Images", panelFrogImages);
+
+		JPanel contentPanel = new JPanel(new BorderLayout());
+		contentPanel.add(panelAllInfo, BorderLayout.NORTH);
+		add(contentPanel);
 		setMinimumSize(new Dimension(660, 640));
 		setPreferredSize(new Dimension(660, 640));
 		updateDiscriminatorTooltip();
@@ -1246,93 +1256,10 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	 */
 	protected void imposeLastValues() {
 		IdentiFrog.LOGGER.writeError("imposeLastValues() is no longer implemented.");
-		/*
-		 * DefaultComboBoxModel<String> celnBoxModel =
-		 * (DefaultComboBoxModel<User>) comboRecorder.getModel(); if
-		 * (celnBoxModel.getIndexOf(lastFrog.getRecorder().getLastName()) == -1)
-		 * { //just set the data as it does not yet exist.
-		 * comboRecorder.setSelectedItem(lastFrog.getRecorder().getLastName());
-		 * } else { //does exists - use it instead of adding it
-		 * comboRecorder.setSelectedIndex
-		 * (celnBoxModel.getIndexOf(lastFrog.getRecorder().getLastName())); }
-		 */
-
-		/*
-		 * comboEntryFirstName.setSelectedItem(lastFrog.getRecorder().getFirstName
-		 * ());
-		 * comboObserverLastName.setSelectedItem(lastFrog.getObserver().getLastName
-		 * ()); comboObserverFirstName.setSelectedItem(lastFrog.getObserver().
-		 * getFirstName());
-		 * 
-		 * textFrog_ID.setText(Integer.toString(lastFrog.getID())); //
-		 * textFrog_ID.setText(nextAvailFrogId);
-		 * textSurveyID.setText(lastFrog.getSurveyID());
-		 * textSpecies.setText(lastFrog.getSpecies());
-		 * sexComboBox.setSelectedItem(lastFrog.getGender()); String dateCapture
-		 * = lastFrog.getDateCapture();
-		 * IdentiFrog.LOGGER.writeMessage(dateCapture);
-		 * IdentiFrog.LOGGER.writeMessage(dateCapture.indexOf('-'));
-		 * IdentiFrog.LOGGER.writeMessage(dateCapture.lastIndexOf('-'));
-		 * IdentiFrog.LOGGER.writeMessage((String)
-		 * dateCapture.subSequence(dateCapture.indexOf('-') + 1,
-		 * dateCapture.lastIndexOf('-'))); //int m = new Integer((String)
-		 * dateCapture.subSequence(dateCapture.indexOf('-') + 1,
-		 * dateCapture.lastIndexOf('-'))).intValue() - 1;
-		 * //dayComboBox.setSelectedItem
-		 * (dateCapture.subSequence(dateCapture.lastIndexOf('-') + 1,
-		 * dateCapture.length())); //monthComboBox.setSelectedItem(month[m]);
-		 * //yearComboBox.setSelectedItem(dateCapture.subSequence(0,
-		 * dateCapture.indexOf('-')));
-		 * 
-		 * textMass.setText(lastFrog.getMass());
-		 * textLength.setText(lastFrog.getLength());
-		 * textFrogComments.setText(lastFrog.getComments());
-		 * comboLocationName.setSelectedItem(lastFrog.getLocation().getName());
-		 * textLocDesc.setText(lastFrog.getLocation().getDescription());
-		 * textX.setText(lastFrog.getLocation().getLongitude());
-		 * textY.setText(lastFrog.getLocation().getLatitude());
-		 * textDatum.setText(lastFrog.getLocation().getDatum()); if
-		 * (lastFrog.getDiscriminator().equals("Yes")) {
-		 * additDiscrNo.setEnabled(false); additDiscrYes.setEnabled(true); }
-		 * else { additDiscrNo.setEnabled(true);
-		 * additDiscrYes.setEnabled(false); }
-		 */
 	}
 
 	protected void setLastValues() {
 		IdentiFrog.LOGGER.writeError("setLastValues() is no longer implemented.");
-
-		//Personel ob = new Personel("observer", (String) comboObserverFirstName.getSelectedItem(), (String) comboObserverLastName.getSelectedItem());
-		//Personel rc = new Personel("recorder", (String) comboEntryFirstName.getSelectedItem(), (String) comboEntryLastName.getSelectedItem());
-		/*
-		 * String obsvr = "Observer String"; String rcrdr = "Recorder String";
-		 * String coordinateType; if (LatLongButton.isSelected()) {
-		 * coordinateType = "Lat/Long"; } else { coordinateType = "UTM"; }
-		 * coordinateType = null; Date dateCaptureObj = (Date)
-		 * captureDatePicker.getModel().getValue(); DateFormat df = new
-		 * SimpleDateFormat("MM-dd-yyyy"); String dateCapture =
-		 * df.format(dateCaptureObj); //String dateCapture =
-		 * DateFormat.dateCaptureObj // String dateCapture = (String)
-		 * yearComboBox.getSelectedItem() + "-" + (String)
-		 * monthComboBox.getSelectedItem() + "-" + (String)
-		 * dayComboBox.getSelectedItem();
-		 * 
-		 * Location lc = new Location((String)
-		 * comboLocationName.getSelectedItem(), textLocDesc.getText(),
-		 * coordinateType, textX.getText(), textY.getText(),
-		 * textDatum.getText(), textZone.getText()); lastFrog = new Frog(frogID,
-		 * textSurveyID.getText(), textSpecies.getText(), (String)
-		 * sexComboBox.getSelectedItem(), textMass.getText(),
-		 * textLength.getText(), dateCapture, "", obsvr, rcrdr, "",
-		 * textFrogComments.getText(), lc);
-		 * 
-		 * this.ID = ID; this.surveyID = surveyID; this.species = species;
-		 * this.gender = gender; this.mass = mass; this.length = length;
-		 * this.dateCapture = dateCapture; this.dateEntry = dateEntry;
-		 * this.observer = observer; this.recorder = recorder;
-		 * this.discriminator = discriminator; this.comments = comments;
-		 * this.location = location;
-		 */
 	}
 
 	void butFillPreviousFrogInfo_actionPerformed(ActionEvent e) {

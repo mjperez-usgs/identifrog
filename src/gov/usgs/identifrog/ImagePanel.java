@@ -1129,7 +1129,6 @@ public class ImagePanel extends JPanel {
 				repaint();
 			}
 		}
-
 	}
 
 	void this_mouseDragged(MouseEvent e) {
@@ -1323,7 +1322,6 @@ public class ImagePanel extends JPanel {
 		image = previousImage;
 		parentFrame.setMenuItemUndo(false);
 		repaint();
-		spo
 	}
 
 	/*
