@@ -43,14 +43,30 @@ public class DiscriminatorPickerDialog extends JDialog {
 		setModal(true);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-		ArrayList<Discriminator> dL = XMLFrogDatabase.getDiscriminators();
+		reloadDiscriminatorsList();
+		setLocationRelativeTo(callingDialog);
+	}
 
+	private void reloadDiscriminatorsList() {
+		ArrayList<Discriminator> dL = XMLFrogDatabase.getDiscriminators();
 		JPanel panel = null;
 		if (dL.size() <= 0) {
 			//no discriminators
 			JLabel label = new JLabel("No project discriminators defined.", SwingConstants.CENTER);
 			panel = new JPanel(new BorderLayout());
 			panel.add(label,BorderLayout.CENTER);
+			
+			JButton manageDiscrimsButton = new JButton("Add Project Discriminators");
+			manageDiscrimsButton.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					// TODO Auto-generated method stub
+					new DiscriminatorFrame(DiscriminatorPickerDialog.this);
+					
+					
+				}
+			});
 		} else {
 			//discriminators
 			discriminatorList = new JCheckBoxList(model);
@@ -111,7 +127,6 @@ public class DiscriminatorPickerDialog extends JDialog {
 		add(panel);
 		pack();
 		setMinimumSize(new Dimension(250, 250));
-		setLocationRelativeTo(callingDialog);
 	}
 
 	public ArrayList<Discriminator> getChosenDiscriminators() {

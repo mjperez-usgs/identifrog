@@ -565,7 +565,7 @@ public class ImagePanel extends JPanel {
 				G2D.drawImage(standardRectBinary, null, BinaryImgX, BinaryImgY);
 			}
 
-			if (!spotextraction & !imageAsDorsal) {
+			if (!spotextraction && !imageAsDorsal) {
 				G2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 				G2D.drawImage(image, null, 0, 0);
 			}

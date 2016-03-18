@@ -16,7 +16,9 @@ import gov.usgs.identifrog.cellrenderers.FrogEditorSiteSampleCellRenderer;
 import gov.usgs.identifrog.cellrenderers.UserListCellRenderer;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
@@ -55,7 +57,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -63,6 +64,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -681,7 +683,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		c.weighty = 0;
 		c.gridx = 0;
 		c.gridy = 0;
-		//c.fill = GridBagConstraints.HORIZONTAL;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		panelDataEntry.add(labEntrydate, c);
 		c.insets = leftSpaceInsets;
 		c.gridx = 1;
@@ -859,9 +861,9 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		panelTopButtons.add(Box.createHorizontalGlue());
 		panelTopButtons.add(surveySwitcherCombobox);
 		panelTopButtons.add(Box.createHorizontalGlue());
-		panelTopButtons.add(butFillFromTemplate);
-		panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
-		panelTopButtons.add(usersButton);
+		//panelTopButtons.add(butFillFromTemplate);
+		//panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
+		//panelTopButtons.add(usersButton);
 		//panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
 		//panelTopButtons.add(butEditDiscriminators);
 		if (IdentiFrog.DEBUGGING_BUILD) {
@@ -870,11 +872,15 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		}
 		panelTopButtons.add(Box.createHorizontalGlue());
 
-		labSurveyID.setText("Survey ID");
-		textSurveyID.setColumns(5);
-		JPanel surveyNamePanel = new JPanel(new BorderLayout());
-		surveyNamePanel.add(labSurveyID,BorderLayout.WEST);
-		surveyNamePanel.add(textSurveyID,BorderLayout.EAST);
+		labSurveyID.setText("Survey Name");
+		textSurveyID.setColumns(15);
+		JPanel surveyNamePanel = new JPanel(new FlowLayout());
+		surveyNamePanel.add(labSurveyID);
+		surveyNamePanel.add(textSurveyID);
+		surveyNamePanel.add(usersButton);
+		surveyNamePanel.add(butFillFromTemplate);
+		surveyNamePanel.add(usersButton);
+		surveyNamePanel.setBorder(new LineBorder(Color.RED));
 		
 		panelSiteSurvey.add(surveyNamePanel);
 		panelSiteSurvey.add(panelDataEntry);
@@ -1468,7 +1474,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	}
 
 	private void butDebugAutopopulate_actionPerformed(ActionEvent e) {
-		textFrog_ID.setText(Integer.toString(XMLFrogDatabase.getNextAvailableFrogID()));
+		//textFrog_ID.setText(Integer.toString(XMLFrogDatabase.getNextAvailableFrogID()));
 		textSpecies.setText("Jumpy");
 		sexComboBox.setSelectedItem("M");
 		//dayComboBox.setSelectedItem("16");
