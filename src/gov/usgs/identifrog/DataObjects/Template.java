@@ -23,6 +23,15 @@ public class Template {
 	private User recorder;
 	private String comments;
 	private Location location;
+	private String name; //unique ID
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 
 	/**
 	 * Creates an element <SiteSample> for attaching to an XML document.
@@ -34,6 +43,9 @@ public class Template {
 
 		// CREATE FROG ELEMENT
 		Element element = document.createElement("template");
+
+		Element nameElem = document.createElement("name");
+		nameElem.appendChild(document.createTextNode(getName()));
 
 		// CREATE SURVEY ID ELEMENT
 		Element surveyid = document.createElement("surveyid");
@@ -105,6 +117,7 @@ public class Template {
 	 */
 	public Template(Template t) {
 		this.frogID = t.getFrogID();
+		this.name = t.getName();
 		this.dateCapture = t.getDateCapture();
 		this.dateEntry = t.getDateEntry();
 		this.surveyID = t.getSurveyID();

@@ -12,12 +12,7 @@ public class FrogEditorSiteSampleCellRenderer extends DefaultListCellRenderer {
 		super.getListCellRendererComponent(list, null, index, isSelected, cellHasFocus); //null - don't run toString()
 		if (value instanceof SiteSample) {
 			SiteSample sample = (SiteSample) value;
-			
 			String text = "";
-			if (isSelected) {
-				text += "Active Survey:\n";
-			}
-			
 			if (sample.getDateCapture() == null && sample.getSurveyID() == null) {
 				text += "null..";
 			} else {

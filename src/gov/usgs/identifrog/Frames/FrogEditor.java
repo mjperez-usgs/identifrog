@@ -9,6 +9,7 @@ import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
 import gov.usgs.identifrog.DataObjects.SiteImage;
 import gov.usgs.identifrog.DataObjects.SiteSample;
+import gov.usgs.identifrog.DataObjects.Template;
 import gov.usgs.identifrog.DataObjects.User;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 import gov.usgs.identifrog.cellrenderers.FrogEditorImageRenderer;
@@ -16,9 +17,7 @@ import gov.usgs.identifrog.cellrenderers.FrogEditorSiteSampleCellRenderer;
 import gov.usgs.identifrog.cellrenderers.UserListCellRenderer;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
@@ -63,8 +62,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -197,6 +194,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		} catch (Exception e) {
 			IdentiFrog.LOGGER.writeExceptionWithMessage("Exception while starting FrogEditor's EDIT mode.", e);
 		}
+				
 		for (SiteSample sample : f.getSiteSamples()) {
 			sampleModel.addElement(sample);
 		}
@@ -230,6 +228,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	DefaultComboBoxModel<SiteSample> sampleModel = new DefaultComboBoxModel<SiteSample>();
 
 	JButton butFillFromTemplate = new JButton();
+	JButton butSurveySwitcher = new JButton();
 	JButton butEditDiscriminators = new JButton();
 	JButton butEditTemplates = new JButton();
 	JButton butDebugPopulate = new JButton();
@@ -301,7 +300,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JButton butCancel = new JButton();
 	JLabel labMassUnit = new JLabel();
 	JLabel labLengthUnit = new JLabel();
-	JButton butClearAll = new JButton();
 	ArrayList<LocInfo> locList = new ArrayList<LocInfo>();
 	DefaultComboBoxModel<User> recorderListModel, observerListModel;
 
@@ -353,6 +351,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 								IdentiFrog.LOGGER.writeMessage("Continuing execution of FrogEditor. Signature Generator has closed.");
 								parentFrame.updateSearchButton();
 								newImg.createListThumbnail();
+								//sample.
 								imageModel.set(idx, newImg); //update the SiteImage object.
 							}
 						}
@@ -408,8 +407,10 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		 * //loadSiteSample(idx); } } });
 		 */
 		JPanel panelFrogImages = new JPanel();
-
-		JPanel changeSurveyPanel = new JPanel();
+		
+		
+		
+		/*JPanel changeSurveyPanel = new JPanel();
 		changeSurveyPanel.setLayout(new BoxLayout(changeSurveyPanel, BoxLayout.PAGE_AXIS));
 		changeSurveyPanel.setBorder(new TitledBorder(new EtchedBorder(), "Active Survey"));
 		JButton changeSurveyButton = new JButton("Switch Surveys");
@@ -423,7 +424,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				//	loadSiteSample(sampleList.getSelectedIndex());
 				//}
 			}
-		});
+		});*/
 		/*
 		 * JButton deleteSurveyButton = new JButton("Delete Survey");
 		 * deleteSurveyButton .setToolTipText(
@@ -449,8 +450,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		 * } } } } });
 		 */
 
-		changeSurveyPanel.add(labelActiveSurvey);
-		changeSurveyPanel.add(changeSurveyButton);
+		/*changeSurveyPanel.add(labelActiveSurvey);
+		changeSurveyPanel.add(changeSurveyButton);*/
 		//changeSurveyPanel.add(deleteSurveyButton);
 
 		//Data
@@ -520,7 +521,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		JPanel panelTopButtons = new JPanel();
 		//site survey panel
 		JPanel panelSiteSurvey = new JPanel();
-		panelSiteSurvey.setLayout(new BoxLayout(panelSiteSurvey, BoxLayout.PAGE_AXIS));
+		panelSiteSurvey.setLayout(new GridBagLayout());
+//		panelSiteSurvey.setLayout(new BoxLayout(panelSiteSurvey, BoxLayout.PAGE_AXIS));
 		//panelSiteSurvey.setAlignmentX(Component.CENTER_ALIGNMENT);
 		TitledBorder siteSurveyBorder = BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Site Survey");
 		siteSurveyBorder.setTitleFont(level1TitleFont);
@@ -555,12 +557,27 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		surveySwitcherCombobox.setModel(sampleModel);
 		surveySwitcherCombobox.setRenderer(new FrogEditorSiteSampleCellRenderer());
 
+		butSurveySwitcher.setText("Switch Survey");
+		butSurveySwitcher.setVisible(true);
+		butSurveySwitcher.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconFolderPaper16.png")));
+		butSurveySwitcher.addActionListener(new java.awt.event.ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				butFillPreviousFrogInfo_actionPerformed(e);
+			}
+		});
+		
 		butFillFromTemplate.setText("Fill From Template");
 		butFillFromTemplate.setVisible(true);
 		butFillFromTemplate.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconBookmark16.png")));
 		butFillFromTemplate.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				butFillPreviousFrogInfo_actionPerformed(e);
+				TemplatePickerDialog tcf = new TemplatePickerDialog(FrogEditor.this);
+				Template t = tcf.getChosenTemplate();
+				if (t != null) {
+					//implement template
+				}
+				System.out.println(t);
+				//butFillPreviousFrogInfo_actionPerformed(e);
 			}
 		});
 
@@ -662,7 +679,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		JLabel observerLabel = new JLabel("Observer");
 
 		labEntrydate.setText("Entry Date");
-		labCapturedate.setText("Capture Date");
+		labCapturedate.setText("Capture Date (part of survey name)");
 
 		UtilDateModel entryDateModel = new UtilDateModel();
 		Properties p = new Properties();
@@ -846,46 +863,56 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				butCancel_actionPerformed(e);
 			}
 		});
-		butClearAll.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconBlank32.png")));
-		butClearAll.setText("Clear All");
-		butClearAll.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				butClearAll_actionPerformed(e);
-			}
-		});
 
 		//Add all items to interface
 
 		//top buttons
-		panelTopButtons.setLayout(new BoxLayout(panelTopButtons, BoxLayout.LINE_AXIS));
-		panelTopButtons.add(Box.createHorizontalGlue());
-		panelTopButtons.add(surveySwitcherCombobox);
-		panelTopButtons.add(Box.createHorizontalGlue());
+		//panelTopButtons.setLayout(new BoxLayout(panelTopButtons, BoxLayout.LINE_AXIS));
+		//panelTopButtons.add(Box.createHorizontalGlue());
+		//panelTopButtons.add(surveySwitcherCombobox);
+		//panelTopButtons.add(Box.createHorizontalGlue());
 		//panelTopButtons.add(butFillFromTemplate);
 		//panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
 		//panelTopButtons.add(usersButton);
 		//panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
 		//panelTopButtons.add(butEditDiscriminators);
-		if (IdentiFrog.DEBUGGING_BUILD) {
-			panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
-			panelTopButtons.add(butDebugPopulate);
-		}
-		panelTopButtons.add(Box.createHorizontalGlue());
+		//if (IdentiFrog.DEBUGGING_BUILD) {
+		//	panelTopButtons.add(Box.createRigidArea(new Dimension(10, 10)));
+		//	panelTopButtons.add(butDebugPopulate);
+		//}
+		//panelTopButtons.add(Box.createHorizontalGlue());
 
-		labSurveyID.setText("Survey Name");
+		labSurveyID.setText("Survey Name:");
 		textSurveyID.setColumns(15);
-		JPanel surveyNamePanel = new JPanel(new FlowLayout());
+		textSurveyID.setMaximumSize(new Dimension(15,100));
+		JPanel surveyNamePanel = new JPanel();
+		//surveyNamePanel.setLayout(new FlowLayout());
+
+//		surveyNamePanel.setLayout(new GridBagLayout());
+
+		surveyNamePanel.setLayout(new BoxLayout(surveyNamePanel,BoxLayout.LINE_AXIS));
 		surveyNamePanel.add(labSurveyID);
 		surveyNamePanel.add(textSurveyID);
-		surveyNamePanel.add(usersButton);
+		surveyNamePanel.add(butSurveySwitcher);
+		surveyNamePanel.add(Box.createHorizontalGlue());
 		surveyNamePanel.add(butFillFromTemplate);
 		surveyNamePanel.add(usersButton);
-		surveyNamePanel.setBorder(new LineBorder(Color.RED));
-		
-		panelSiteSurvey.add(surveyNamePanel);
-		panelSiteSurvey.add(panelDataEntry);
-		panelSiteSurvey.add(panelLocation);
-		panelSiteSurvey.add(panelBiometrics);
+		c = new GridBagConstraints();
+
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.weighty = 0;
+		c.gridx = 0;
+		c.gridy = 0;
+		panelSiteSurvey.add(surveyNamePanel,c);
+		c.gridy++;
+		panelSiteSurvey.add(panelDataEntry,c);
+		c.gridy++;
+		panelSiteSurvey.add(panelLocation,c);
+		c.gridy++;
+		c.weighty = 1;
+		c.fill = GridBagConstraints.BOTH;
+		panelSiteSurvey.add(panelBiometrics,c);
 
 		//PANEL LOCATION INFO
 		c = new GridBagConstraints();
@@ -956,8 +983,6 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		panelBottomButtons.add(Box.createHorizontalGlue());
 		panelBottomButtons.add(butCancel);
 		panelBottomButtons.add(Box.createRigidArea(new Dimension(10, 10)));
-		panelBottomButtons.add(butClearAll);
-		panelBottomButtons.add(Box.createRigidArea(new Dimension(10, 10)));
 
 		panelBottomButtons.add(butSave);
 		panelBottomButtons.add(Box.createHorizontalGlue());
@@ -977,7 +1002,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 		JPanel surveyPanel = new JPanel(new BorderLayout());
 
-		surveyPanel.add(panelTopButtons, BorderLayout.NORTH);
+		//surveyPanel.add(panelTopButtons, BorderLayout.NORTH);
 		surveyPanel.add(leftrightSplitpane, BorderLayout.CENTER);
 
 		tabPane.add("Site Surveys", surveyPanel);
@@ -987,7 +1012,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		contentPanel.add(panelAllInfo, BorderLayout.NORTH);
 		add(contentPanel);
 		setMinimumSize(new Dimension(660, 640));
-		setPreferredSize(new Dimension(660, 640));
+		//setPreferredSize(new Dimension(660, 640));
 		updateDiscriminatorTooltip();
 		pack();
 		setLocationRelativeTo(parentFrame);
@@ -1020,6 +1045,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				// mass
 				// length
 				String locationName = (String) comboLocationName.getSelectedItem().toString();
+				System.out.println(locationName + " LN 2 SAVE: ");
 				String locationDescription = textLocDesc.getText().trim();
 
 				// longitude
@@ -1061,7 +1087,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 				ArrayList<SiteImage> images = new ArrayList<SiteImage>();
 				for (int i = 0; i < imageModel.getSize(); i++) {
-					images.add(imageModel.get(i));
+					SiteImage img = imageModel.get(i);
+					images.add(img);
 				}
 
 				sample.setSiteImages(images);
@@ -1195,6 +1222,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 			for (Location l : XMLFrogDatabase.getAllLocations()) {
 				comboLocationName.addItem(l);
 			}
+			comboLocationName.setSelectedItem(sample.getLocation());
 
 			textMass.setText(sample.getMass());
 			textLength.setText(sample.getLength());
@@ -1274,11 +1302,12 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 	void locnameComboBox_actionPerformed(ActionEvent e) {
 		int locind = comboLocationName.getSelectedIndex();
+		System.out.println("Location index "+locind + " num "+comboLocationName.getItemCount());
 		// set to original coordinates
-		if (locind > 0) { // in comboBox Location List index = 0 for a new entry
-			--locind;
-			textX.setText(Double.toString(locList.get(locind).loccoor.getX()));
-			textY.setText(Double.toString(locList.get(locind).loccoor.getY()));
+		if (locind >= 0 && locind < comboLocationName.getItemCount()) { // in comboBox Location List index = 0 for a new entry
+			//--locind;
+			textX.setText(comboLocationName.getItemAt(locind).getLongitude());
+			textY.setText(comboLocationName.getItemAt(locind).getLatitude());
 		} /*
 		 * else { textX.setText(""); textY.setText(""); }
 		 */

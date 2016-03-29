@@ -1,14 +1,9 @@
 package gov.usgs.identifrog.Frames;
 
-import gov.usgs.identifrog.DialogFileChooser;
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.ImageManipFrame;
 import gov.usgs.identifrog.DataObjects.DateLabelFormatter;
-import gov.usgs.identifrog.DataObjects.Discriminator;
-import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.Location;
-import gov.usgs.identifrog.DataObjects.SiteImage;
-import gov.usgs.identifrog.DataObjects.SiteSample;
 import gov.usgs.identifrog.DataObjects.Template;
 import gov.usgs.identifrog.DataObjects.User;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
@@ -17,7 +12,6 @@ import gov.usgs.identifrog.cellrenderers.UserListCellRenderer;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -25,7 +19,6 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
-import java.io.File;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -46,6 +39,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -75,7 +69,6 @@ import org.jdatepicker.impl.UtilDateModel;
  */
 @SuppressWarnings("serial")
 public class TemplateFrame extends JDialog implements ListSelectionListener {
-	protected MainFrame parentFrame;
 	private boolean shouldSave = false;
 
 	private Preferences root = Preferences.userRoot();
@@ -102,64 +95,25 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 	private int activeSample = 0;
 
-	/**
-	 * This is the standard add-frog window that comes up when a "New Frog" is
-	 * entered.
-	 * 
-	 * @param frame
-	 *            Parent frame
-	 * @param title
-	 *            Window title
-	 * @param image
-	 *            Image to load for this frog since it's not in the DB yet.
-	 */
-	public TemplateFrame(MainFrame frame, String title, File image) {
-		super((Frame) frame, title, true); //make modal (true)
-		IdentiFrog.LOGGER.writeMessage("Opening FrogEditor's NEW FROG frog editor");
-		parentFrame = frame;
+	public TemplateFrame(JFrame frame) {
+		IdentiFrog.LOGGER.writeMessage("Opening template manager");
 		try {
-			//images = new ArrayList<SiteImage>();
-			//discriminators = new ArrayList<Discriminator>(); //empty to start
-			SiteImage simage = new SiteImage();
-			simage.setProcessed(false);
-			simage.setSourceFilePath(image.getAbsolutePath());
-			//generate thumbnail in memory
-			//simage.createListThumbnail();
-
-			SiteSample sample = new SiteSample();
-			sample.addSiteImage(simage);
-
-			//images.add(simage);
 			init();
-			LocalDate now = LocalDate.now();
-			entryDatePicker.getModel().setDate(now.getYear(), now.getMonthValue() - 1, now.getDayOfMonth()); //-1 cause it's 0 indexed
-			entryDatePicker.getModel().setSelected(true);
-
+			setLocationRelativeTo(frame);
+			setVisible(true);
 		} catch (Exception e) {
-			IdentiFrog.LOGGER.writeExceptionWithMessage("Exception while starting FrogEditor's NEW mode.", e);
+			IdentiFrog.LOGGER.writeExceptionWithMessage("Exception while starting template editor", e);
 		}
 	}
-
-	/**
-	 * This is the edit version of the add frog window.
-	 * 
-	 * @param frame
-	 *            parent frame
-	 * @param fh
-	 *            folderhandler
-	 * @param title
-	 *            Title of the page
-	 * @param frog
-	 *            Frog to edit and populate the interface with. The frog is
-	 *            copied in memory and is known as copyfrog until saved to disk.
-	 */
-	public TemplateFrame(MainFrame frame) {
-		IdentiFrog.LOGGER.writeMessage("Opening Template Manager window");
-		parentFrame = frame;
+	
+	public TemplateFrame(JDialog dialog) {
+		IdentiFrog.LOGGER.writeMessage("Opening template manager");
 		try {
 			init();
+			setLocationRelativeTo(dialog);
+			setVisible(true);
 		} catch (Exception e) {
-			IdentiFrog.LOGGER.writeException(e);
+			IdentiFrog.LOGGER.writeExceptionWithMessage("Exception while starting template editor", e);
 		}
 	}
 
@@ -528,12 +482,12 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		labZone.setText("Zone");
 		textZone.setColumns(200);
 		butSave.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconSave32.png")));
-		butSave.setText("Save Entry");
+		butSave.setText("Save Template");
 		butSave.setToolTipText("Saves this template to the database.");
 		butSave.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (commitChanges()) {
-					IdentiFrog.LOGGER.writeMessage("TemplateFrame is saving");
+					IdentiFrog.LOGGER.writeMessage("Saving active template");
 					Template templateData = new Template();
 				}
 			}
@@ -658,7 +612,6 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		setMinimumSize(new Dimension(660, 640));
 		setPreferredSize(new Dimension(660, 640));
 		pack();
-		setLocationRelativeTo(parentFrame);
 	}
 
 	/**
@@ -690,7 +643,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 				} else if (UTMButton.isSelected()) {
 					locCoorType = "UTM";
 				} else {
-					locCoorType = "UNKNOWN";
+					locCoorType = "";
 				}
 				int zone = Location.EMPTY_ZONE;
 				try {
@@ -702,7 +655,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 				Location lc = new Location(locationName, locationDescription, locCoorType, textY.getText().trim(), textX.getText().trim(), datum,
 						zone);
 
-				//Generate sitesample
+				//Generate Template
 				/*
 				 * SiteSample sample = new SiteSample();
 				 * sample.setSurveyID(textSurveyID.getText().trim());

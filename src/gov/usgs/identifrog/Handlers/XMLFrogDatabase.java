@@ -409,13 +409,20 @@ public class XMLFrogDatabase {
 				template = new Template();
 				Element templateElement = (Element) tList.item(i);
 
+				Element nameElement = (Element) templateElement.getElementsByTagName("name").item(0);
+				if (nameElement != null) {
+					template.setName(nameElement.getTextContent());
+				} else {
+					template.setName("Unnamed Template");
+				}
+				
 				// load template one by one
-				IdentiFrog.LOGGER.writeMessage("Loading -date- for Template");
+				IdentiFrog.LOGGER.writeMessage("Loading -date- for Template "+template.getName());
 				NamedNodeMap dateAttributes = templateElement.getElementsByTagName("date").item(0).getAttributes();
 				template.setDateEntry(dateAttributes.getNamedItem("entry").getTextContent());
 				template.setDateCapture(dateAttributes.getNamedItem("capture").getTextContent());
 				// Biometrics
-				IdentiFrog.LOGGER.writeMessage("Loading -biometrics- for Template");
+				IdentiFrog.LOGGER.writeMessage("Loading -biometrics- for Template "+template.getName());
 				NamedNodeMap bm = templateElement.getElementsByTagName("biometrics").item(0).getAttributes();
 				if (bm.getNamedItem("mass") != null) {
 					template.setMass(bm.getNamedItem("mass").getNodeValue());
@@ -425,11 +432,11 @@ public class XMLFrogDatabase {
 				}
 
 				// Comments
-				IdentiFrog.LOGGER.writeMessage("Loading -comments- for Template");
+				IdentiFrog.LOGGER.writeMessage("Loading -comments- for Template "+template.getName());
 				template.setComments(templateElement.getElementsByTagName("comments").item(0).getTextContent());
 
 				// Location
-				IdentiFrog.LOGGER.writeMessage("Loading -location- for Template");
+				IdentiFrog.LOGGER.writeMessage("Loading -location- for Template "+template.getName());
 				Location location = new Location();
 				Element locationElement = (Element) templateElement.getElementsByTagName("location").item(0);
 				// Location - name
@@ -440,7 +447,7 @@ public class XMLFrogDatabase {
 				NodeList coordinate = locationElement.getElementsByTagName("coordinate");
 				if (coordinate.getLength() < 1) {
 					// no coordinate was set
-					IdentiFrog.LOGGER.writeMessage("No coordinate data in -location- in Template");
+					IdentiFrog.LOGGER.writeMessage("No coordinate data in -location- in Template "+template.getName());
 					location.setCoordinateType(null);
 				} else {
 					Element coordinateElement = (Element) coordinate.item(0);
@@ -450,7 +457,7 @@ public class XMLFrogDatabase {
 						// Element coordinateElement = ((Element)
 						// nn.item(0)).getElementsByTagName("coordinate");
 						if (location.getCoordinateType().equals("Lat/Long")) {
-							IdentiFrog.LOGGER.writeMessage("Loading LatLong -location- for Template");
+							IdentiFrog.LOGGER.writeMessage("Loading LatLong -location- for Template "+template.getName());
 							location.setLongitude(coordinateElement.getElementsByTagName("longitude").item(0).getTextContent());
 							location.setLatitude(coordinateElement.getElementsByTagName("latitude").item(0).getTextContent());
 							location.setDatum(coordinateElement.getElementsByTagName("datum").item(0).getTextContent());
@@ -471,7 +478,7 @@ public class XMLFrogDatabase {
 				template.setLocation(location);
 
 				// Personel
-				IdentiFrog.LOGGER.writeMessage("Loading -userids(s)- for Template");
+				IdentiFrog.LOGGER.writeMessage("Loading -userids(s)- for Template "+template.getName());
 				//User observer = new User();
 				//User recorder = new User();
 				Element observerElem = (Element) templateElement.getElementsByTagName("observer").item(0);
@@ -481,7 +488,7 @@ public class XMLFrogDatabase {
 				template.setRecorder(XMLFrogDatabase.getRecorderByID(Integer.parseInt(recorderElem.getTextContent())));
 
 				// SurveyID
-				IdentiFrog.LOGGER.writeMessage("Loading -surveyid- for Template");
+				IdentiFrog.LOGGER.writeMessage("Loading -surveyid- for Template "+template.getName());
 				template.setSurveyID(templateElement.getElementsByTagName("surveyid").item(0).getTextContent());
 				templates.add(template);
 			}
@@ -1278,6 +1285,10 @@ public class XMLFrogDatabase {
 				}
 			}
 		}
+	}
+
+	public static ArrayList<Template> getTemplates() {
+		return templates;
 	}
 
 }

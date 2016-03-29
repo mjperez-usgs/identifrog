@@ -42,12 +42,11 @@ public class DiscriminatorPickerDialog extends JDialog {
 		setIconImages(IdentiFrog.ICONS);
 		setModal(true);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
-		reloadDiscriminatorsList();
+		reloadDiscriminatorsList(alreadySelectedDiscrims);
 		setLocationRelativeTo(callingDialog);
 	}
 
-	private void reloadDiscriminatorsList() {
+	private void reloadDiscriminatorsList(ArrayList<Discriminator> alreadySelectedDiscrims) {
 		ArrayList<Discriminator> dL = XMLFrogDatabase.getDiscriminators();
 		JPanel panel = null;
 		if (dL.size() <= 0) {
