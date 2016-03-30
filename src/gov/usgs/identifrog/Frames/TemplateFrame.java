@@ -117,7 +117,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 	public TemplateFrame(JFrame frame) {
 		IdentiFrog.LOGGER.writeMessage("Opening template manager");
 		try {
-			init();
+			init2();
 			setLocationRelativeTo(frame);
 			setVisible(true);
 		} catch (Exception e) {
@@ -128,7 +128,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 	public TemplateFrame(JDialog dialog) {
 		IdentiFrog.LOGGER.writeMessage("Opening template manager");
 		try {
-			init();
+			init2();
 			setLocationRelativeTo(dialog);
 			setVisible(true);
 		} catch (Exception e) {
@@ -193,7 +193,9 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 	JLabel labSpecies = new JLabel("Species");
 	JTextField textDatum = new JTextField();
 	JTextField textSurveyID = new JTextField();
-	JLabel labSurveyID = new JLabel();
+	JTextField textTemplateName = new JTextField();
+	JLabel labSurveyID = new JLabel("Survey ID");
+	JLabel labTemplateName = new JLabel("Template Name");
 
 	JLabel labCapturedate = new JLabel();
 	JLabel labEntrydate = new JLabel();
@@ -241,7 +243,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 	private DisabledGlassPane templateEditorDisabler;
 	private JList<Template> templateList;
 
-	private void init() throws Exception {
+	private void init2() throws Exception {
 		setModal(true);
 		setIconImages(IdentiFrog.ICONS);
 		setLayout(new BorderLayout());
@@ -276,7 +278,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		JPanel panelTopButtons = new JPanel();
 		//site survey panel
 		JPanel panelSiteSurvey = new JPanel();
-		panelSiteSurvey.setLayout(new BoxLayout(panelSiteSurvey, BoxLayout.PAGE_AXIS));
+		panelSiteSurvey.setLayout(new GridBagLayout());
 		//panelSiteSurvey.setAlignmentX(Component.CENTER_ALIGNMENT);
 		TitledBorder siteSurveyBorder = BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Template Data");
 		siteSurveyBorder.setTitleFont(level1TitleFont);
@@ -307,14 +309,18 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		butNewTemplate.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				//butFillPreviousFrogInfo_actionPerformed(e);
-				for (int i = 0; i < templateModel.getSize(); i++){
+				for (int i = 0; i < templateModel.getSize(); i++) {
 					Template t = templateModel.getElementAt(i);
 					if (t.getName().equalsIgnoreCase("New Template")) {
-						JOptionPane.showMessageDialog(TemplateFrame.this, "Templates must be uniquely named.\nChange your template named \"New Survey\" to something else before adding a new one.", "Duplicate template not allowed", JOptionPane.ERROR_MESSAGE);
+						JOptionPane
+								.showMessageDialog(
+										TemplateFrame.this,
+										"Templates must be uniquely named.\nChange your template named \"New Survey\" to something else before adding a new one.",
+										"Duplicate template not allowed", JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 				}
-				
+
 				templateEditorDisabler.setOverlayEnabled(false);
 				Template template = new Template();
 				template.setName("New Template");
@@ -420,9 +426,6 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		c.insets = leftSpaceInsets;
 		c.gridx = 1;
 		panelDataEntry.add(observerLabel, c);
-		c.gridx = 2;
-		c.weightx = 0.5;
-		panelDataEntry.add(labSurveyID, c);
 
 		//4th row
 		c.insets = noInsets;
@@ -435,11 +438,6 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		c.insets = leftSpaceInsets;
 		c.gridx = 1;
 		panelDataEntry.add(comboObserver, c);
-		c.gridx = 2;
-		c.weightx = 0.5;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		textSurveyID.setMinimumSize(textSurveyID.getPreferredSize());
-		panelDataEntry.add(textSurveyID, c);
 
 		panelDataEntry.setMaximumSize(new Dimension(10000, 120));
 
@@ -454,7 +452,6 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		textMass.setColumns(5);
 		labLength.setText("Length, mm");
 		textLength.setColumns(5);
-		labSurveyID.setText("Survey ID");
 		textSurveyID.setColumns(5);
 
 		labFrogComments.setText("Comments");
@@ -509,6 +506,31 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		textX.setColumns(128);
 		labY.setText("Longitude");
 		textY.setColumns(128);
+
+		Insets topInsets = new Insets(3, 5, 0, 5);
+		Insets bottomInsets = new Insets(0, 5, 3, 5);
+		
+		JPanel surveyNamePanel = new JPanel(new GridBagLayout());
+		c = new GridBagConstraints();
+		c.weightx = 1;
+		c.weighty = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets = topInsets;
+		surveyNamePanel.add(labTemplateName, c);
+		c.gridx++;
+		surveyNamePanel.add(labSurveyID, c);
+		
+		c.gridy++;
+		c.gridx = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = bottomInsets;
+		surveyNamePanel.add(textTemplateName, c);
+		c.gridx++;
+		surveyNamePanel.add(textSurveyID, c);
+		
+		
 		//LatLongButton.setBounds(new Rectangle(288, 100, 80, 20));
 		//UTMButton.setBounds(new Rectangle(375, 100, 80, 20));
 		Butgroup.add(LatLongButton);
@@ -543,7 +565,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		});
 
 		//Add all items to interface
-
+		
 		//top buttons
 		panelTopButtons.setLayout(new BoxLayout(panelTopButtons, BoxLayout.LINE_AXIS));
 		panelTopButtons.add(Box.createHorizontalGlue());
@@ -557,15 +579,25 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 			panelTopButtons.add(butDebugPopulate);
 		}
 		panelTopButtons.add(Box.createHorizontalGlue());
+		c = new GridBagConstraints();
 
-		panelSiteSurvey.add(panelDataEntry);
-		panelSiteSurvey.add(panelLocation);
-		panelSiteSurvey.add(panelBiometrics);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.weighty = 0;
+		c.gridx = 0;
+		c.gridy = 0;
+		panelSiteSurvey.add(surveyNamePanel, c);
+		c.gridy++;
+		panelSiteSurvey.add(panelDataEntry, c);
+		c.gridy++;
+		panelSiteSurvey.add(panelLocation, c);
+		c.gridy++;
+		c.weighty = 1;
+		c.fill = GridBagConstraints.BOTH;
+		panelSiteSurvey.add(panelBiometrics, c);
 
 		//PANEL LOCATION INFO
 		c = new GridBagConstraints();
-		Insets topInsets = new Insets(3, 5, 0, 5);
-		Insets bottomInsets = new Insets(0, 5, 3, 5);
 		c.insets = topInsets;
 		c.weightx = 1;
 		c.weighty = 0;

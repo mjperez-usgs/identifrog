@@ -47,6 +47,7 @@ public class DiscriminatorPickerDialog extends JDialog {
 	}
 
 	private void reloadDiscriminatorsList(ArrayList<Discriminator> alreadySelectedDiscrims) {
+		getContentPane().removeAll();
 		ArrayList<Discriminator> dL = XMLFrogDatabase.getDiscriminators();
 		JPanel panel = null;
 		if (dL.size() <= 0) {
@@ -60,12 +61,12 @@ public class DiscriminatorPickerDialog extends JDialog {
 				
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					// TODO Auto-generated method stub
-					new DiscriminatorFrame(DiscriminatorPickerDialog.this);
-					
-					
+					new DiscriminatorFrame(DiscriminatorPickerDialog.this).setVisible(true);
+					//reload discriminators list
+					reloadDiscriminatorsList(alreadySelectedDiscrims); //if bugs arise due to recusion here, may consider checking out a better implementation of this.
 				}
 			});
+			panel.add(manageDiscrimsButton,BorderLayout.SOUTH);
 		} else {
 			//discriminators
 			discriminatorList = new JCheckBoxList(model);
