@@ -29,7 +29,7 @@ public class DiscriminatorPickerDialog extends JDialog {
 	JCheckBoxList discriminatorList;
 	DefaultListModel<JCheckBox> model = new DefaultListModel<JCheckBox>();
 	HashMap<JCheckBox, Discriminator> checkMap = new HashMap<JCheckBox, Discriminator>(); //crazy, I know...
-	private ArrayList<Discriminator> chosenDiscriminators;
+	private ArrayList<Discriminator> chosenDiscriminators = new ArrayList<Discriminator>();;
 	private JButton saveButton, cancelButton;
 
 	public DiscriminatorPickerDialog(JDialog callingDialog, ArrayList<Discriminator> alreadySelectedDiscrims) {
@@ -48,25 +48,35 @@ public class DiscriminatorPickerDialog extends JDialog {
 
 	private void reloadDiscriminatorsList(ArrayList<Discriminator> alreadySelectedDiscrims) {
 		getContentPane().removeAll();
+		model.clear();
+		chosenDiscriminators.clear();
+		checkMap.clear();
 		ArrayList<Discriminator> dL = XMLFrogDatabase.getDiscriminators();
 		JPanel panel = null;
+		JButton manageDiscrimsButton = new JButton("Manage Discriminators");
+		manageDiscrimsButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				ArrayList<Discriminator> selectedDiscrimininators = new ArrayList<>();
+				for (Map.Entry<JCheckBox, Discriminator> entry : checkMap.entrySet()) {
+					JCheckBox key = entry.getKey();
+					Discriminator value = entry.getValue();
+					if (key.isSelected()) {
+						selectedDiscrimininators.add(value);
+					}
+				}
+				new DiscriminatorFrame(DiscriminatorPickerDialog.this).setVisible(true);
+				//reload discriminators list
+				reloadDiscriminatorsList(selectedDiscrimininators); //if bugs arise due to recusion here, may consider checking out a better implementation of this.
+			}
+		});
 		if (dL.size() <= 0) {
 			//no discriminators
 			JLabel label = new JLabel("No project discriminators defined.", SwingConstants.CENTER);
 			panel = new JPanel(new BorderLayout());
-			panel.add(label,BorderLayout.CENTER);
-			
-			JButton manageDiscrimsButton = new JButton("Add Project Discriminators");
-			manageDiscrimsButton.addActionListener(new ActionListener() {
-				
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					new DiscriminatorFrame(DiscriminatorPickerDialog.this).setVisible(true);
-					//reload discriminators list
-					reloadDiscriminatorsList(alreadySelectedDiscrims); //if bugs arise due to recusion here, may consider checking out a better implementation of this.
-				}
-			});
-			panel.add(manageDiscrimsButton,BorderLayout.SOUTH);
+			panel.add(label, BorderLayout.CENTER);
+			panel.add(manageDiscrimsButton, BorderLayout.SOUTH);
 		} else {
 			//discriminators
 			discriminatorList = new JCheckBoxList(model);
@@ -87,7 +97,7 @@ public class DiscriminatorPickerDialog extends JDialog {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					chosenDiscriminators = new ArrayList<Discriminator>();
+					chosenDiscriminators.clear();
 					//update chosen discrims
 					for (Map.Entry<JCheckBox, Discriminator> entry : checkMap.entrySet()) {
 						JCheckBox key = entry.getKey();
@@ -112,15 +122,21 @@ public class DiscriminatorPickerDialog extends JDialog {
 			c.fill = GridBagConstraints.BOTH;
 			c.weighty = 1;
 			c.weightx = 1;
-			c.gridwidth = 5;
+			c.gridx = c.gridy = 0;
+			c.gridwidth = 3;
 			panel.add(discriminatorList, c);
 
 			c.gridwidth = 1;
 			c.weighty = 0;
 			c.weightx = 1;
+			c.gridy++;
+			panel.add(manageDiscrimsButton, c);
 			c.gridx = 1;
 			panel.add(cancelButton, c);
-			c.gridx = 3;
+
+			c.gridy++;
+			c.gridwidth = 2;
+			c.gridx = 0;
 			panel.add(saveButton, c);
 		}
 		panel.setBorder(new EmptyBorder(5, 5, 5, 5));
