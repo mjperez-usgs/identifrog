@@ -62,6 +62,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -517,8 +518,9 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		JScrollPane isp = new JScrollPane(imageList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		imagesPanel.add(isp, BorderLayout.CENTER);
 		imagesPanel.add(addImageButton, BorderLayout.SOUTH);
+		imagesPanel.setBorder(new TitledBorder(new EtchedBorder(), "Survey Images"));
 
-		JPanel panelTopButtons = new JPanel();
+		//JPanel panelTopButtons = new JPanel();
 		//site survey panel
 		JPanel panelSiteSurvey = new JPanel();
 		panelSiteSurvey.setLayout(new GridBagLayout());

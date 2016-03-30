@@ -2,22 +2,31 @@ package gov.usgs.identifrog.Frames;
 
 import gov.usgs.identifrog.IdentiFrog;
 import gov.usgs.identifrog.ImageManipFrame;
+import gov.usgs.identifrog.SharedUI;
 import gov.usgs.identifrog.DataObjects.DateLabelFormatter;
 import gov.usgs.identifrog.DataObjects.Location;
 import gov.usgs.identifrog.DataObjects.Template;
 import gov.usgs.identifrog.DataObjects.User;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
+import gov.usgs.identifrog.cellrenderers.TemplateListCellRenderer;
 import gov.usgs.identifrog.cellrenderers.UserListCellRenderer;
 
+import java.awt.AWTEvent;
+import java.awt.AlphaComposite;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.geom.Point2D;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -34,20 +43,30 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JLayer;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.plaf.LayerUI;
 
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
@@ -70,7 +89,7 @@ import org.jdatepicker.impl.UtilDateModel;
 @SuppressWarnings("serial")
 public class TemplateFrame extends JDialog implements ListSelectionListener {
 	private boolean shouldSave = false;
-
+	private DefaultListModel<Template> templateModel = new DefaultListModel<>();
 	private Preferences root = Preferences.userRoot();
 	//private Preferences node = root.node("edu/isu/aadis/defaults");
 
@@ -105,7 +124,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 			IdentiFrog.LOGGER.writeExceptionWithMessage("Exception while starting template editor", e);
 		}
 	}
-	
+
 	public TemplateFrame(JDialog dialog) {
 		IdentiFrog.LOGGER.writeMessage("Opening template manager");
 		try {
@@ -219,6 +238,9 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 	JButton usersButton;
 	JComboBox<Location> comboLocationName = new JComboBox<Location>();
 
+	private DisabledGlassPane templateEditorDisabler;
+	private JList<Template> templateList;
+
 	private void init() throws Exception {
 		setModal(true);
 		setIconImages(IdentiFrog.ICONS);
@@ -247,7 +269,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 			recorderListModel.addElement(user);
 		}
 
-		panelAllInfo.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		panelAllInfo.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		panelAllInfo.setLayout(new BoxLayout(panelAllInfo, BoxLayout.PAGE_AXIS));
 
 		//Images panel
@@ -256,7 +278,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		JPanel panelSiteSurvey = new JPanel();
 		panelSiteSurvey.setLayout(new BoxLayout(panelSiteSurvey, BoxLayout.PAGE_AXIS));
 		//panelSiteSurvey.setAlignmentX(Component.CENTER_ALIGNMENT);
-		TitledBorder siteSurveyBorder = BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Site Survey");
+		TitledBorder siteSurveyBorder = BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Template Data");
 		siteSurveyBorder.setTitleFont(level1TitleFont);
 		panelSiteSurvey.setBorder(siteSurveyBorder);
 
@@ -284,7 +306,22 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		butNewTemplate.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconBookmark32.png")));
 		butNewTemplate.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				butFillPreviousFrogInfo_actionPerformed(e);
+				//butFillPreviousFrogInfo_actionPerformed(e);
+				for (int i = 0; i < templateModel.getSize(); i++){
+					Template t = templateModel.getElementAt(i);
+					if (t.getName().equalsIgnoreCase("New Template")) {
+						JOptionPane.showMessageDialog(TemplateFrame.this, "Templates must be uniquely named.\nChange your template named \"New Survey\" to something else before adding a new one.", "Duplicate template not allowed", JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+				}
+				
+				templateEditorDisabler.setOverlayEnabled(false);
+				Template template = new Template();
+				template.setName("New Template");
+				templateModel.addElement(template);
+				templateList.setSelectedIndex(templateModel.getSize() - 1);
+				assert templateList.getSelectedIndex() == templateModel.getSize() - 1;
+				repaint();
 			}
 		});
 
@@ -600,18 +637,55 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		panelBottomButtons.add(butSave);
 		panelBottomButtons.add(Box.createHorizontalGlue());
 		//panelAllInfo.add(labImage);
-		panelAllInfo.add(panelTopButtons);
+		//panelAllInfo.add(panelTopButtons);
 		//panelAllInfo.add(panelFrogInfo);
 		panelAllInfo.add(panelSiteSurvey);
 		//panelAllInfo.add(labFRO);
 
 		panelAllInfo.add(Box.createVerticalGlue());
+		JPanel blankInfoPanel = new JPanel();
+		blankInfoPanel.setLayout(new BoxLayout(blankInfoPanel, BoxLayout.LINE_AXIS));
+		blankInfoPanel.add(Box.createHorizontalGlue());
+		blankInfoPanel.add(new JLabel("Blank fields will not overwrite existing values when applying the template."));
+		blankInfoPanel.add(Box.createHorizontalGlue());
+
+		panelAllInfo.add(blankInfoPanel);
 		panelAllInfo.add(panelBottomButtons);
+
+		templateEditorDisabler = new DisabledGlassPane();
+		JLayer<JComponent> jlayer = new JLayer<JComponent>(panelAllInfo, templateEditorDisabler);
+
+		//TEMPLATE LIST
+		templateList = new JList<Template>();
+		templateList.setModel(templateModel);
+		templateList.setCellRenderer(new TemplateListCellRenderer());
+		JPanel templateSelectionPanel = new JPanel(new BorderLayout());
+		templateSelectionPanel.setBorder(new TitledBorder(new EtchedBorder(), "Templates"));
+		templateSelectionPanel.add(new JScrollPane(templateList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
+
+		JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, templateSelectionPanel, jlayer);
+		sp.setDividerLocation(120);
+		JPanel contentPanel = new JPanel(new BorderLayout());
+		contentPanel.add(sp, BorderLayout.CENTER);
+		contentPanel.add(panelTopButtons, BorderLayout.NORTH);
+		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+
 		//getContentPane().add(panelAllInfo, BorderLayout.CENTER);
-		add(panelAllInfo);
+		add(contentPanel);
 		setMinimumSize(new Dimension(660, 640));
 		setPreferredSize(new Dimension(660, 640));
 		pack();
+
+		loadTemplates();
+	}
+
+	private void loadTemplates() {
+		templateModel.clear();
+		ArrayList<Template> templates = XMLFrogDatabase.getTemplates();
+		IdentiFrog.LOGGER.writeMessage("Loading templates for template manager frame. DB has " + templates.size() + " templates in it");
+		for (Template template : templates) {
+			templateModel.addElement(template);
+		}
 	}
 
 	/**
@@ -1089,6 +1163,54 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 
 	public void setShouldSave(boolean shouldSave) {
 		this.shouldSave = shouldSave;
+	}
+
+	class DisabledGlassPane extends LayerUI<JComponent> {
+		private boolean isOverlayEnabled = true;
+
+		public boolean isOverlayEnabled() {
+			return isOverlayEnabled;
+		}
+
+		public void setOverlayEnabled(boolean isEnabled) {
+			this.isOverlayEnabled = isEnabled;
+		}
+
+		@Override
+		public void paint(Graphics g, JComponent c) {
+			super.paint(g, c);
+			if (!isOverlayEnabled)
+				return;
+			Graphics2D g2 = (Graphics2D) g.create();
+			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .75f));
+			g2.setPaint(new GradientPaint(0, 0, Color.gray, 0, c.getHeight(), Color.black));
+			g2.fillRect(0, 0, c.getWidth(), c.getHeight());
+
+			g2.setColor(Color.white);
+			SharedUI.drawCenteredString(g2, "Select a template", SwingUtilities.getLocalBounds(c), new Font("Segoe UI", Font.PLAIN, 25));
+			g2.dispose();
+		}
+
+		@Override
+		public void eventDispatched(AWTEvent e, JLayer l) {
+			if (isOverlayEnabled && e instanceof InputEvent) {
+				((InputEvent) e).consume();
+			}
+		}
+
+		@Override
+		public void installUI(JComponent c) {
+			super.installUI(c);
+			JLayer jlayer = (JLayer) c;
+			jlayer.setLayerEventMask(AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_MOTION_EVENT_MASK | AWTEvent.KEY_EVENT_MASK);
+		}
+
+		@Override
+		public void uninstallUI(JComponent c) {
+			JLayer jlayer = (JLayer) c;
+			jlayer.setLayerEventMask(0);
+			super.uninstallUI(c);
+		}
 	}
 
 }
