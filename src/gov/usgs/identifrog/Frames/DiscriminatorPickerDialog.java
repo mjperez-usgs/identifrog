@@ -115,6 +115,7 @@ public class DiscriminatorPickerDialog extends JDialog {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					//do nothing. do not set chosenDiscrims to anything.
+					chosenDiscriminators = null; //don't change anything
 					dispose();
 				}
 			});
