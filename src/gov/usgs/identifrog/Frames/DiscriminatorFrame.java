@@ -39,10 +39,13 @@ public class DiscriminatorFrame extends JDialog {
 	private static final int TOP_ROW_PADDING = 4; //gridbaglayout row's top padding
 	private JFrame callingFrame;
 	private JDialog callingDialog;
+	final JTextField discriminatorTextField = new JTextField();
 	JButton saveAllButton;
 	JList<Discriminator> discriminatorList;
 	Discriminator editingDiscriminator;
-
+	Action updateAction = null;
+	Action addAction = null;
+	
 	public DiscriminatorFrame() {
 		setupFrame();
 		//setVisible(true);
@@ -77,11 +80,11 @@ public class DiscriminatorFrame extends JDialog {
 			setModalityType(ModalityType.APPLICATION_MODAL);
 		}
 
-		final JTextField discriminatorTextField = new JTextField();
 		final DefaultListModel<Discriminator> discriminatorModel = new DefaultListModel<Discriminator>();
-		final JButton saveDiscriminator = new JButton("Save Discriminator");
+		final JButton updateDiscriminator = new JButton("Update");
+		final JButton addDiscriminator = new JButton("Add");
 		final JButton deleteDiscriminator = new JButton("Delete Discriminator");
-		
+		updateDiscriminator.setEnabled(false);
 		deleteDiscriminator.setEnabled(false);
 
 		ArrayList<Discriminator> discriminators = XMLFrogDatabase.getDiscriminators();
@@ -98,7 +101,7 @@ public class DiscriminatorFrame extends JDialog {
 				for (int i = 0; i < discriminatorModel.getSize(); i++) {
 					discriminators.add(discriminatorModel.get(i));
 				}
-				
+
 				ArrayList<Discriminator> uniqueList = new ArrayList<Discriminator>(discriminators);
 				Collections.sort(uniqueList);
 
@@ -113,7 +116,41 @@ public class DiscriminatorFrame extends JDialog {
 		TitledBorder discBorder = new TitledBorder(new EtchedBorder(), "Discriminators");
 		//Dimension listMinSize = new Dimension(70,350);
 		//Dimension listMaxSize = new Dimension(150,10000);
+		
+		updateAction = new AbstractAction() {
 
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				if (discriminatorTextField.getText().trim().equals("")) {
+					return;
+				}
+				//technically we are editing it cause of pass by reference but java doesn't know the object updated
+				editingDiscriminator.setText(discriminatorTextField.getText().trim());
+				discriminatorModel.setElementAt(editingDiscriminator, discriminatorList.getSelectedIndex());
+				editingDiscriminator = null;
+
+				discriminatorTextField.setText("");
+				updateDiscriminator.setEnabled(false);
+				deleteDiscriminator.setEnabled(false);
+				setAddActionListener();
+			}
+		};
+		addAction = new AbstractAction() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				if (discriminatorTextField.getText().trim().equals("")) {
+					return;
+				}
+				Discriminator Discriminator = new Discriminator(XMLFrogDatabase.getNextAvailableDiscriminatorID(), discriminatorTextField.getText()
+						.trim());
+				discriminatorModel.addElement(Discriminator);
+				discriminatorTextField.setText("");
+				deleteDiscriminator.setEnabled(false);
+				updateDiscriminator.setEnabled(false);
+			}
+		};
+		
 		discriminatorList = new JList<Discriminator>();
 		discriminatorList.setCellRenderer(new WrappedStringListCellRenderer(100));
 		discriminatorList.setModel(discriminatorModel);
@@ -125,6 +162,8 @@ public class DiscriminatorFrame extends JDialog {
 				int idx = discriminatorList.getSelectedIndex();
 				if (idx != -1) {
 					editingDiscriminator = discriminatorModel.get(idx);
+					updateDiscriminator.setEnabled(true);
+					setUpdateActionListener();
 					if (editingDiscriminator.isInUse()) {
 						editingDiscriminator = null;
 						discriminatorTextField.setText("");
@@ -134,48 +173,30 @@ public class DiscriminatorFrame extends JDialog {
 						deleteDiscriminator.setEnabled(true);
 					}
 				} else {
+					updateDiscriminator.setEnabled(false);
 					editingDiscriminator = null;
 					discriminatorTextField.setText("");
 					deleteDiscriminator.setEnabled(false);
-
+					discriminatorTextField.removeActionListener(updateAction);
+					discriminatorTextField.addActionListener(addAction);
 				}
 			}
 		});
 
-		JScrollPane discScrollPane = new JScrollPane(discriminatorList);
+		JScrollPane discScrollPane = new JScrollPane(discriminatorList,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		discScrollPane.setBorder(discBorder);
 
 		JPanel discriminatorPanel = new JPanel(new GridBagLayout());
 		discriminatorPanel.setMinimumSize(new Dimension(250, 275));
 		GridBagConstraints c = new GridBagConstraints();
-		
-		Action saveAction = new AbstractAction() {
 
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				if (discriminatorTextField.getText().trim().equals("")) {
-					return;
-				}
-				
-				if (editingDiscriminator == null) {
-					Discriminator Discriminator = new Discriminator(XMLFrogDatabase.getNextAvailableDiscriminatorID(), discriminatorTextField
-							.getText().trim());
-					discriminatorModel.addElement(Discriminator);
-				} else {
-					//technically we are editing it cause of pass by reference but java doesn't know the object updated
-					editingDiscriminator.setText(discriminatorTextField.getText().trim());
-					discriminatorModel.setElementAt(editingDiscriminator, discriminatorList.getSelectedIndex());
-					editingDiscriminator = null;
-				}
-				discriminatorTextField.setText("");
-				deleteDiscriminator.setEnabled(false);
-			}
-		};
-		discriminatorTextField.addActionListener(saveAction);
-		saveDiscriminator.addActionListener(saveAction);
+		
+		discriminatorTextField.addActionListener(addAction);
+		updateDiscriminator.addActionListener(updateAction);
+		addDiscriminator.addActionListener(addAction);
 
 		deleteDiscriminator.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
@@ -192,6 +213,7 @@ public class DiscriminatorFrame extends JDialog {
 		c.gridy = 0;
 		c.weighty = 0;
 		c.weightx = 0;
+		c.gridwidth = 2;
 		c.insets = noInsets;
 
 		JLabel descriptionLabel = new JLabel("Discriminator description");
@@ -205,20 +227,31 @@ public class DiscriminatorFrame extends JDialog {
 
 		//Save button
 		c.gridy = 2;
+		c.gridwidth = 1;
 		c.anchor = GridBagConstraints.CENTER;
 		c.insets = topPaddingInsets;
 		//c.fill = GridBagConstraints.HORIZONTAL;
-		discriminatorPanel.add(saveDiscriminator, c);
+		discriminatorPanel.add(updateDiscriminator, c);
 
-		//Save button
+		c.gridy = 2;
+		c.gridx = 1;
+		c.anchor = GridBagConstraints.CENTER;
+		c.insets = topPaddingInsets;
+		//c.fill = GridBagConstraints.HORIZONTAL;
+		discriminatorPanel.add(addDiscriminator, c);
+
+		//Save All Button
 		c.gridy = 3;
+		c.gridx = 0;
+		c.gridwidth = 2;
 		c.anchor = GridBagConstraints.CENTER;
 		c.insets = topPaddingInsets;
 		//c.fill = GridBagConstraints.HORIZONTAL;
 		discriminatorPanel.add(deleteDiscriminator, c);
-		
+
 		//text
 		c.gridy = 4;
+		c.gridwidth = 2;
 		c.fill = GridBagConstraints.NONE;
 		c.anchor = GridBagConstraints.NORTHWEST;
 		String labelText = String
@@ -229,7 +262,7 @@ public class DiscriminatorFrame extends JDialog {
 		JLabel infoLabel = new JLabel(labelText);
 		discriminatorPanel.add(infoLabel, c);
 
-		c.gridx = 1;
+		c.gridx = 2;
 		c.gridy = 0;
 		c.gridheight = 5;
 		c.weightx = 1;
@@ -260,5 +293,15 @@ public class DiscriminatorFrame extends JDialog {
 
 		//setResizable(false);
 		setMinimumSize(new Dimension(300, 275));
+	}
+
+	protected void setUpdateActionListener() {
+		discriminatorTextField.removeActionListener(addAction);
+		discriminatorTextField.addActionListener(updateAction);
+	}
+
+	protected void setAddActionListener() {
+		discriminatorTextField.removeActionListener(updateAction);
+		discriminatorTextField.addActionListener(addAction);
 	}
 }
