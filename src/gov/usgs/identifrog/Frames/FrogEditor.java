@@ -17,13 +17,17 @@ import gov.usgs.identifrog.cellrenderers.FrogEditorSiteSampleCellRenderer;
 import gov.usgs.identifrog.cellrenderers.UserListCellRenderer;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -47,9 +51,11 @@ import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JLayer;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -66,6 +72,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.plaf.LayerUI;
 
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
@@ -195,7 +202,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		} catch (Exception e) {
 			IdentiFrog.LOGGER.writeExceptionWithMessage("Exception while starting FrogEditor's EDIT mode.", e);
 		}
-				
+
 		for (SiteSample sample : f.getSiteSamples()) {
 			sampleModel.addElement(sample);
 		}
@@ -408,24 +415,21 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		 * //loadSiteSample(idx); } } });
 		 */
 		JPanel panelFrogImages = new JPanel();
-		
-		
-		
-		/*JPanel changeSurveyPanel = new JPanel();
-		changeSurveyPanel.setLayout(new BoxLayout(changeSurveyPanel, BoxLayout.PAGE_AXIS));
-		changeSurveyPanel.setBorder(new TitledBorder(new EtchedBorder(), "Active Survey"));
-		JButton changeSurveyButton = new JButton("Switch Surveys");
-		changeSurveyButton
-				.setToolTipText("<html>Change editor to the selected site survey.<br>Saves the current data in this editor window but does not commit it unless this frog is saved.</html>");
-		changeSurveyButton.addActionListener(new ActionListener() {
 
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				//if (sampleList.getSelectedIndex() >= 0 && commitChanges()) {
-				//	loadSiteSample(sampleList.getSelectedIndex());
-				//}
-			}
-		});*/
+		/*
+		 * JPanel changeSurveyPanel = new JPanel();
+		 * changeSurveyPanel.setLayout(new BoxLayout(changeSurveyPanel,
+		 * BoxLayout.PAGE_AXIS)); changeSurveyPanel.setBorder(new
+		 * TitledBorder(new EtchedBorder(), "Active Survey")); JButton
+		 * changeSurveyButton = new JButton("Switch Surveys");
+		 * changeSurveyButton .setToolTipText(
+		 * "<html>Change editor to the selected site survey.<br>Saves the current data in this editor window but does not commit it unless this frog is saved.</html>"
+		 * ); changeSurveyButton.addActionListener(new ActionListener() {
+		 * 
+		 * @Override public void actionPerformed(ActionEvent e) { //if
+		 * (sampleList.getSelectedIndex() >= 0 && commitChanges()) { //
+		 * loadSiteSample(sampleList.getSelectedIndex()); //} } });
+		 */
 		/*
 		 * JButton deleteSurveyButton = new JButton("Delete Survey");
 		 * deleteSurveyButton .setToolTipText(
@@ -451,8 +455,10 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		 * } } } } });
 		 */
 
-		/*changeSurveyPanel.add(labelActiveSurvey);
-		changeSurveyPanel.add(changeSurveyButton);*/
+		/*
+		 * changeSurveyPanel.add(labelActiveSurvey);
+		 * changeSurveyPanel.add(changeSurveyButton);
+		 */
 		//changeSurveyPanel.add(deleteSurveyButton);
 
 		//Data
@@ -524,7 +530,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		//site survey panel
 		JPanel panelSiteSurvey = new JPanel();
 		panelSiteSurvey.setLayout(new GridBagLayout());
-//		panelSiteSurvey.setLayout(new BoxLayout(panelSiteSurvey, BoxLayout.PAGE_AXIS));
+		//		panelSiteSurvey.setLayout(new BoxLayout(panelSiteSurvey, BoxLayout.PAGE_AXIS));
 		//panelSiteSurvey.setAlignmentX(Component.CENTER_ALIGNMENT);
 		TitledBorder siteSurveyBorder = BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Site Survey");
 		siteSurveyBorder.setTitleFont(level1TitleFont);
@@ -567,7 +573,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				butFillPreviousFrogInfo_actionPerformed(e);
 			}
 		});
-		
+
 		butFillFromTemplate.setText("Fill From Template");
 		butFillFromTemplate.setVisible(true);
 		butFillFromTemplate.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconBookmark16.png")));
@@ -577,6 +583,10 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 				Template t = tcf.getChosenTemplate();
 				if (t != null) {
 					//implement template
+					if (t.getSurveyID() != null && !t.getSurveyID().equals("")) {
+						textSurveyID.setText(t.getSurveyID());
+					}
+
 				}
 				System.out.println(t);
 				//butFillPreviousFrogInfo_actionPerformed(e);
@@ -784,13 +794,12 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		c.gridheight = 2;
 		c.weighty = 1;
 		c.fill = GridBagConstraints.BOTH;
-		
-		
+
 		labFrogComments.setText("Comments");
 		textComments.setColumns(115);
 		textComments.setWrapStyleWord(true);
 		textComments.setLineWrap(true);
-		panelBiometrics.add(new JScrollPane(textComments,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER), c);
+		panelBiometrics.add(new JScrollPane(textComments, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER), c);
 
 		// PANEL LOCATION INFO
 		labLocationName.setText("Location Name");
@@ -886,13 +895,13 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 		labSurveyID.setText("Survey Name:");
 		textSurveyID.setColumns(15);
-		textSurveyID.setMaximumSize(new Dimension(15,100));
+		textSurveyID.setMaximumSize(new Dimension(15, 100));
 		JPanel surveyNamePanel = new JPanel();
 		//surveyNamePanel.setLayout(new FlowLayout());
 
-//		surveyNamePanel.setLayout(new GridBagLayout());
+		//		surveyNamePanel.setLayout(new GridBagLayout());
 
-		surveyNamePanel.setLayout(new BoxLayout(surveyNamePanel,BoxLayout.LINE_AXIS));
+		surveyNamePanel.setLayout(new BoxLayout(surveyNamePanel, BoxLayout.LINE_AXIS));
 		surveyNamePanel.add(labSurveyID);
 		surveyNamePanel.add(textSurveyID);
 		surveyNamePanel.add(butSurveySwitcher);
@@ -906,15 +915,15 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		c.weighty = 0;
 		c.gridx = 0;
 		c.gridy = 0;
-		panelSiteSurvey.add(surveyNamePanel,c);
+		panelSiteSurvey.add(surveyNamePanel, c);
 		c.gridy++;
-		panelSiteSurvey.add(panelDataEntry,c);
+		panelSiteSurvey.add(panelDataEntry, c);
 		c.gridy++;
-		panelSiteSurvey.add(panelLocation,c);
+		panelSiteSurvey.add(panelLocation, c);
 		c.gridy++;
 		c.weighty = 1;
 		c.fill = GridBagConstraints.BOTH;
-		panelSiteSurvey.add(panelBiometrics,c);
+		panelSiteSurvey.add(panelBiometrics, c);
 
 		//PANEL LOCATION INFO
 		c = new GridBagConstraints();
@@ -997,9 +1006,14 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 		panelAllInfo.add(Box.createVerticalGlue());
 		panelAllInfo.add(panelBottomButtons);
-		
+
 		panelSiteSurvey.add(Box.createVerticalGlue());
-		JSplitPane leftrightSplitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, imagesPanel /*new JPanel()*/, panelSiteSurvey);
+		JSplitPane leftrightSplitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, imagesPanel /*
+																								 * new
+																								 * JPanel
+																								 * (
+																								 * )
+																								 */, panelSiteSurvey);
 		leftrightSplitpane.setDividerLocation(120);
 
 		JPanel surveyPanel = new JPanel(new BorderLayout());
@@ -1287,24 +1301,18 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		}
 	}
 
-	/**
-	 * Populates the add frog interface with old values from the last frog data.
-	 */
-	protected void imposeLastValues() {
-		IdentiFrog.LOGGER.writeError("imposeLastValues() is no longer implemented.");
-	}
-
-	protected void setLastValues() {
-		IdentiFrog.LOGGER.writeError("setLastValues() is no longer implemented.");
-	}
-
 	void butFillPreviousFrogInfo_actionPerformed(ActionEvent e) {
-		imposeLastValues();
+		SurveyPickerFrame spf = new SurveyPickerFrame(FrogEditor.this, frog, frog.getSiteSamples().get(activeSampleIndex));
+		spf.setVisible(true);
+		SiteSample switchTo = spf.getSurveyToLoad();
+		if (switchTo != null) {
+			loadSiteSample(frog.getSiteSamples().indexOf(switchTo));
+		}
 	}
 
 	void locnameComboBox_actionPerformed(ActionEvent e) {
 		int locind = comboLocationName.getSelectedIndex();
-		System.out.println("Location index "+locind + " num "+comboLocationName.getItemCount());
+		System.out.println("Location index " + locind + " num " + comboLocationName.getItemCount());
 		// set to original coordinates
 		if (locind >= 0 && locind < comboLocationName.getItemCount()) { // in comboBox Location List index = 0 for a new entry
 			//--locind;
@@ -1644,4 +1652,32 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		this.shouldSave = shouldSave;
 	}
 
+	class ValidationLayerUI extends LayerUI<JFormattedTextField> {
+		@Override
+		public void paint(Graphics g, JComponent c) {
+			super.paint(g, c);
+
+			JLayer jlayer = (JLayer) c;
+			JFormattedTextField ftf = (JFormattedTextField) jlayer.getView();
+			if (!ftf.isEditValid()) {
+				Graphics2D g2 = (Graphics2D) g.create();
+
+				// Paint the red X.
+				g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				int w = c.getWidth();
+				int h = c.getHeight();
+				int s = 8;
+				int pad = 4;
+				int x = w - pad - s;
+				int y = (h - s) / 2;
+				g2.setPaint(Color.red);
+				g2.fillRect(x, y, s + 1, s + 1);
+				g2.setPaint(Color.white);
+				g2.drawLine(x, y, x + s, y + s);
+				g2.drawLine(x, y + s, x + s, y);
+
+				g2.dispose();
+			}
+		}
+	}
 }

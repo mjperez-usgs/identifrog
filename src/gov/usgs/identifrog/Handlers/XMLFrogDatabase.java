@@ -1153,6 +1153,7 @@ public class XMLFrogDatabase {
 			numToProcess += frogs.size();
 			numToProcess += recorders.size();
 			numToProcess += observers.size();
+			numToProcess += templates.size();
 		}
 
 		@Override
@@ -1226,7 +1227,7 @@ public class XMLFrogDatabase {
 				numProcessed++;
 				publish(numProcessed);
 			}
-			root.appendChild(discrimsElement);
+			root.appendChild(templatesElement);
 
 			//METADATA
 			IdentiFrog.LOGGER.writeMessage("Writing DB metadata to DB");
@@ -1289,6 +1290,24 @@ public class XMLFrogDatabase {
 
 	public static ArrayList<Template> getTemplates() {
 		return templates;
+	}
+
+	/**
+	 * Points the source template object in the template list to the one labeled newTemplate.
+	 * @param source template already in the templates list (as an object)
+	 * @param newTemplate new template to replace with
+	 */
+	public static void updateTemplate(Template source, Template newTemplate) {
+		Template t = templates.set(templates.indexOf(source),newTemplate);
+		assert t != null;
+	}
+
+	/**
+	 * Adds a new template to the list of templates
+	 * @param template Template to add
+	 */
+	public static void addTemplate(Template template) {
+		templates.add(template);
 	}
 
 }

@@ -39,12 +39,12 @@ public class TemplatePickerDialog extends JDialog {
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setMinimumSize(new Dimension(250, 250));
 		loadTemplateList();
-		pack();
 		setLocationRelativeTo(callingDialog);
 		setVisible(true);
 	}
 
 	private void loadTemplateList() {
+		getContentPane().removeAll();
 
 		ArrayList<Template> templates = XMLFrogDatabase.getTemplates();
 		JPanel panel = null;
@@ -60,6 +60,7 @@ public class TemplatePickerDialog extends JDialog {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					new TemplateFrame(TemplatePickerDialog.this);
+					loadTemplateList();
 				}
 			});
 			panel.add(openTemplateManagerButton, BorderLayout.SOUTH);
@@ -85,25 +86,14 @@ public class TemplatePickerDialog extends JDialog {
 				}
 			});
 
-			cancelButton.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					//do nothing. do not set chosenDiscrims to anything.
-					dispose();
-				}
-			});
-
 			c.gridwidth = 1;
 			c.weighty = 0;
 			c.weightx = 1;
-			c.gridx = 1;
-			panel.add(cancelButton, c);
-			c.gridx = 3;
 			panel.add(loadButton, c);
 		}
 		panel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		add(panel);
+		pack();
 	}
 
 	public Template getChosenTemplate() {

@@ -363,7 +363,7 @@ public class MainFrame extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new TemplateFrame(MainFrame.this).setVisible(true);
+				new TemplateFrame(MainFrame.this);
 			}
 		});
 

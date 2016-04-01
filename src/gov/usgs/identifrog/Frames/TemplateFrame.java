@@ -5,6 +5,8 @@ import gov.usgs.identifrog.ImageManipFrame;
 import gov.usgs.identifrog.SharedUI;
 import gov.usgs.identifrog.DataObjects.DateLabelFormatter;
 import gov.usgs.identifrog.DataObjects.Location;
+import gov.usgs.identifrog.DataObjects.SiteImage;
+import gov.usgs.identifrog.DataObjects.SiteSample;
 import gov.usgs.identifrog.DataObjects.Template;
 import gov.usgs.identifrog.DataObjects.User;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
@@ -30,6 +32,7 @@ import java.awt.event.InputEvent;
 import java.awt.geom.Point2D;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -324,6 +327,8 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 				templateEditorDisabler.setOverlayEnabled(false);
 				Template template = new Template();
 				template.setName("New Template");
+				XMLFrogDatabase.addTemplate(template);
+				assert XMLFrogDatabase.getTemplates().size() > 0;
 				templateModel.addElement(template);
 				templateList.setSelectedIndex(templateModel.getSize() - 1);
 				assert templateList.getSelectedIndex() == templateModel.getSize() - 1;
@@ -509,7 +514,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 
 		Insets topInsets = new Insets(3, 5, 0, 5);
 		Insets bottomInsets = new Insets(0, 5, 3, 5);
-		
+
 		JPanel surveyNamePanel = new JPanel(new GridBagLayout());
 		c = new GridBagConstraints();
 		c.weightx = 1;
@@ -521,7 +526,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		surveyNamePanel.add(labTemplateName, c);
 		c.gridx++;
 		surveyNamePanel.add(labSurveyID, c);
-		
+
 		c.gridy++;
 		c.gridx = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -529,8 +534,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		surveyNamePanel.add(textTemplateName, c);
 		c.gridx++;
 		surveyNamePanel.add(textSurveyID, c);
-		
-		
+
 		//LatLongButton.setBounds(new Rectangle(288, 100, 80, 20));
 		//UTMButton.setBounds(new Rectangle(375, 100, 80, 20));
 		Butgroup.add(LatLongButton);
@@ -547,7 +551,62 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 			public void actionPerformed(ActionEvent e) {
 				if (commitChanges()) {
 					IdentiFrog.LOGGER.writeMessage("Saving active template");
-					Template templateData = new Template();
+					Template template = new Template();
+					try {
+						Date eDate = (Date) entryDatePicker.getModel().getValue();
+						String entrydate = IdentiFrog.dateFormat.format(eDate);
+						Date d = (Date) captureDatePicker.getModel().getValue();
+						String capturedate = IdentiFrog.dateFormat.format(d);
+
+						// mass
+						// length
+						String locationName = (String) comboLocationName.getSelectedItem().toString();
+						String locationDescription = textLocDesc.getText().trim();
+
+						// longitude
+						// latitude
+						// datum
+						// zone
+						String locCoorType;
+						if (LatLongButton.isSelected()) {
+							locCoorType = "Lat/Long";
+						} else if (UTMButton.isSelected()) {
+							locCoorType = "UTM";
+						} else {
+							locCoorType = "UNKNOWN";
+						}
+						int zone = Location.EMPTY_ZONE;
+						try {
+							zone = Integer.parseInt(textZone.getText().trim());
+						} catch (NumberFormatException ex) {
+							//not a zone
+							zone = -1;
+						}
+						String datum = textDatum.getText();
+						Location lc = new Location(locationName, locationDescription, locCoorType, textY.getText().trim(), textX.getText().trim(),
+								datum, zone);
+
+						//Generate sitesample
+						template.setSurveyID(textSurveyID.getText().trim());
+						template.setMass(textMass.getText().trim());
+						template.setLength(textLength.getText().trim());
+						System.out.println(capturedate + " " + entrydate);
+						template.setDateCapture(capturedate);
+						template.setDateEntry(entrydate);
+						User selectedObs = (User) comboObserver.getSelectedItem();
+						User selectedRec = (User) comboRecorder.getSelectedItem();
+						template.setRecorder(XMLFrogDatabase.getRecorderByID(selectedRec.getID())); //we use IDs instead of assigning values because 
+						template.setObserver(XMLFrogDatabase.getObserverByID(selectedObs.getID())); //these may be out of sync with the XML database (say a user fools with the file in the background)
+						template.setComments(textComments.getText().trim());
+						template.setLocation(lc);
+						template.setName(textTemplateName.getText().trim());
+						XMLFrogDatabase.updateTemplate(templateModel.get(templateList.getSelectedIndex()), template);
+						templateModel.set(templateList.getSelectedIndex(), template);
+						XMLFrogDatabase.writeXMLFile();
+						repaint();
+					} catch (Exception ex) {
+						IdentiFrog.LOGGER.writeExceptionWithMessage("Failed to commit template changes, exception occured.", ex);
+					}
 				}
 			}
 		});
@@ -565,7 +624,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		});
 
 		//Add all items to interface
-		
+
 		//top buttons
 		panelTopButtons.setLayout(new BoxLayout(panelTopButtons, BoxLayout.LINE_AXIS));
 		panelTopButtons.add(Box.createHorizontalGlue());
@@ -691,6 +750,7 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 		templateList = new JList<Template>();
 		templateList.setModel(templateModel);
 		templateList.setCellRenderer(new TemplateListCellRenderer());
+		templateList.addListSelectionListener(this);
 		JPanel templateSelectionPanel = new JPanel(new BorderLayout());
 		templateSelectionPanel.setBorder(new TitledBorder(new EtchedBorder(), "Templates"));
 		templateSelectionPanel.add(new JScrollPane(templateList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER));
@@ -1184,9 +1244,91 @@ public class TemplateFrame extends JDialog implements ListSelectionListener {
 	}
 
 	@Override
-	public void valueChanged(ListSelectionEvent e) {
-		// TODO Auto-generated method stub
+	public void valueChanged(ListSelectionEvent ex) {
+		//loadtemplate
+		if (ex.getValueIsAdjusting() == false) {
+			if (templateList.getSelectedIndex() != -1) {
+				templateEditorDisabler.setOverlayEnabled(false);
+				Template template = templateModel.get(templateList.getSelectedIndex());
+				try {
+					if (template.getDateEntry() != null) {
+						Date entryDate;
+						entryDate = IdentiFrog.dateFormat.parse(template.getDateEntry());
+						//ridiculous... thanks oracle
+						Calendar cal = Calendar.getInstance();
+						cal.setTime(entryDate);
+						int year = cal.get(Calendar.YEAR);
+						int month = cal.get(Calendar.MONTH);
+						int day = cal.get(Calendar.DAY_OF_MONTH);
+						entryDatePicker.getModel().setDate(year, month, day); //-1 cause it's 0 indexed
+						entryDatePicker.getModel().setSelected(true);
+					}
+				} catch (ParseException e) {
+					IdentiFrog.LOGGER.writeExceptionWithMessage("Failed to parse entry date when loading template!", e);
+				}
 
+				try {
+					if (template.getDateCapture() != null) {
+						Date captureDate;
+						captureDate = IdentiFrog.dateFormat.parse(template.getDateCapture());
+						//ridiculous... thanks oracle
+						Calendar cal = Calendar.getInstance();
+						cal.setTime(captureDate);
+						int year = cal.get(Calendar.YEAR);
+						int month = cal.get(Calendar.MONTH);
+						int day = cal.get(Calendar.DAY_OF_MONTH);
+						captureDatePicker.getModel().setDate(year, month, day);
+						captureDatePicker.getModel().setSelected(true);
+					}
+				} catch (ParseException e) {
+					IdentiFrog.LOGGER.writeExceptionWithMessage("Failed to parse capture date when loading template!", e);
+				}
+
+				textSurveyID.setText(template.getSurveyID());
+				comboRecorder.setSelectedItem(template.getRecorder());
+				comboObserver.setSelectedItem(template.getObserver());
+
+				if (template.getLocation() != null && template.getLocation().getCoordinateType() != null) {
+					if (template.getLocation().getCoordinateType().equals("UTM")) {
+						textX.setText(template.getLocation().getLatitude());
+						textY.setText(template.getLocation().getLongitude());
+						UTMButton.setSelected(true);
+						textZone.setText(Integer.toString(template.getLocation().getZone()));
+						labZone.setVisible(true);
+						textZone.setVisible(true);
+					} else {
+						textY.setText(template.getLocation().getLongitude());
+						textX.setText(template.getLocation().getLatitude());
+						LatLongButton.setSelected(true);
+						labZone.setVisible(false);
+						textZone.setVisible(false);
+					}
+					textLocDesc.setText(template.getLocation().getDescription());
+					textDatum.setText(template.getLocation().getDatum());
+				}
+
+				for (Location l : XMLFrogDatabase.getAllLocations()) {
+					comboLocationName.addItem(l);
+				}
+				comboLocationName.setSelectedItem(template.getLocation());
+
+				textMass.setText(template.getMass());
+				textLength.setText(template.getLength());
+				textComments.setText(template.getComments());
+				textTemplateName.setText(template.getName());
+
+				if (!LatLongButton.isSelected() && !UTMButton.isSelected()) {
+					LatLongButton.setSelected(true);
+					labZone.setVisible(false);
+					textZone.setVisible(false);
+				}
+				repaint();
+			} else {
+				//nothing selected.
+				templateEditorDisabler.setOverlayEnabled(true);
+				repaint();
+			}
+		}
 	}
 
 	public boolean shouldSave() {
