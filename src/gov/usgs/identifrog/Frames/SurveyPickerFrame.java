@@ -77,11 +77,11 @@ public class SurveyPickerFrame extends JDialog {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				group.getSelection();
 				for (Enumeration<AbstractButton> buttons = group.getElements(); buttons.hasMoreElements();) {
 					AbstractButton button = buttons.nextElement();
 					if (button.isSelected()) {
 						loadSurvey = radioButtonMap.get(button);
+						break;
 					}
 				}
 				dispose();

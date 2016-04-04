@@ -586,10 +586,92 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					if (t.getSurveyID() != null && !t.getSurveyID().equals("")) {
 						textSurveyID.setText(t.getSurveyID());
 					}
+					if (t.getDateCapture() != null && !t.getDateCapture().equals("")) {
+						try {
+							Date captureDate;
+							captureDate = IdentiFrog.dateFormat.parse(t.getDateCapture());
+							//ridiculous... thanks oracle
+							Calendar cal = Calendar.getInstance();
+							cal.setTime(captureDate);
+							int year = cal.get(Calendar.YEAR);
+							int month = cal.get(Calendar.MONTH);
+							int day = cal.get(Calendar.DAY_OF_MONTH);
+							captureDatePicker.getModel().setDate(year, month, day);
+							captureDatePicker.getModel().setSelected(true);
+						} catch (ParseException ex) {
+							IdentiFrog.LOGGER.writeExceptionWithMessage("Failed to parse capture date when loading template!", ex);
+						}
+					}
+					if (t.getDateEntry() != null && !t.getDateEntry().equals("")) {
+						try {
+							Date entryDate;
+							entryDate = IdentiFrog.dateFormat.parse(t.getDateEntry());
+							//ridiculous... thanks oracle
+							Calendar cal = Calendar.getInstance();
+							cal.setTime(entryDate);
+							int year = cal.get(Calendar.YEAR);
+							int month = cal.get(Calendar.MONTH);
+							int day = cal.get(Calendar.DAY_OF_MONTH);
+							entryDatePicker.getModel().setDate(year, month, day);
+							entryDatePicker.getModel().setSelected(true);
+						} catch (ParseException ex) {
+							IdentiFrog.LOGGER.writeExceptionWithMessage("Failed to parse entry date when loading template!", ex);
+						}
+					}
 
+					if (t.getRecorder() != null) {
+						comboRecorder.setSelectedItem(t.getRecorder());
+					}
+					if (t.getObserver() != null) {
+						comboObserver.setSelectedItem(t.getObserver());
+					}
+
+					if (t.getLocation() != null) {
+						Location loc = t.getLocation();
+						if (!isNullOrEmptyString(loc.getCoordinateType())) {
+							if (loc.getCoordinateType().equals("UTM")) {
+								UTMButton.setSelected(true);
+								labZone.setVisible(true);
+								textZone.setVisible(true);
+							} else if (loc.getCoordinateType().equals("Lat/Long")) {
+								LatLongButton.setSelected(true);
+								labZone.setVisible(false);
+								textZone.setVisible(false);
+							}
+						}
+						if (!isNullOrEmptyString(loc.getLatitude())) {
+							textX.setText(loc.getLatitude());
+						}
+						if (!isNullOrEmptyString(loc.getLatitude())) {
+							textY.setText(loc.getLongitude());
+						}
+						if (loc.getZone() > 0) {
+							textZone.setText(Integer.toString(t.getLocation().getZone()));
+						}
+						if (!isNullOrEmptyString(loc.getDescription())) {
+							textLocDesc.setText(t.getLocation().getDescription());
+						}
+						if (!isNullOrEmptyString(loc.getDatum())) {
+							textDatum.setText(loc.getDatum());
+						}
+
+						if (!isNullOrEmptyString(loc.getName())) {
+							comboLocationName.setSelectedItem(loc.getName());
+						}
+					}
+
+					if (!isNullOrEmptyString(t.getMass())) {
+						textMass.setText(t.getMass());
+					}
+					if (!isNullOrEmptyString(t.getLength())) {
+						textLength.setText(t.getLength());
+					}
+					if (!isNullOrEmptyString(t.getComments())) {
+						textComments.setText(t.getComments());
+					}
 				}
+
 				System.out.println(t);
-				//butFillPreviousFrogInfo_actionPerformed(e);
 			}
 		});
 
@@ -1032,6 +1114,10 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		updateDiscriminatorTooltip();
 		pack();
 		setLocationRelativeTo(parentFrame);
+	}
+
+	private boolean isNullOrEmptyString(String str) {
+		return str == null || str.isEmpty();
 	}
 
 	/**

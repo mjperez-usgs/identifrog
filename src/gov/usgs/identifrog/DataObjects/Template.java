@@ -92,6 +92,7 @@ public class Template {
 		// element.appendChild(setupImage(document, "image",
 		// getGenericImageName()));
 
+		element.appendChild(nameElem);
 		element.appendChild(surveyid);
 		element.appendChild(comments);
 		element.appendChild(recorderElem);
