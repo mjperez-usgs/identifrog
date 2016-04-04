@@ -1,10 +1,10 @@
 package gov.usgs.identifrog.Frames;
 
 import gov.usgs.identifrog.IdentiFrog;
-import gov.usgs.identifrog.DataObjects.Discriminator;
 import gov.usgs.identifrog.DataObjects.Frog;
 import gov.usgs.identifrog.DataObjects.SiteSample;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -18,8 +18,10 @@ import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
 public class SurveyPickerFrame extends JDialog {
@@ -47,20 +49,22 @@ public class SurveyPickerFrame extends JDialog {
 		getContentPane().removeAll();
 		radioButtonMap.clear();
 		ArrayList<SiteSample> samples = frog.getSiteSamples();
-		JPanel panel = new JPanel(new GridBagLayout());
+		JPanel surveysPanel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridwidth = 2;
 		c.weighty = 0;
 		c.weightx = 1;
+		c.gridy = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		for (SiteSample s : samples) {
-			JRadioButton button = new JRadioButton(s.getDateCapture() + ": " + s.getSurveyID());
+			System.out.println("GRIDY: " + c.gridy);
+			JRadioButton button = new JRadioButton((s.getDateCapture() != null ? s.getDateCapture() : "No Capture Date") + ": " + s.getSurveyID());
 			group.add(button);
 			if (s == activeSurvey) {
 				button.setSelected(true);
 			}
 			radioButtonMap.put(button, s);
-			panel.add(button, c);
+			surveysPanel.add(button, c);
 			c.gridy++;
 		}
 
@@ -83,12 +87,13 @@ public class SurveyPickerFrame extends JDialog {
 				dispose();
 			}
 		});
-		
+
 		addButton.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				SiteSample sample = new SiteSample();
+				sample.setSurveyID("New Survey");
 				frog.addSiteSample(sample);
 				loadSurvey = sample;
 				dispose();
@@ -105,19 +110,29 @@ public class SurveyPickerFrame extends JDialog {
 			}
 		});
 
-		c.gridy++;
-		c.gridwidth = 1;
-		c.fill = GridBagConstraints.BOTH;
-		panel.add(deleteButton, c);
-		c.gridx = 1;
-		panel.add(addButton, c);
+		GridBagConstraints bottomConstraints = new GridBagConstraints();
+		bottomConstraints.gridy = c.gridy;
 
-		c.gridy++;
-		c.gridwidth = 2;
-		c.gridx = 0;
-		panel.add(loadButton, c);
+		JPanel bottomPanel = new JPanel(new GridBagLayout());
+		bottomConstraints.gridy++;
+		bottomConstraints.gridwidth = 1;
+		bottomConstraints.weightx = 1;
+		bottomConstraints.fill = GridBagConstraints.BOTH;
+		bottomPanel.add(deleteButton, bottomConstraints);
+		bottomConstraints.gridx = 1;
+		bottomPanel.add(addButton, bottomConstraints);
 
+		bottomConstraints.gridy++;
+		bottomConstraints.gridwidth = 2;
+		bottomConstraints.gridx = 0;
+		bottomPanel.add(loadButton, bottomConstraints);
+
+		JPanel panel = new JPanel(new BorderLayout());
 		panel.setBorder(new EmptyBorder(5, 5, 5, 5));
+		panel.add(new JLabel("Surveys for frog "+frog.getID(),JLabel.CENTER),BorderLayout.NORTH);
+		panel.add(new JScrollPane(surveysPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER),
+				BorderLayout.CENTER);
+		panel.add(bottomPanel, BorderLayout.SOUTH);
 		add(panel);
 		pack();
 		setMinimumSize(new Dimension(250, 250));
