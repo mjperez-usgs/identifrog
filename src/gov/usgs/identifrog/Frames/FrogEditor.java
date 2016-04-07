@@ -18,6 +18,7 @@ import gov.usgs.identifrog.cellrenderers.UserListCellRenderer;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
@@ -47,6 +48,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -67,6 +69,8 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
@@ -317,6 +321,8 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JComboBox<Location> comboLocationName = new JComboBox<Location>();
 	private JComboBox<SiteSample> surveySwitcherCombobox;
 	private JLabel activeFrogImageLabel;
+	private JList<SiteImage> masterFrogImageList;
+	private DefaultListModel<SiteImage> masterFrogImageModel;
 
 	private void init() throws Exception {
 		setModal(true);
@@ -415,10 +421,30 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		 * img = sampleList.getModel().getElementAt(idx); //commitChanges();
 		 * //loadSiteSample(idx); } } });
 		 */
-		JPanel panelFrogImages = new JPanel();
-		activeFrogImageLabel = new JLabel();
-		panelFrogImages.add(activeFrogImageLabel);
-		
+		JPanel panelFrogImages = new JPanel(new BorderLayout());
+		masterFrogImageList = new JList<SiteImage>();
+		masterFrogImageModel = new DefaultListModel<SiteImage>();
+		masterFrogImageList.setModel(masterFrogImageModel);
+		masterFrogImageList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		masterFrogImageList.setCellRenderer(new DefaultListCellRenderer() {
+
+			@Override
+			public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+				if (value instanceof SiteImage) {
+					SiteImage img = (SiteImage) value;
+					SiteSample s = frog.getSampleContainingImage(img);
+					setText(s.getDateCapture() + ": " + s.getSurveyID() + " #" + (s.getSiteImages().indexOf(img) + 1));
+				}
+				return this;
+			}
+		});
+		activeFrogImageLabel = new JLabel("Select a frog image on the left", SwingConstants.CENTER);
+		masterFrogImageList.addListSelectionListener(this);
+		panelFrogImages.add(activeFrogImageLabel, BorderLayout.CENTER);
+		panelFrogImages.add(masterFrogImageList, BorderLayout.WEST);
+
 		/*
 		 * JPanel changeSurveyPanel = new JPanel();
 		 * changeSurveyPanel.setLayout(new BoxLayout(changeSurveyPanel,
@@ -1115,6 +1141,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		setMinimumSize(new Dimension(660, 640));
 		//setPreferredSize(new Dimension(660, 640));
 		updateDiscriminatorTooltip();
+		reloadMasterFrogList();
 		pack();
 		setLocationRelativeTo(parentFrame);
 	}
@@ -1399,6 +1426,13 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		}
 	}
 
+	private void reloadMasterFrogList() {
+		masterFrogImageModel.clear();
+		for (SiteImage img : frog.getAllSiteImages()) {
+			masterFrogImageModel.addElement(img);
+		}
+	}
+
 	void locnameComboBox_actionPerformed(ActionEvent e) {
 		int locind = comboLocationName.getSelectedIndex();
 		System.out.println("Location index " + locind + " num " + comboLocationName.getItemCount());
@@ -1653,8 +1687,21 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
-		// TODO Auto-generated method stub
+		if (!e.getValueIsAdjusting()) {
+			if (e.getSource() == imageList) {
 
+			} else if (e.getSource() == masterFrogImageList) {
+				int index = masterFrogImageList.getSelectedIndex();
+				if (index >= 0) {
+					SiteImage img = masterFrogImageModel.get(index);
+					activeFrogImageLabel.setIcon(new ImageIcon(img.getDorsalImage()));
+					activeFrogImageLabel.setText("");
+				} else {
+					activeFrogImageLabel.setIcon(null);
+					activeFrogImageLabel.setText("Select a frog image on the left");
+				}
+			}
+		}
 	}
 
 	/**

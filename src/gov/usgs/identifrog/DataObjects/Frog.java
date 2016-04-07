@@ -84,11 +84,12 @@ public class Frog implements Comparable<Frog> {
 	}
 
 	/**
-	 * Creates an XML element representing this frog in the XML database.
-	 * Calls the fresh version of createElement() in associated objects if this one is a fresh import.
+	 * Creates an XML element representing this frog in the XML database. Calls
+	 * the fresh version of createElement() in associated objects if this one is
+	 * a fresh import.
 	 */
 	public Element createDBElement(Document document) {
-		
+
 		// CREATE FROG ELEMENT
 		Element element = document.createElement("frog");
 		// SET ID ATTRIBUTE OF FROG
@@ -129,8 +130,7 @@ public class Frog implements Comparable<Frog> {
 				sites.appendChild(sample.createElement(document));
 			}
 			element.appendChild(sites);
-			
-			
+
 			Element previousIDs = document.createElement("previousids");
 			for (Integer prevId : previousIds) {
 				Element prevIdElem = document.createElement("previousid");
@@ -159,7 +159,7 @@ public class Frog implements Comparable<Frog> {
 		}
 		str += "Previous IDs: \n";
 		for (Integer i : previousIds) {
-			str += i +" ";
+			str += i + " ";
 		}
 		str += "\n";
 		return str;
@@ -270,7 +270,7 @@ public class Frog implements Comparable<Frog> {
 		if (siteSamples.size() == 1) {
 			return siteSamples.get(0);
 		}
-		
+
 		DateLabelFormatter dlf = new DateLabelFormatter();
 		Date latestDate = new Date(0L);
 		SiteSample latestSample = null;
@@ -328,7 +328,8 @@ public class Frog implements Comparable<Frog> {
 	}
 
 	/**
-	 * Processes a delete request on this frog. Deletes this frogs images and will remove from the database on the next save.
+	 * Processes a delete request on this frog. Deletes this frogs images and
+	 * will remove from the database on the next save.
 	 */
 	public void delete() {
 		for (SiteImage img : getAllSiteImages()) {
@@ -378,7 +379,7 @@ public class Frog implements Comparable<Frog> {
 				return 0;
 			} else if (localLatest.getDateCapture() == null) {
 				return -1;
-			} else if (otherLatest.getDateCapture() == null){
+			} else if (otherLatest.getDateCapture() == null) {
 				return 1;
 			}
 
@@ -406,11 +407,11 @@ public class Frog implements Comparable<Frog> {
 			}
 			return 0;
 		case MainFrame.SORT_BY_SEARCHABILITY:
-			if (!isFreshImport() && otherFrog.isFreshImport()){
+			if (!isFreshImport() && otherFrog.isFreshImport()) {
 				//this is new, other is not
 				return 1;
 			}
-			if (isFreshImport() && !otherFrog.isFreshImport()){
+			if (isFreshImport() && !otherFrog.isFreshImport()) {
 				//this is new, other is not
 				return -1;
 			}
@@ -421,26 +422,48 @@ public class Frog implements Comparable<Frog> {
 				return -1;
 			}
 			return 0;
-		default: 
+		default:
 			//Sort By ID
 			return getID() - otherFrog.getID();
 		}
 	}
-	
+
 	/**
-	 * Merges the other frog into this one.
-	 * This object is modified during this procedure.
-	 * @param other Other frog to merge into this one
+	 * Merges the other frog into this one. This object is modified during this
+	 * procedure.
+	 * 
+	 * @param other
+	 *            Other frog to merge into this one
 	 */
-	public void mergeWith(Frog other){ 
+	public void mergeWith(Frog other) {
 		for (SiteSample s : other.getSiteSamples()) {
 			addSiteSample(s);
 		}
-		
+
 		//add other's ids
-		for (int id: other.previousIds) {
+		for (int id : other.previousIds) {
 			previousIds.add(id);
 		}
 		previousIds.add(other.getID());
+	}
+
+	/**
+	 * Returns the sample that contains the specified img object (reference
+	 * based).
+	 * 
+	 * @param img
+	 *            Image object to find
+	 * @return SiteSample that contains said image
+	 */
+	public SiteSample getSampleContainingImage(SiteImage img) {
+		for (SiteSample sample : siteSamples) {
+			for (SiteImage simg : sample.getSiteImages()) {
+				if (simg == img) {
+					return sample;
+				}
+			}
+		}
+		assert false; //this should not be reached.
+		return null;
 	}
 }
