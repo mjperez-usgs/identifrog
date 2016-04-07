@@ -207,7 +207,7 @@ public class ProjectManagerFrame extends JDialog implements ActionListener {
 					loadSite(f.getSelectedFile().getAbsolutePath());
 					dispose();
 				} else {
-					new ErrorDialog("The selected XML file is not an IdentiFrog site file.");
+					JOptionPane.showMessageDialog(ProjectManagerFrame.this, "The selected XML file is not an IdentiFrog site file.", "Invalid Project File", JOptionPane.ERROR_MESSAGE);
 				}
 			}
 		}

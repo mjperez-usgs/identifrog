@@ -1,8 +1,10 @@
 package gov.usgs.identifrog;
 
-import gov.usgs.identifrog.Frames.ErrorDialog;
+import gov.usgs.identifrog.Frames.ProjectManagerFrame;
 
 import java.io.File;
+
+import javax.swing.JOptionPane;
 
 /**
  * <p>
@@ -77,9 +79,9 @@ public class DigSigThread extends Thread {
 			}
 			threadRunning = false;
 		} catch (Exception ex) {
-			new ErrorDialog("Error trying to open digital signature creator.");
-			ex.printStackTrace();
+			IdentiFrog.LOGGER.writeExceptionWithMessage("Error opening digital signature generator:", ex);
 			threadRunning = false;
+			JOptionPane.showMessageDialog(null, "Error opening digital signature generator.", "IdentiFrog error", JOptionPane.ERROR_MESSAGE);
 		}
 	} // run()
 

@@ -1,6 +1,7 @@
-package gov.usgs.identifrog;
+package gov.usgs.identifrog.Frames;
 
 import gov.usgs.identifrog.DataObjects.SiteImage;
+import gov.usgs.identifrog.Frames.ErrorDialog;
 import gov.usgs.identifrog.Frames.FrogEditor;
 import gov.usgs.identifrog.Frames.MainFrame;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
@@ -60,7 +61,7 @@ import javax.swing.event.ChangeListener;
  *         from <b>IdentiFrog</b> <i>2005</i>
  */
 @SuppressWarnings("serial")
-public class ImageManipFrame extends JDialog {
+public class SignatureGeneratorFrame extends JDialog {
 	private Preferences root = Preferences.userRoot();
 	@SuppressWarnings("unused")
 	private final Preferences node = root.node("edu/isu/aadis/defaults");
@@ -172,7 +173,7 @@ public class ImageManipFrame extends JDialog {
 	 * @param parent
 	 * @param imageFile
 	 */
-	public ImageManipFrame(FrogEditor parent, SiteImage image) {
+	public SignatureGeneratorFrame(FrogEditor parent, SiteImage image) {
 		parentFrame = parent;
 		this.image = image;
 		//DbId = db_id;
@@ -191,7 +192,7 @@ public class ImageManipFrame extends JDialog {
 		installDir = XMLFrogDatabase.getMainFolder();
 		setIconImages(IdentiFrog.ICONS);
 		//setJMenuBar(jMenuBar1);
-		imagePanel = new ImagePanel(ImageManipFrame.this, image);
+		imagePanel = new ImagePanel(SignatureGeneratorFrame.this, image);
 		digSignature = new DigSignature();
 		getContentPane().setLayout(new BorderLayout());
 		panelStatus.setLayout(new BorderLayout());
@@ -201,18 +202,18 @@ public class ImageManipFrame extends JDialog {
 		butClearImage.setText("Clear Image");
 		butClearImage.addActionListener(new ImageManipFrame_butClearImage_actionAdapter(this));
 		butPencil.setPreferredSize(new Dimension(41, 41));
-		butPencil.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconPencil32.png")));
+		butPencil.setIcon(new ImageIcon(SignatureGeneratorFrame.class.getResource("IconPencil32.png")));
 		//butPencil.setText("");// Pencil
 		butPencil.setToolTipText("Pencil");
 		butPencil.addActionListener(new ImageManipFrame_butPencil_actionAdapter(this));
 		butUndoPencil.setPreferredSize(new Dimension(41, 41));
-		butUndoPencil.setIcon(new ImageIcon(ImageManipFrame.class.getResource("/resources/IconUndo32.png")));
+		butUndoPencil.setIcon(new ImageIcon(SignatureGeneratorFrame.class.getResource("/resources/IconUndo32.png")));
 		//butUndoPencil.setText("");
 		butUndoPencil.addActionListener(new ImageManipFrame_butUndoPencil_actionAdapter(this));
 		butUndoPencil.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 		butUndoPencil.setToolTipText("Erase Pencil");
 		butFillSpot.setPreferredSize(new Dimension(41, 41));
-		butFillSpot.setIcon(new ImageIcon(ImageManipFrame.class.getResource("IconFill32.png")));
+		butFillSpot.setIcon(new ImageIcon(SignatureGeneratorFrame.class.getResource("IconFill32.png")));
 		//butFillSpot.setText("");
 		butFillSpot.setToolTipText("Spot Filler");
 		butFillSpot.addActionListener(new ImageManipFrame_butFillSpot_actionAdapter(this));
@@ -320,7 +321,7 @@ public class ImageManipFrame extends JDialog {
 		butStartOver.setIcon(new ImageIcon(MainFrame.class.getResource("/resources/IconRefresh32.png")));
 		butStartOver.setText("Restart");
 		butStartOver.addActionListener(new ImageManipFrame_butStartOver_actionAdapter(this));
-		butQuit.setIcon(new ImageIcon(ImageManipFrame.class.getResource("/resources/IconCancel32.png")));
+		butQuit.setIcon(new ImageIcon(SignatureGeneratorFrame.class.getResource("/resources/IconCancel32.png")));
 		butQuit.setText("Quit");
 		butQuit.addActionListener(new ImageManipFrame_butQuit_actionAdapter(this));
 		butBack.setEnabled(false);
@@ -348,7 +349,7 @@ public class ImageManipFrame extends JDialog {
 		MenuItemExit.setText("Exit");
 		butEraser.setText("Eraser");
 		butEraser.setPreferredSize(new Dimension(107, 33));
-		butEraser.setIcon(new ImageIcon(ImageManipFrame.class.getResource("/resources/IconBlank32.png")));
+		butEraser.setIcon(new ImageIcon(SignatureGeneratorFrame.class.getResource("/resources/IconBlank32.png")));
 		butEraser.addActionListener(new ImageManipFrame_butEraser_actionAdapter(this));
 		SliderThreshold.setOrientation(JSlider.VERTICAL);
 		SliderThreshold.setMajorTickSpacing(1000);
@@ -548,12 +549,12 @@ public class ImageManipFrame extends JDialog {
 		ExampleRSide.setMinimumSize(new Dimension(360, 189));
 		ExampleRSide.setPreferredSize(new Dimension(360, 189));
 		ExampleRSide.add(labelExampleRSide, null);
-		labelExampleRidge.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleRidge.gif")));
-		labelExampleEyeClicks.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleEyeClicks.gif")));
-		labelExampleSnout.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleSnout.gif")));
-		labelExampleVent.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleVent.gif")));
-		labelExampleLSide.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleLSide.gif")));
-		labelExampleRSide.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleRSide.gif")));
+		labelExampleRidge.setIcon(new ImageIcon(SignatureGeneratorFrame.class.getResource("exampleRidge.gif")));
+		labelExampleEyeClicks.setIcon(new ImageIcon(SignatureGeneratorFrame.class.getResource("exampleEyeClicks.gif")));
+		labelExampleSnout.setIcon(new ImageIcon(SignatureGeneratorFrame.class.getResource("exampleSnout.gif")));
+		labelExampleVent.setIcon(new ImageIcon(SignatureGeneratorFrame.class.getResource("exampleVent.gif")));
+		labelExampleLSide.setIcon(new ImageIcon(SignatureGeneratorFrame.class.getResource("exampleLSide.gif")));
+		labelExampleRSide.setIcon(new ImageIcon(SignatureGeneratorFrame.class.getResource("exampleRSide.gif")));
 		labelExampleRidge.setVisible(true);
 		labelExampleEyeClicks.setVisible(true);
 		labelExampleSnout.setVisible(true);
@@ -691,7 +692,7 @@ public class ImageManipFrame extends JDialog {
 	// Pencil to draw on Color Image
 	protected void butPencil_actionPerformed(ActionEvent e) {
 		// Load an image for the cursor
-		Image pencilimage = Toolkit.getDefaultToolkit().getImage(ImageManipFrame.class.getResource("MousePencel.png"));
+		Image pencilimage = Toolkit.getDefaultToolkit().getImage(SignatureGeneratorFrame.class.getResource("MousePencel.png"));
 		// Create the hotspot for the cursor
 		Point hotSpot = new Point(1, 15);
 		// Create the custom cursor
@@ -854,7 +855,7 @@ public class ImageManipFrame extends JDialog {
 				digSigThread.start();
 			} else {
 				IdentiFrog.LOGGER.writeError("Could not obtain binary image, variable was null (in case 2)");
-				JOptionPane.showMessageDialog(ImageManipFrame.this, "Could not obtain binary image (Variable was null).", "Signature Generator Error", JOptionPane.ERROR_MESSAGE);
+				new ErrorDialog("Could not obtain binary image");
 			}
 			image.setSignatureGenerated(true);
 			image.processImageIntoDB(true);
@@ -1031,7 +1032,7 @@ public class ImageManipFrame extends JDialog {
 			setMenuItemUndo(false);
 			TextAreaStatus.setText("Click on an area inside the mask, but outside the frog,\n" + "or click Next>>");
 			butEraser.setText("Eraser");
-			butEraser.setIcon(new ImageIcon(ImageManipFrame.class.getResource("Eraser.gif")));
+			butEraser.setIcon(new ImageIcon(SignatureGeneratorFrame.class.getResource("Eraser.gif")));
 		} else {// Mask mode
 			// imagePanel.setMaskOn(false);
 			imagePanel.setEraserOn(true);
@@ -1040,7 +1041,7 @@ public class ImageManipFrame extends JDialog {
 			imagePanel.setUndoPoint();
 			TextAreaStatus.setText("Click and drag the eraser over an area you want to erase,\n" + "or click Next>>");
 			butEraser.setText("Mask");
-			butEraser.setIcon(new ImageIcon(ImageManipFrame.class.getResource("mask.gif")));
+			butEraser.setIcon(new ImageIcon(SignatureGeneratorFrame.class.getResource("mask.gif")));
 		}
 	}
 
@@ -1169,7 +1170,7 @@ public class ImageManipFrame extends JDialog {
 		try {
 			c = Integer.parseInt(TextFieldThreshold_edges.getText());
 			if (c < 1 || c > 300) {
-				JOptionPane.showMessageDialog(ImageManipFrame.this, "Invalid Entry, Must be an integer between 1 - 300", "Signature Generator Error", JOptionPane.ERROR_MESSAGE);
+				new ErrorDialog("Invalid Entry, Must be an integer between 1 - 300");
 			} else {
 				SliderThreshold_edges.setValue(c);
 				imagePanel.setThreshold_edges(c);
@@ -1177,8 +1178,7 @@ public class ImageManipFrame extends JDialog {
 		} catch (Exception ex) {
 			IdentiFrog.LOGGER.writeException(ex);
 			TextFieldThreshold_edges.setText("" + c);
-			JOptionPane.showMessageDialog(ImageManipFrame.this, "Invalid Entry, Must be an integer between 1 - 300", "Signature Generator Error", JOptionPane.ERROR_MESSAGE);
-
+			new ErrorDialog("Invalid Entry, Must be an integer between 1 - 300");
 		}
 	}
 
@@ -1187,16 +1187,14 @@ public class ImageManipFrame extends JDialog {
 		try {
 			w = Integer.parseInt(TextFieldDilation_radius.getText());
 			if (w < 0 || w > 10) {
-				JOptionPane.showMessageDialog(ImageManipFrame.this, "Invalid Entry, Must be an integer between 1 - 10", "Signature Generator Error", JOptionPane.ERROR_MESSAGE);
-
+				new ErrorDialog("Invalid Entry, Must be an integer between 0 - 30");
 			} else {
 				SliderDilation_radius.setValue(w);
 				imagePanel.setDilation_radius(w);
 			}
 		} catch (Exception ex) {
 			TextFieldDilation_radius.setText("" + w);
-			JOptionPane.showMessageDialog(ImageManipFrame.this, "Invalid Entry, Must be an integer between 1 - 10", "Signature Generator Error", JOptionPane.ERROR_MESSAGE);
-
+			new ErrorDialog("Invalid Entry, Must be an integer between 0 - 30");
 		}
 	}
 
@@ -1205,8 +1203,7 @@ public class ImageManipFrame extends JDialog {
 		try {
 			w = Integer.parseInt(TextFieldNoise_radius.getText());
 			if (w < 0 || w > 100) {
-				JOptionPane.showMessageDialog(ImageManipFrame.this, "Invalid Entry, Must be an integer between 1 - 100", "Signature Generator Error", JOptionPane.ERROR_MESSAGE);
-
+				new ErrorDialog("Invalid Entry, Must be an integer between 0 - 100");
 			} else {
 				SliderNoise_radius.setValue(w);
 				imagePanel.setNoise_radius(w);
@@ -1214,7 +1211,7 @@ public class ImageManipFrame extends JDialog {
 		} catch (Exception ex) {
 			IdentiFrog.LOGGER.writeException(ex);
 			TextFieldNoise_radius.setText("" + w);
-			JOptionPane.showMessageDialog(ImageManipFrame.this, "Invalid Entry, Must be an integer between 1 - 100", "Signature Generator Error", JOptionPane.ERROR_MESSAGE);
+			new ErrorDialog("Invalid Entry, Must be an integer between 0 - 100");
 		}
 	}
 
@@ -1322,9 +1319,9 @@ public class ImageManipFrame extends JDialog {
 }
 
 class ImageManipFrame_butClearImage_actionAdapter implements java.awt.event.ActionListener {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_butClearImage_actionAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_butClearImage_actionAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1334,9 +1331,9 @@ class ImageManipFrame_butClearImage_actionAdapter implements java.awt.event.Acti
 }
 
 class ImageManipFrame_butPencil_actionAdapter implements java.awt.event.ActionListener {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_butPencil_actionAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_butPencil_actionAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1346,9 +1343,9 @@ class ImageManipFrame_butPencil_actionAdapter implements java.awt.event.ActionLi
 }
 
 class ImageManipFrame_butUndoPencil_actionAdapter implements java.awt.event.ActionListener {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_butUndoPencil_actionAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_butUndoPencil_actionAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1359,9 +1356,9 @@ class ImageManipFrame_butUndoPencil_actionAdapter implements java.awt.event.Acti
 }
 
 class ImageManipFrame_butFillSpot_actionAdapter implements java.awt.event.ActionListener {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_butFillSpot_actionAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_butFillSpot_actionAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1371,9 +1368,9 @@ class ImageManipFrame_butFillSpot_actionAdapter implements java.awt.event.Action
 }
 
 class ImageManipFrame_butUndoFillSpot_actionAdapter implements java.awt.event.ActionListener {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_butUndoFillSpot_actionAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_butUndoFillSpot_actionAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1384,9 +1381,9 @@ class ImageManipFrame_butUndoFillSpot_actionAdapter implements java.awt.event.Ac
 }
 
 class ImageManipFrame_butQuit_actionAdapter implements java.awt.event.ActionListener {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_butQuit_actionAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_butQuit_actionAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1396,9 +1393,9 @@ class ImageManipFrame_butQuit_actionAdapter implements java.awt.event.ActionList
 }
 
 class ImageManipFrame_menuFile_actionAdapter implements java.awt.event.ActionListener {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_menuFile_actionAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_menuFile_actionAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1408,9 +1405,9 @@ class ImageManipFrame_menuFile_actionAdapter implements java.awt.event.ActionLis
 }
 
 class ImageManipFrame_MenuItemUndo_actionAdapter implements java.awt.event.ActionListener {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_MenuItemUndo_actionAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_MenuItemUndo_actionAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1420,9 +1417,9 @@ class ImageManipFrame_MenuItemUndo_actionAdapter implements java.awt.event.Actio
 }
 
 class ImageManipFrame_butNext_actionAdapter implements java.awt.event.ActionListener {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_butNext_actionAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_butNext_actionAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1432,9 +1429,9 @@ class ImageManipFrame_butNext_actionAdapter implements java.awt.event.ActionList
 }
 
 class ImageManipFrame_butBack_actionAdapter implements java.awt.event.ActionListener {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_butBack_actionAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_butBack_actionAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1444,9 +1441,9 @@ class ImageManipFrame_butBack_actionAdapter implements java.awt.event.ActionList
 }
 
 class ImageManipFrame_butStartOver_actionAdapter implements java.awt.event.ActionListener {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_butStartOver_actionAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_butStartOver_actionAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1456,9 +1453,9 @@ class ImageManipFrame_butStartOver_actionAdapter implements java.awt.event.Actio
 }
 
 class ImageManipFrame_butEraser_actionAdapter implements java.awt.event.ActionListener {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_butEraser_actionAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_butEraser_actionAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1468,9 +1465,9 @@ class ImageManipFrame_butEraser_actionAdapter implements java.awt.event.ActionLi
 }
 
 class ImageManipFrame_TextFieldThreshold_edges_keyAdapter extends java.awt.event.KeyAdapter {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_TextFieldThreshold_edges_keyAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_TextFieldThreshold_edges_keyAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1480,9 +1477,9 @@ class ImageManipFrame_TextFieldThreshold_edges_keyAdapter extends java.awt.event
 }
 
 class ImageManipFrame_TextFieldDilation_radius_keyAdapter extends java.awt.event.KeyAdapter {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_TextFieldDilation_radius_keyAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_TextFieldDilation_radius_keyAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1492,9 +1489,9 @@ class ImageManipFrame_TextFieldDilation_radius_keyAdapter extends java.awt.event
 }
 
 class ImageManipFrame_TextFieldNoise_radius_keyAdapter extends java.awt.event.KeyAdapter {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_TextFieldNoise_radius_keyAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_TextFieldNoise_radius_keyAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1504,9 +1501,9 @@ class ImageManipFrame_TextFieldNoise_radius_keyAdapter extends java.awt.event.Ke
 }
 
 class ImageManipFrame_TextFieldThreshold_edges_focusAdapter extends java.awt.event.FocusAdapter {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_TextFieldThreshold_edges_focusAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_TextFieldThreshold_edges_focusAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1516,9 +1513,9 @@ class ImageManipFrame_TextFieldThreshold_edges_focusAdapter extends java.awt.eve
 }
 
 class ImageManipFrame_TextFieldDilation_radius_focusAdapter extends java.awt.event.FocusAdapter {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_TextFieldDilation_radius_focusAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_TextFieldDilation_radius_focusAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1528,9 +1525,9 @@ class ImageManipFrame_TextFieldDilation_radius_focusAdapter extends java.awt.eve
 }
 
 class ImageManipFrame_TextFieldNoise_radius_focusAdapter extends java.awt.event.FocusAdapter {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_TextFieldNoise_radius_focusAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_TextFieldNoise_radius_focusAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1540,9 +1537,9 @@ class ImageManipFrame_TextFieldNoise_radius_focusAdapter extends java.awt.event.
 }
 
 class ImageManipFrame_butDustFrame_actionAdapter implements java.awt.event.ActionListener {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_butDustFrame_actionAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_butDustFrame_actionAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
@@ -1552,13 +1549,16 @@ class ImageManipFrame_butDustFrame_actionAdapter implements java.awt.event.Actio
 }
 
 class ImageManipFrame_this_windowAdapter extends java.awt.event.WindowAdapter {
-	ImageManipFrame adaptee;
+	SignatureGeneratorFrame adaptee;
 
-	ImageManipFrame_this_windowAdapter(ImageManipFrame adaptee) {
+	ImageManipFrame_this_windowAdapter(SignatureGeneratorFrame adaptee) {
 		this.adaptee = adaptee;
 	}
 
 	public void windowClosing(WindowEvent e) {
 		adaptee.this_windowClosing(e);
 	}
+
+
+	public JPanel get
 }

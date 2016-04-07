@@ -1474,8 +1474,8 @@ public class MainFrame extends JFrame {
 				// markExport.saveToFile(filePath);
 				markExport.saveToMark(XMLFrogDatabase.getFrogs(), filePath);
 			} catch (Exception ex) {
-				new ErrorDialog("Cannot save the file.");
-				ex.printStackTrace();
+				IdentiFrog.LOGGER.writeExceptionWithMessage("Unable to save MARK File: ", ex);
+				JOptionPane.showMessageDialog(MainFrame.this, "Unable to save MARK file.", "Export to MARK failed", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}
@@ -1520,14 +1520,15 @@ public class MainFrame extends JFrame {
 			try {
 				Desktop.getDesktop().browse(new URI(url));
 			} catch (IOException e) {
-				new ErrorDialog("Cannot open " + url + " IO exception.");
 				IdentiFrog.LOGGER.writeException(e);
+				JOptionPane.showMessageDialog(MainFrame.this, "I/O Exception opening URL:\n"+url, "Invalid URL", JOptionPane.ERROR_MESSAGE);
 			} catch (URISyntaxException e) {
-				new ErrorDialog("Cannot open " + url + ", invalid URI.");
 				IdentiFrog.LOGGER.writeException(e);
+				JOptionPane.showMessageDialog(MainFrame.this, "Invalid URL:\n"+url, "Invalid URL", JOptionPane.ERROR_MESSAGE);
 			}
 		} else {
-			new ErrorDialog("Desktop services not supported on this OS. You can view the manual at " + url + ".");
+			IdentiFrog.LOGGER.writeError("Desktop services not available on this OS");
+			JOptionPane.showMessageDialog(MainFrame.this, "No desktop services available on this OS.\nYou can view documentation at\n"+url, "No desktop services", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

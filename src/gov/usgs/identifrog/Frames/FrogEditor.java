@@ -316,6 +316,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 	JButton usersButton;
 	JComboBox<Location> comboLocationName = new JComboBox<Location>();
 	private JComboBox<SiteSample> surveySwitcherCombobox;
+	private JLabel activeFrogImageLabel;
 
 	private void init() throws Exception {
 		setModal(true);
@@ -415,7 +416,9 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		 * //loadSiteSample(idx); } } });
 		 */
 		JPanel panelFrogImages = new JPanel();
-
+		activeFrogImageLabel = new JLabel();
+		panelFrogImages.add(activeFrogImageLabel);
+		
 		/*
 		 * JPanel changeSurveyPanel = new JPanel();
 		 * changeSurveyPanel.setLayout(new BoxLayout(changeSurveyPanel,
