@@ -98,6 +98,11 @@ import org.jdatepicker.impl.UtilDateModel;
  */
 @SuppressWarnings("serial")
 public class FrogEditor extends JDialog implements ListSelectionListener {
+	protected static final int IMAGE_FULL = 0;
+	protected static final int IMAGE_THUMBNAIL = 1;
+	protected static final int IMAGE_DORSAL = 2;
+	private int activeImageType = IMAGE_DORSAL;
+
 	protected MainFrame parentFrame;
 	private boolean shouldSave = false;
 	private boolean checkImageCountOnExit = false;
@@ -442,7 +447,67 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		});
 		activeFrogImageLabel = new JLabel("Select a frog image on the left", SwingConstants.CENTER);
 		masterFrogImageList.addListSelectionListener(this);
-		panelFrogImages.add(activeFrogImageLabel, BorderLayout.CENTER);
+
+		JButton thumbnailButton, dorsalButton, fullButton;
+		thumbnailButton = new JButton("Thumbnail");
+		dorsalButton = new JButton("Dorsal");
+		fullButton = new JButton("Full");
+
+		ActionListener frogImageSelectionListener = new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (e.getSource() == thumbnailButton) {
+					activeImageType = IMAGE_THUMBNAIL;
+				} else if (e.getSource() == dorsalButton) {
+					activeImageType = IMAGE_DORSAL;
+				} else if (e.getSource() == fullButton) {
+					activeImageType = IMAGE_FULL;
+				}
+				
+				int index = masterFrogImageList.getSelectedIndex();
+				if (index >= 0) {
+					SiteImage img = masterFrogImageModel.get(index);
+					ImageIcon ii = null;
+					switch (activeImageType) {
+					case IMAGE_DORSAL:
+						ii = new ImageIcon(img.getDorsalImage());
+						break;
+					case IMAGE_FULL:
+						ii = new ImageIcon(img.getSourceFilePath());
+						break;
+					case IMAGE_THUMBNAIL:
+						ii = new ImageIcon(img.getColorThumbnail());
+						break;
+					default: 
+						ii = new ImageIcon(img.getColorThumbnail());
+						break;
+					}
+					activeFrogImageLabel.setIcon(ii);
+					activeFrogImageLabel.setText("");
+				} else {
+					activeFrogImageLabel.setIcon(null);
+					activeFrogImageLabel.setText("Select a frog image on the left");
+				}
+			}
+		};
+
+		thumbnailButton.addActionListener(frogImageSelectionListener);
+		dorsalButton.addActionListener(frogImageSelectionListener);
+		fullButton.addActionListener(frogImageSelectionListener);
+
+		JPanel frogImagesButtonPanel = new JPanel();
+		frogImagesButtonPanel.setLayout(new BoxLayout(frogImagesButtonPanel, BoxLayout.LINE_AXIS));
+		frogImagesButtonPanel.add(Box.createHorizontalGlue());
+		frogImagesButtonPanel.add(thumbnailButton);
+		frogImagesButtonPanel.add(dorsalButton);
+		frogImagesButtonPanel.add(fullButton);
+		frogImagesButtonPanel.add(Box.createHorizontalGlue());
+
+		JPanel frogImagePanel = new JPanel(new BorderLayout());
+		frogImagePanel.add(new JScrollPane(activeFrogImageLabel,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED), BorderLayout.CENTER);
+		frogImagePanel.add(frogImagesButtonPanel, BorderLayout.SOUTH);
+		panelFrogImages.add(frogImagePanel, BorderLayout.CENTER);
 		panelFrogImages.add(masterFrogImageList, BorderLayout.WEST);
 
 		/*
@@ -512,11 +577,9 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		}
 
 		panelAllInfo.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		panelAllInfo.setLayout(new BoxLayout(panelAllInfo, BoxLayout.PAGE_AXIS));
+		panelAllInfo.setLayout(new BorderLayout());
 
 		//Surveys Panel
-		//JPanel surveysPanel = new JPanel(new BorderLayout());
-		//surveysPanel.setMinimumSize(new Dimension(100, 50));
 		addSurveyButton.setMaximumSize(new Dimension(160, 15));
 		addSurveyButton.addActionListener(new ActionListener() {
 			@Override
@@ -586,7 +649,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		locationBorder.setTitleFont(level2TitleFont);
 		panelLocation.setBorder(locationBorder);
 		//panelLocation.setAlignmentX(Component.LEFT_ALIGNMENT);
-		panelAllInfo.setPreferredSize(new Dimension(800, 695));
+		//panelAllInfo.setPreferredSize(new Dimension(800, 695));
 
 		//top buttons==============
 		surveySwitcherCombobox = new JComboBox<SiteSample>();
@@ -1109,22 +1172,17 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		panelBottomButtons.add(butSave);
 		panelBottomButtons.add(Box.createHorizontalGlue());
 		//panelAllInfo.add(labImage);
-		panelAllInfo.add(panelFrogInfo);
-		panelAllInfo.add(tabPane);
+		panelAllInfo.add(panelFrogInfo,BorderLayout.NORTH);
+		panelAllInfo.add(tabPane,BorderLayout.CENTER);
 
 		//panelAllInfo.add(panelSiteSurvey);
 		//panelAllInfo.add(labFRO);
 
-		panelAllInfo.add(Box.createVerticalGlue());
-		panelAllInfo.add(panelBottomButtons);
+		//panelAllInfo.add(Box.createVerticalGlue());
+		panelAllInfo.add(panelBottomButtons,BorderLayout.SOUTH);
 
-		panelSiteSurvey.add(Box.createVerticalGlue());
-		JSplitPane leftrightSplitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, imagesPanel /*
-																								 * new
-																								 * JPanel
-																								 * (
-																								 * )
-																								 */, panelSiteSurvey);
+		//panelSiteSurvey.add(Box.createVerticalGlue());
+		JSplitPane leftrightSplitpane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, imagesPanel, panelSiteSurvey);
 		leftrightSplitpane.setDividerLocation(120);
 
 		JPanel surveyPanel = new JPanel(new BorderLayout());
@@ -1136,7 +1194,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		tabPane.add("Frog Images", panelFrogImages);
 
 		JPanel contentPanel = new JPanel(new BorderLayout());
-		contentPanel.add(panelAllInfo, BorderLayout.NORTH);
+		contentPanel.add(panelAllInfo, BorderLayout.CENTER);
 		add(contentPanel);
 		setMinimumSize(new Dimension(660, 640));
 		//setPreferredSize(new Dimension(660, 640));
