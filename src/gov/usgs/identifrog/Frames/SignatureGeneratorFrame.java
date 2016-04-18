@@ -1,13 +1,16 @@
 package gov.usgs.identifrog.Frames;
 
+import gov.usgs.identifrog.DigSigThread;
+import gov.usgs.identifrog.DigSignature;
+import gov.usgs.identifrog.FillSpot;
+import gov.usgs.identifrog.IdentiFrog;
+import gov.usgs.identifrog.ImagePanel;
 import gov.usgs.identifrog.DataObjects.SiteImage;
-import gov.usgs.identifrog.Frames.ErrorDialog;
-import gov.usgs.identifrog.Frames.FrogEditor;
-import gov.usgs.identifrog.Frames.MainFrame;
 import gov.usgs.identifrog.Handlers.XMLFrogDatabase;
 import gov.usgs.identifrog.extendedclasses.DilationSteppingSlider;
 import gov.usgs.identifrog.extendedclasses.EdgeSteppingSlider;
 import gov.usgs.identifrog.extendedclasses.NoiseSteppingSlider;
+import gov.usgs.identifrog.signaturegenerator.SignatureFlowState;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -15,6 +18,8 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
@@ -26,11 +31,17 @@ import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.lang.invoke.SerializedLambda;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.ExecutionException;
 import java.util.prefs.Preferences;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -42,8 +53,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -62,6 +75,38 @@ import javax.swing.event.ChangeListener;
  */
 @SuppressWarnings("serial")
 public class SignatureGeneratorFrame extends JDialog {
+	//IMAGES
+	private ImageIcon imageSave32 = new ImageIcon(MainFrame.class.getResource("/resources/IconFloppy32.png"));
+	private ImageIcon imagePrevious32 = new ImageIcon(MainFrame.class.getResource("/resources/IconPrevious32.png"));
+	private ImageIcon imageNext32 = new ImageIcon(MainFrame.class.getResource("/resources/IconNext32.png"));
+	private ImageIcon imageUndo32 = new ImageIcon(MainFrame.class.getResource("/resources/IconUndo32.png"));
+	private ImageIcon imageCancel32 = new ImageIcon(MainFrame.class.getResource("/resources/IconCancel32.png"));
+
+	//IMAGE STEP EXAMPLES
+	private ImageIcon imageExampleVent = new ImageIcon(MainFrame.class.getResource("/resources/exampleVent.gif"));
+	private ImageIcon imageExampleDorsalLateral = new ImageIcon(MainFrame.class.getResource("/resources/exampleRidge.gif"));
+	private ImageIcon imageExampleEyes = new ImageIcon(MainFrame.class.getResource("/resources/exampleEyeClicks.gif"));
+	private ImageIcon imageExampleSnout = new ImageIcon(MainFrame.class.getResource("/resources/exampleSnout.gif"));
+	private ImageIcon imageExampleTopY = new ImageIcon(MainFrame.class.getResource("/resources/exampleLSide.gif"));
+	private ImageIcon imageExampleBottomY = new ImageIcon(MainFrame.class.getResource("/resources/exampleRSide.gif"));
+
+	//WORKFLOW
+	private int CURRENT_STEP = 0;
+	private final int VENT_STEP = 0;
+	private final int SNOUT_STEP = 1;
+	private final int TOPY_STEP = 2;
+	private final int BOTTOMY_STEP = 3;
+	private final int EYE_STEP = 4;
+	private final int DORSALLATERAL_STEP = 5;
+	private final int SPOT_STEP = 6;
+	private final int FINAL_STEP = SPOT_STEP; //> this step = saving
+
+	private JButton butQuit = new JButton("Cancel Signature Generation");
+	private JButton butBack = new JButton("Previous Step");
+	private JButton butNext = new JButton("Next Step");
+	private LinkedList<SignatureFlowState> signatureFlowStack = new LinkedList<SignatureFlowState>();
+
+	//OLD GENERATOR
 	private Preferences root = Preferences.userRoot();
 	@SuppressWarnings("unused")
 	private final Preferences node = root.node("edu/isu/aadis/defaults");
@@ -89,9 +134,7 @@ public class SignatureGeneratorFrame extends JDialog {
 	private JButton butDone = new JButton();
 	private JPanel inPanelButtons = new JPanel();
 	public JButton butStartOver = new JButton();
-	private JButton butQuit = new JButton();
-	private JButton butBack = new JButton();
-	private JButton butNext = new JButton();
+
 	// extract shape 1-14-09
 	private JButton butExtract = new JButton();
 	//private BorderLayout borderLayout2 = new BorderLayout();
@@ -155,16 +198,18 @@ public class SignatureGeneratorFrame extends JDialog {
 	public int imageInEllipse_width = 0;
 	public int imageInEllipse_heigth = 0;
 
-	private ImageIcon imageSave32 = new ImageIcon(MainFrame.class.getResource("/resources/IconFloppy32.png"));
-	private Icon imagePrevious32 = new ImageIcon(MainFrame.class.getResource("/resources/IconPrevious32.png"));
-	private Icon imageNext32 = new ImageIcon(MainFrame.class.getResource("/resources/IconNext32.png"));
-	private Icon imageUndo32 = new ImageIcon(MainFrame.class.getResource("/resources/IconUndo32.png"));
 	private Icon iamgeRestart32 = new ImageIcon(MainFrame.class.getResource("/resources/IconRefresh32.png"));
+
 	private JButton butClear = new JButton();
 	private JButton butOverlayToggle = new JButton();
 	private Icon imageErase32 = new ImageIcon(MainFrame.class.getResource("/resources/IconEraser32.png"));
 	private JButton butDetect = new JButton();
 	private Icon imageRadar32 = new ImageIcon(MainFrame.class.getResource("/resources/IconRadar32.png"));
+	private JLabel directionsLabel;
+	private JLabel exampleIconLabel;
+	private JLabel exampleLabel;
+	private JLabel directionsStepLabel;
+	private JPanel authoringPanel;
 
 	/**
 	 * Creates a new Digital Signature Window using the specified parent and
@@ -179,11 +224,312 @@ public class SignatureGeneratorFrame extends JDialog {
 		//DbId = db_id;
 		parentFrame.setCursor(new Cursor(Cursor.WAIT_CURSOR));
 		try {
-			init();
+			init2();
+
+			inflateDirectionsForStep(CURRENT_STEP);
+			inflateAuthoringFlowStep(CURRENT_STEP);
+			inflateAuthoringStep(CURRENT_STEP);
+			//at this point we can import an old stack from disk
+			setVisible(true);
 		} catch (Exception e) {
 			IdentiFrog.LOGGER.writeExceptionWithMessage("ImageManipFrame failed init()", e);
 		}
 		parentFrame.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+	}
+
+	/**
+	 * Initializes Signature Generator 2's base-state UI.
+	 */
+	private void init2() {
+		JPanel directionsPanel = new JPanel(new GridBagLayout()); //left side directions
+		GridBagConstraints directionsConstraints = new GridBagConstraints();
+		authoringPanel = new JPanel(); //main content
+		JPanel authorflowPanel = new JPanel(); //bottom buttons for next, back, etc.
+
+		//INSTRUCTIONS
+		JLabel instructionsHeaderLabel = new JLabel("Instructions");
+		directionsStepLabel = new JLabel();
+		directionsLabel = new JLabel();
+		setDirectionsText("Directions will be placed here.");
+		exampleLabel = new JLabel("Example");
+		exampleIconLabel = new JLabel("An example image will be shown here.");
+
+		directionsConstraints.gridy++;
+		directionsPanel.add(instructionsHeaderLabel, directionsConstraints);
+		directionsConstraints.gridy++;
+
+		directionsPanel.add(directionsStepLabel, directionsConstraints);
+		directionsConstraints.gridy++;
+
+		directionsPanel.add(directionsLabel, directionsConstraints);
+		directionsConstraints.gridy++;
+
+		directionsPanel.add(exampleLabel, directionsConstraints);
+		directionsConstraints.gridy++;
+		directionsConstraints.weighty = 1;
+		directionsConstraints.fill = GridBagConstraints.BOTH;
+		directionsPanel.add(exampleIconLabel, directionsConstraints);
+
+		//AUTHOR FLOW
+		butBack.setIcon(imagePrevious32);
+		butQuit.setIcon(imageCancel32);
+		butNext.setIcon(imageNext32);
+		butNext.setHorizontalTextPosition(SwingConstants.LEFT);
+		
+		butNext.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				advanceStep(getStepSerializedValues());
+			}
+		});
+		butBack.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				previousStep();
+			}
+		});
+
+		authorflowPanel.setLayout(new BoxLayout(authorflowPanel, BoxLayout.LINE_AXIS));
+		authorflowPanel.add(butBack);
+		authorflowPanel.add(Box.createHorizontalGlue());
+		authorflowPanel.add(butQuit);
+		authorflowPanel.add(Box.createHorizontalGlue());
+		authorflowPanel.add(butNext);
+
+		JSplitPane contentFlowSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, authoringPanel, authorflowPanel);
+		JSplitPane directionsContentSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, directionsPanel, contentFlowSplitPane);
+
+		contentFlowSplitPane.setResizeWeight(1.0);
+		directionsContentSplitPane.setResizeWeight(1.0);
+		add(directionsContentSplitPane);
+
+		setPreferredSize(new Dimension(1280,720));
+		pack();
+		contentFlowSplitPane.setDividerLocation(0.9);
+		directionsContentSplitPane.setDividerLocation(0.1);
+
+		setModal(true);
+	}
+
+	/**
+	 * Serializes the user input from the current step into a list of avlues that will be pushed onto the stack when advancing the step.
+	 * @return
+	 */
+	protected ArrayList<Point2D> getStepSerializedValues() {
+
+		return new ArrayList<>();
+	}
+
+	/**
+	 * Sets the directions panel up for the specified step.
+	 * 
+	 * @param step
+	 *            Step to setup.
+	 */
+	private void inflateDirectionsForStep(int step) {
+		exampleIconLabel.setText("");
+		switch (step) {
+		case VENT_STEP:
+			directionsLabel.setText("Click on the vent of the frog.");
+			exampleIconLabel.setIcon(imageExampleVent);
+			break;
+		case SNOUT_STEP:
+			directionsLabel.setText("Click on the vent of the frog.");
+			exampleIconLabel.setIcon(imageExampleSnout);
+			break;
+		case TOPY_STEP:
+			directionsLabel.setText("Place the line at the leftmost part of the main frog body.");
+			exampleIconLabel.setIcon(imageExampleTopY);
+			break;
+		case BOTTOMY_STEP:
+			directionsLabel.setText("Place the line at the rightmost part of the main frog body.");
+			exampleIconLabel.setIcon(imageExampleBottomY);
+			break;
+		case EYE_STEP:
+			directionsLabel.setText("Click on the lateral part of the frog's eyes (leftmost part of eye, relative to the image)");
+			exampleIconLabel.setIcon(imageExampleEyes);
+			break;
+		case DORSALLATERAL_STEP:
+			directionsLabel.setText("Drag the handles to the inner parts of the dorsal later of the frog.");
+			exampleIconLabel.setIcon(imageExampleDorsalLateral);
+			break;
+		case SPOT_STEP:
+			directionsLabel
+					.setText("Draw the boundary of the spots of the frog, then fill them in. Confirm that the displayed frog is accurate, then click Save to generate the signature.");
+			exampleIconLabel.setIcon(null);
+			exampleIconLabel.setText("Step has no image right now.");
+			break;
+		default:
+			directionsLabel.setText("Unknown step: " + step);
+			exampleIconLabel.setText("¯\\_(ツ)_/¯");
+			exampleIconLabel.setIcon(null);
+		}
+	}
+
+	/**
+	 * Advances the signature flow forward one step, pushing values onto the
+	 * stack and then inflating the next step.
+	 */
+	private void advanceStep(ArrayList<Point2D> stackItems) {
+		CURRENT_STEP++;
+		if (CURRENT_STEP > FINAL_STEP) {
+			//Saving.
+			showMessage("Signature will save here");
+			return;
+		}
+		addItemsToStack(stackItems);
+		inflateDirectionsForStep(CURRENT_STEP);
+		inflateAuthoringFlowStep(CURRENT_STEP);
+		inflateAuthoringStep(CURRENT_STEP);
+	}
+
+	/**
+	 * Inflates the Authoring Flow (back, cancel, next) buttons for the specified step.
+	 * @param Step to configure panel for
+	 */
+	private void inflateAuthoringFlowStep(int step) {
+		switch (step) {
+		case VENT_STEP:
+			butBack.setText("Previous Step");
+			butBack.setVisible(false);
+			butBack.setEnabled(false);
+			butBack.setIcon(imagePrevious32);
+
+			butNext.setText("Auto Advancing");
+			butNext.setToolTipText("Signature Generator will automatically advance when this step is completed");
+			butNext.setVisible(true);
+			butNext.setEnabled(false);
+			butNext.setIcon(imageNext32);
+			break;
+		case SNOUT_STEP:
+			butBack.setText("Previous Step");
+			butBack.setVisible(true);
+			butBack.setEnabled(true);
+			butBack.setIcon(imagePrevious32);
+
+			butNext.setText("Auto Advancing");
+			butNext.setToolTipText("Signature Generator will automatically advance when this step is completed");
+			butNext.setVisible(true);
+			butNext.setEnabled(false);
+			butNext.setIcon(imageNext32);
+			break;
+		case TOPY_STEP:
+			butBack.setText("Previous Step");
+			butBack.setVisible(true);
+			butBack.setEnabled(true);
+			butBack.setIcon(imagePrevious32);
+
+			butNext.setText("Auto Advancing");
+			butNext.setToolTipText("Signature Generator will automatically advance when this step is completed");
+			butNext.setVisible(true);
+			butNext.setEnabled(false);
+			butNext.setIcon(imageNext32);
+			break;
+		case BOTTOMY_STEP:
+			butBack.setText("Previous Step");
+			butBack.setVisible(true);
+			butBack.setEnabled(true);
+			butBack.setIcon(imagePrevious32);
+
+			butNext.setText("Auto Advancing");
+			butNext.setToolTipText("Signature Generator will automatically advance when this step is completed");
+			butNext.setVisible(true);
+			butNext.setEnabled(false);
+			butNext.setIcon(imageNext32);
+			break;
+		case EYE_STEP:
+			butBack.setText("Previous Step");
+			butBack.setVisible(true);
+			butBack.setEnabled(true);
+			butBack.setIcon(imagePrevious32);
+
+			butNext.setText("Auto Advancing");
+			butNext.setToolTipText("Signature Generator will automatically advance when this step is completed");
+			butNext.setVisible(true);
+			butNext.setEnabled(false);
+			butNext.setIcon(imageNext32);
+			break;
+		case DORSALLATERAL_STEP:
+			butBack.setText("Previous Step");
+			butBack.setVisible(true);
+			butBack.setEnabled(true);
+			butBack.setIcon(imagePrevious32);
+
+			butNext.setText("Next Step");
+			butNext.setToolTipText("Click when finished aligning the box");
+			butNext.setVisible(true);
+			butNext.setEnabled(true);
+			butNext.setIcon(imageNext32);
+			break;
+		case SPOT_STEP:
+			butBack.setText("Previous Step");
+			butBack.setVisible(true);
+			butBack.setEnabled(true);
+			butBack.setIcon(imagePrevious32);
+
+			butNext.setText("Generate Signature");
+			butNext.setToolTipText("Click to generate signature");
+			butNext.setVisible(true);
+			butNext.setEnabled(true);
+			butNext.setIcon(imageSave32);
+			break;
+		default:
+			directionsLabel.setText("Unknown step: " + step);
+			exampleIconLabel.setText("¯\\_(ツ)_/¯");
+			exampleIconLabel.setIcon(null);
+		}
+	}
+
+	/**
+	 * Pushes a set of values onto the stack as a SignatureFlowState object.
+	 * 
+	 * @param stackItems
+	 */
+	private void addItemsToStack(ArrayList<Point2D> stackItems) {
+		signatureFlowStack.add(new SignatureFlowState(stackItems));
+	}
+
+	/**
+	 * Inflates the authoring area for the current step.
+	 * 
+	 * @param step Step to inflate
+	 */
+	private void inflateAuthoringStep(int step) {
+		// TODO Auto-generated method stub
+		authoringPanel.removeAll();
+		JButton advanceButton = new JButton("Debug: Advance to "+(CURRENT_STEP+2));
+		advanceButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				advanceStep(getStepSerializedValues());
+			}
+		});
+		authoringPanel.add(advanceButton);
+	}
+
+	/**
+	 * Placeholder method for GUI mockup
+	 * 
+	 * @param string
+	 */
+	private void showMessage(String string) {
+		JOptionPane.showMessageDialog(null, string);
+	}
+
+	/**
+	 * Moves the signature flow back one step, popping the last item off the
+	 * stack, and then reinflating the interface by iterating through the
+	 * signature flow.
+	 */
+	private void previousStep() {
+
+	}
+
+	private void setDirectionsText(String text) {
+		directionsLabel.setText("<html>" + text + "</html>");
 	}
 
 	// graphical user interface initialization
@@ -242,7 +588,7 @@ public class SignatureGeneratorFrame extends JDialog {
 				TextFieldDilation_radius.setEnabled(false);
 				TextFieldNoise_radius.setEnabled(false);
 				TextFieldThreshold_edges.setEnabled(false);
-				
+
 				imagePanel.standardRectColor = IdentiFrog.copyImage(imagePanel.standardRectColorCopy); //make copy
 				//imagePanel.standardRectGray = new BufferedImage(ImagePanel.rect_width, ImagePanel.rect_height, BufferedImage.TYPE_3BYTE_BGR);
 				imagePanel.standardRectBinary = new BufferedImage(ImagePanel.rect_width, ImagePanel.rect_height, BufferedImage.TYPE_3BYTE_BGR);
@@ -278,18 +624,17 @@ public class SignatureGeneratorFrame extends JDialog {
 			}
 		});
 
-/*		butOverlayToggle.setPreferredSize(new Dimension(41, 41));
-		butOverlayToggle.setIcon(imageUndo32);
-		//butUndoFillSpot.setText("");
-		butOverlayToggle.setToolTipText("Toggle Spot Extraction Overlay");
-		butOverlayToggle.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-		});*/
+		/*
+		 * butOverlayToggle.setPreferredSize(new Dimension(41, 41));
+		 * butOverlayToggle.setIcon(imageUndo32); //butUndoFillSpot.setText("");
+		 * butOverlayToggle.setToolTipText("Toggle Spot Extraction Overlay");
+		 * butOverlayToggle.addActionListener(new ActionListener() {
+		 * 
+		 * @Override public void actionPerformed(ActionEvent arg0) { // TODO
+		 * Auto-generated method stub
+		 * 
+		 * } });
+		 */
 
 		TextAreaStep.setFont(new java.awt.Font("SansSerif", Font.BOLD, 14));
 		TextAreaStep.setForeground(new Color(90, 0, 120));
@@ -802,11 +1147,13 @@ public class SignatureGeneratorFrame extends JDialog {
 			try {
 				imagePanel.mapOntoRectangle();
 			} catch (ArrayIndexOutOfBoundsException ex) {
-				IdentiFrog.LOGGER.writeExceptionWithMessage("User likely drew an invalid rectangle: ",ex);
-				JOptionPane.showMessageDialog(this, "Error: Invalid selection.\nMake sure you have drawn a figure without overlaps\nand the line are all within the image.", "Error generating dorsal image", JOptionPane.ERROR_MESSAGE);
+				IdentiFrog.LOGGER.writeExceptionWithMessage("User likely drew an invalid rectangle: ", ex);
+				JOptionPane.showMessageDialog(this,
+						"Error: Invalid selection.\nMake sure you have drawn a figure without overlaps\nand the line are all within the image.",
+						"Error generating dorsal image", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
-			
+
 			ExamplePanelContainer.setVisible(true);
 			ExampleVent.setVisible(false);
 			ExampleSnout.setVisible(false);
@@ -822,7 +1169,7 @@ public class SignatureGeneratorFrame extends JDialog {
 			setSpotExtractionPanelTools(true);
 			imagePanel.setImageinEllipse(false);
 			// ready to map fingerprint onto Standard Rectangle
-			
+
 			imagePanel.standardRectEdgesDilated = imagePanel.detectEdges();
 			imagePanel.trackOriginalRectImage();
 			imagePanel.setSpotExtraction(true);
@@ -855,7 +1202,7 @@ public class SignatureGeneratorFrame extends JDialog {
 				digSigThread.start();
 			} else {
 				IdentiFrog.LOGGER.writeError("Could not obtain binary image, variable was null (in case 2)");
-				new ErrorDialog("Could not obtain binary image");
+				JOptionPane.showMessageDialog(null, "Could not obtain binary image");
 			}
 			image.setSignatureGenerated(true);
 			image.processImageIntoDB(true);
@@ -952,7 +1299,7 @@ public class SignatureGeneratorFrame extends JDialog {
 	}
 
 	protected void setNumSpotsUI(int i) {
-		label_numSpots.setText("Number of spots defined: "+i);
+		label_numSpots.setText("Number of spots defined: " + i);
 	}
 
 	// All these are enabled or disabled at the same time, simply saving code
@@ -1170,7 +1517,7 @@ public class SignatureGeneratorFrame extends JDialog {
 		try {
 			c = Integer.parseInt(TextFieldThreshold_edges.getText());
 			if (c < 1 || c > 300) {
-				new ErrorDialog("Invalid Entry, Must be an integer between 1 - 300");
+				JOptionPane.showMessageDialog(null, "Invalid Entry, Must be an integer between 1 - 300");
 			} else {
 				SliderThreshold_edges.setValue(c);
 				imagePanel.setThreshold_edges(c);
@@ -1178,7 +1525,7 @@ public class SignatureGeneratorFrame extends JDialog {
 		} catch (Exception ex) {
 			IdentiFrog.LOGGER.writeException(ex);
 			TextFieldThreshold_edges.setText("" + c);
-			new ErrorDialog("Invalid Entry, Must be an integer between 1 - 300");
+			JOptionPane.showMessageDialog(null, "Invalid Entry, Must be an integer between 1 - 300");
 		}
 	}
 
@@ -1187,14 +1534,14 @@ public class SignatureGeneratorFrame extends JDialog {
 		try {
 			w = Integer.parseInt(TextFieldDilation_radius.getText());
 			if (w < 0 || w > 10) {
-				new ErrorDialog("Invalid Entry, Must be an integer between 0 - 30");
+				JOptionPane.showMessageDialog(null, "Invalid Entry, Must be an integer between 0 - 30");
 			} else {
 				SliderDilation_radius.setValue(w);
 				imagePanel.setDilation_radius(w);
 			}
 		} catch (Exception ex) {
 			TextFieldDilation_radius.setText("" + w);
-			new ErrorDialog("Invalid Entry, Must be an integer between 0 - 30");
+			JOptionPane.showMessageDialog(null, "Invalid Entry, Must be an integer between 0 - 30");
 		}
 	}
 
@@ -1203,7 +1550,7 @@ public class SignatureGeneratorFrame extends JDialog {
 		try {
 			w = Integer.parseInt(TextFieldNoise_radius.getText());
 			if (w < 0 || w > 100) {
-				new ErrorDialog("Invalid Entry, Must be an integer between 0 - 100");
+				JOptionPane.showMessageDialog(null, "Invalid Entry, Must be an integer between 0 - 100");
 			} else {
 				SliderNoise_radius.setValue(w);
 				imagePanel.setNoise_radius(w);
@@ -1211,7 +1558,7 @@ public class SignatureGeneratorFrame extends JDialog {
 		} catch (Exception ex) {
 			IdentiFrog.LOGGER.writeException(ex);
 			TextFieldNoise_radius.setText("" + w);
-			new ErrorDialog("Invalid Entry, Must be an integer between 0 - 100");
+			JOptionPane.showMessageDialog(null, "Invalid Entry, Must be an integer between 0 - 100");
 		}
 	}
 
@@ -1558,7 +1905,4 @@ class ImageManipFrame_this_windowAdapter extends java.awt.event.WindowAdapter {
 	public void windowClosing(WindowEvent e) {
 		adaptee.this_windowClosing(e);
 	}
-
-
-	public JPanel get
 }

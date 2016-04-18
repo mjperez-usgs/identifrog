@@ -349,9 +349,11 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					imageList.setSelectedIndex(idx);
 					//codeModel.setSelectedFileName(table.getValueAt(table.getSelectedRow(), 0).toString());
 					JPopupMenu popup = new JPopupMenu();
-					JMenuItem popupSignatureSearch, popupDeleteImage, popupOriginalFilename;
+					JMenuItem popupSignatureSearch, popupSignatureSearch2, popupDeleteImage, popupOriginalFilename;
 
 					popupSignatureSearch = new JMenuItem();
+					popupSignatureSearch2 = new JMenuItem("Signature Generator 2");
+
 					if (img.isSignatureGenerated()) {
 						popupSignatureSearch.setText("Search for frog match");
 					} else {
@@ -373,6 +375,27 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 								newImg.createListThumbnail();
 								//sample.
 								imageModel.set(idx, newImg); //update the SiteImage object.
+							}
+						}
+					});
+					
+					popupSignatureSearch2.addActionListener(new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							if (img.isSignatureGenerated()) {
+								//search for this frog via image
+								//parentFrame.setSearchImage(img);
+								//parentFrame.getTabbedPane().setSelectedIndex(1);
+								//dispose();
+							} else {
+								IdentiFrog.LOGGER.writeMessage("Launching Signature Generator 2 for image " + img);
+								SignatureGeneratorFrame sgf = new SignatureGeneratorFrame(FrogEditor.this, img);
+								//SiteImage newImg = openDigSigFrame(img);
+								IdentiFrog.LOGGER.writeMessage("Continuing execution of FrogEditor. Signature Generator has closed.");
+								parentFrame.updateSearchButton();
+								//newImg.createListThumbnail();
+								//sample.
+								//imageModel.set(idx, newImg); //update the SiteImage object.
 							}
 						}
 					});
@@ -399,6 +422,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 					});
 
 					popup.add(popupSignatureSearch);
+					popup.add(popupSignatureSearch2);
 					popup.add(popupDeleteImage);
 
 					if (img.isProcessed()) {
@@ -1197,7 +1221,7 @@ public class FrogEditor extends JDialog implements ListSelectionListener {
 		contentPanel.add(panelAllInfo, BorderLayout.CENTER);
 		add(contentPanel);
 		setMinimumSize(new Dimension(660, 640));
-		//setPreferredSize(new Dimension(660, 640));
+		setPreferredSize(new Dimension(660, 640));
 		updateDiscriminatorTooltip();
 		reloadMasterFrogList();
 		pack();

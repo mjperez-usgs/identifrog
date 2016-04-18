@@ -224,7 +224,7 @@ public class ImagePanel extends JPanel {
 
 	
 	// Pencil
-	ArrayList<Pencil_Line> pencilCoor = new ArrayList<Pencil_Line>();
+	public ArrayList<Pencil_Line> pencilCoor = new ArrayList<Pencil_Line>();
 	public int drawingNumber = 0;
 	// Spot Filler
 	public ArrayList<SpotCoordinate> spotFilledCoor = new ArrayList<SpotCoordinate>();
@@ -422,7 +422,7 @@ public class ImagePanel extends JPanel {
 	}
 
 	// Deletes temporary files used in Digital Signature Creation
-	protected void deleteTempFiles() {
+	public void deleteTempFiles() {
 		String path = imageFile.getParent();
 		if (path == null) {
 			path = "";
@@ -667,7 +667,7 @@ public class ImagePanel extends JPanel {
 	}
 
 	// Sets image to the original
-	protected void resetToOrigImage() {
+	public void resetToOrigImage() {
 		image = origImage;
 		shrinkImageToFit = true;
 		deleteTempFiles();
@@ -1257,7 +1257,7 @@ public class ImagePanel extends JPanel {
 		}
 	}
 
-	protected void dustImage() {
+	public void dustImage() {
 		setUndoPoint();
 		// maxDustPixels
 		Cursor lastCursor = getCursor();
@@ -1879,20 +1879,20 @@ public class ImagePanel extends JPanel {
 		noise_radius = radius;
 	}
 
-	protected void setShowCenterLine(boolean centerLine) {
+	public void setShowCenterLine(boolean centerLine) {
 		showCenterLine = centerLine;
 	}
 
-	protected void setFirstClick(boolean click) {
+	public void setFirstClick(boolean click) {
 		firstClick = click;
 	}
 
-	protected void setSpotExtraction(boolean click) {
+	public void setSpotExtraction(boolean click) {
 		spotextraction = click;
 	}
 
 	@SuppressWarnings("unchecked")
-	protected void newOperationStep() {
+	public void newOperationStep() {
 		Cursor inCursor = parentFrame.getCursor();
 		parentFrame.setCursor(new Cursor(Cursor.WAIT_CURSOR));
 		String path = imageFile.getParent();
@@ -1933,7 +1933,7 @@ public class ImagePanel extends JPanel {
 		}
 	}
 
-	protected void backOperationStep() {
+	public void backOperationStep() {
 		Cursor inCursor = parentFrame.getCursor();
 		parentFrame.setCursor(new Cursor(Cursor.WAIT_CURSOR));
 		if (operationPlace > 0) {
@@ -1949,7 +1949,7 @@ public class ImagePanel extends JPanel {
 		this.eraserOn = eraserOn;
 	}
 
-	protected void setPencilOn(boolean on) {
+	public void setPencilOn(boolean on) {
 		pencil = on;
 	}
 

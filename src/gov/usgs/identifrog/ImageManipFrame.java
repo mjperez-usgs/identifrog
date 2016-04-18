@@ -548,12 +548,12 @@ public class ImageManipFrame extends JDialog {
 		ExampleRSide.setMinimumSize(new Dimension(360, 189));
 		ExampleRSide.setPreferredSize(new Dimension(360, 189));
 		ExampleRSide.add(labelExampleRSide, null);
-		labelExampleRidge.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleRidge.gif")));
+/*		labelExampleRidge.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleRidge.gif")));
 		labelExampleEyeClicks.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleEyeClicks.gif")));
 		labelExampleSnout.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleSnout.gif")));
 		labelExampleVent.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleVent.gif")));
 		labelExampleLSide.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleLSide.gif")));
-		labelExampleRSide.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleRSide.gif")));
+		labelExampleRSide.setIcon(new ImageIcon(ImageManipFrame.class.getResource("exampleRSide.gif")));*/
 		labelExampleRidge.setVisible(true);
 		labelExampleEyeClicks.setVisible(true);
 		labelExampleSnout.setVisible(true);

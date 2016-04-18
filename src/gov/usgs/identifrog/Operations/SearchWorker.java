@@ -337,32 +337,36 @@ public class SearchWorker extends SwingWorker<ArrayList<FrogMatch>, String> {
 		badCandidates.clear();
 
 		// keep candidates whose spot difference <= defaultSpotDifferencePass2
-		/*
-		 * if (candidates.get(0).getScore() <= DEFAULT_SPOT_DIFFERENCE_PASS2) {
-		 * int myind = 0, mycount = 0, stopind1 = 0; while (myind <
-		 * Pass2_distances.size()) { if (Pass2_distances.get(myind).getScore()
-		 * <= DEFAULT_SPOT_DIFFERENCE_PASS2) { if
-		 * (isUnique(Pass2_distances.get(myind).frogid,
-		 * Candidates_forHausdorff)) { ++mycount; stopind1 = myind; }
-		 * Candidates_forHausdorff.add(Pass2_distances.get(myind)); } ++myind; }
-		 * // end while // if the number of remaining unique candidates < 10 if
-		 * (mycount < topTen) { ++stopind1; while (mycount < topTen & stopind1 <
-		 * Pass2_distances.size()) { // check if this image already entered the
-		 * next step if (!isEntered(Pass2_distances.get(stopind1).signature,
-		 * Candidates_forHausdorff)) { // check if it is a unique frog addition
-		 * to the next step if (isUnique(Pass2_distances.get(stopind1).frogid,
-		 * Candidates_forHausdorff)) { ++mycount; }
-		 * Candidates_forHausdorff.add(Pass2_distances.get(stopind1)); }
-		 * ++stopind1; } // end while } // end if } else { /* if pass #2 has
-		 * spot differences > defaultSpotDifferencePass2 select closest images
-		 * of 10 candidates with unique frog_id
-		 * 
-		 * int ind1 = 0, count = 0; while (count < topTen & ind1 <
-		 * Pass2_distances.size()) { if
-		 * (isUnique(Pass2_distances.get(ind1).frogid, Candidates_forHausdorff))
-		 * { ++count; } Candidates_forHausdorff.add(Pass2_distances.get(ind1));
-		 * ++ind1; } }
-		 */
+/*		
+		  if (candidates.get(0).getScore() <= DEFAULT_SPOT_DIFFERENCE_PASS2) {
+		  int myind = 0, mycount = 0, stopind1 = 0; while (myind <
+		  Pass2_distances.size()) { if (Pass2_distances.get(myind).getScore()
+		  <= DEFAULT_SPOT_DIFFERENCE_PASS2) { 
+			  if (isUnique(Pass2_distances.get(myind).frogid, Candidates_forHausdorff)) { 
+			  ++mycount; stopind1 = myind; 
+			  }
+		  
+		  Candidates_forHausdorff.add(Pass2_distances.get(myind)); 
+		  ++myind; 
+		  }
+		  // end while // if the number of remaining unique candidates < 10 if
+		  (mycount < topTen) { ++stopind1; while (mycount < topTen & stopind1 <
+		  Pass2_distances.size()) { // check if this image already entered the
+		  next step if (!isEntered(Pass2_distances.get(stopind1).signature,
+		  Candidates_forHausdorff)) { // check if it is a unique frog addition
+		  to the next step if (isUnique(Pass2_distances.get(stopind1).frogid,
+		  Candidates_forHausdorff)) { ++mycount; }
+		  Candidates_forHausdorff.add(Pass2_distances.get(stopind1)); }
+		  ++stopind1; } // end while } // end if } else { /* if pass #2 has
+		  spot differences > defaultSpotDifferencePass2 select closest images
+		  of 10 candidates with unique frog_id
+		  
+		  int ind1 = 0, count = 0; while (count < topTen & ind1 <
+		  Pass2_distances.size()) { if
+		  (isUnique(Pass2_distances.get(ind1).frogid, Candidates_forHausdorff))
+		  { ++count; } Candidates_forHausdorff.add(Pass2_distances.get(ind1));
+		  ++ind1; } }*/
+		 
 		// STEP 3: HAUSDORFF DISTANCE
 		for (ImageMatch m : candidates) {
 			//HausdorffDistance oneWayHausdorff = new HausdorffDistance();
